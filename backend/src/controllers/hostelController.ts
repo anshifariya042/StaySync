@@ -1,96 +1,70 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import * as hostelService from "../services/hostelService";
+import { Request, Response } from "express";
+import { createHostelService } from "../services/hostelService";
+import { registerUser } from "../services/authService";
+import { UserRole } from "../models/User";
 
-/**
- * Extend Request to include logged-in user (added by protect middleware)
- */
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    role: string;
-  };
-}
-
-/**
- * Params type for routes using :id
- */
-interface IdParams {
-  id: string;
-}
-
-/**
- * 🔹 Register Hostel (Admin creates hostel → Pending Approval)
- */
-export const registerHostel: RequestHandler = async (
-  req,
-  res,
-  next
-) => {
+export const createHostel = async (req: Request, res: Response) => {
   try {
-    const authReq = req as AuthRequest;
+    const {
+      name,
+      ownerName,
+      email,
+      phone,
+      location,
+      description,
+      totalRooms,
+      facilities,
+      images,
+      password
+    } = req.body;
 
-    if (!authReq.user) {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
+    let imageUrls: string[] = [];
+
+    // If files are uploaded via multer
+    if (req.files && Array.isArray(req.files)) {
+      imageUrls = (req.files as Express.Multer.File[]).map(
+        (file) => file.path
+      );
+    }
+    // If image URLs are provided in the body
+    else if (images && Array.isArray(images)) {
+      imageUrls = images;
+    } else if (typeof images === 'string') {
+      imageUrls = [images];
     }
 
-    const hostel = await hostelService.createHostel({
-      ...req.body,
-      createdBy: authReq.user.id,
-    });
+    const hostelData = {
+      name,
+      ownerName,
+      email,
+      phone,
+      location,
+      description,
+      totalRooms: Number(totalRooms) || 0,
+      facilities: Array.isArray(facilities) ? facilities : [],
+      images: imageUrls,
+      price: req.body.price || 0
+    };
+
+    const hostel = await createHostelService(hostelData);
+
+    // If password is provided, create an admin user for this hostel
+    if (password) {
+      await registerUser({
+        name: ownerName,
+        email: email,
+        password: password,
+        role: UserRole.ADMIN,
+        hostelId: hostel._id as any
+      });
+    }
 
     res.status(201).json({
-      message: "Hostel registered successfully. Waiting for approval.",
-      hostel,
+      message: "Hostel registered successfully",
+      hostel
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * 🔹 SuperAdmin → View all pending hostels
- */
-export const listPendingHostels: RequestHandler = async (
-  _req,
-  res,
-  next
-) => {
-  try {
-    const hostels = await hostelService.getPendingHostels();
-
-    res.status(200).json({
-      count: hostels.length,
-      hostels,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * 🔹 SuperAdmin → Approve Hostel
- */
-export const approveHostel: RequestHandler<{ id: string }> = async (
-  req,
-  res,
-  next
-) => {
-  try {
-    const { id } = req.params; // ✅ Now TS knows id is string
-
-    const hostel = await hostelService.approveHostel(id);
-
-    if (!hostel) {
-      res.status(404).json({ message: "Hostel not found" });
-      return;
-    }
-
-    res.status(200).json({
-      message: "Hostel approved successfully",
-      hostel,
-    });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error("Hostel registration error:", error);
+    res.status(500).json({ message: error.message || "Hostel registration failed" });
   }
 };

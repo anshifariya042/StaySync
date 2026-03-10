@@ -1,6 +1,8 @@
 import express from "express";
 import { protect } from "../middlewares/authMiddleware";
 import { authorizeRoles } from "../middlewares/roleMiddleware";
+import { UserRole } from "../models/User";
+
 
 const router = express.Router();
 
@@ -13,7 +15,7 @@ router.get("/profile", protect, (req, res) => {
 router.get(
   "/admin",
   protect,
-  authorizeRoles("superadmin", "admin"),
+  authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   (req, res) => {
     res.json({ message: "Welcome Admin!" });
   }
@@ -23,7 +25,7 @@ router.get(
 router.get(
   "/staff",
   protect,
-  authorizeRoles("superadmin", "admin", "staff"),
+  authorizeRoles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF),
   (req, res) => {
     res.json({ message: "Welcome Staff/Admin!" });
   }

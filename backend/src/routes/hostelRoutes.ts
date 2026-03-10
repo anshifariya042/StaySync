@@ -1,21 +1,38 @@
 import express from "express";
-import { protect } from "../middlewares/authmiddleware";
-import { authorizeRoles } from "../middlewares/roleMiddleware";
-import {
-  registerHostel,
-  listPendingHostels,
-  approveHostel,
-} from "../controllers/hostelController";
+import upload from "../middlewares/upload";
+import { createHostel } from "../controllers/hostelController";
+import { addRoom, getRooms, updateRoom, deleteRoom } from "../controllers/roomController";
+import { addResident, getResidents, removeResident } from "../controllers/residentController";
+import { getComplaints, updateComplaintStatus, assignStaff, createComplaint } from "../controllers/complaintController";
+import { addStaff, getStaff, updateStaff, removeStaff } from "../controllers/staffController";
+import { protect } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
-// Admin registers hostel
-router.post("/", protect, authorizeRoles("admin"), registerHostel);
+router.post("/add-hostel", upload.array("images", 5), createHostel);
+router.post("/register-hostel", createHostel);
 
-// SuperAdmin views pending
-router.get("/pending", protect, authorizeRoles("superadmin"), listPendingHostels);
+// Room routes
+router.post("/rooms", protect, addRoom);
+router.get("/:hostelId/rooms", protect, getRooms);
+router.put("/rooms/:id", protect, updateRoom);
+router.delete("/rooms/:id", protect, deleteRoom);
 
-// SuperAdmin approves hostel
-router.patch("/approve/:id", protect, authorizeRoles("superadmin"), approveHostel);
+// Resident routes
+router.post("/residents", protect, addResident);
+router.get("/:hostelId/residents", protect, getResidents);
+router.delete("/residents/:id", protect, removeResident);
+
+// Complaint routes
+router.get("/:hostelId/complaints", protect, getComplaints);
+router.post("/complaints", protect, createComplaint);
+router.put("/complaints/:id/status", protect, updateComplaintStatus);
+router.put("/complaints/:id/assign", protect, assignStaff);
+
+// Staff routes
+router.post("/staff", protect, addStaff);
+router.get("/:hostelId/staff", protect, getStaff);
+router.put("/staff/:id", protect, updateStaff);
+router.delete("/staff/:id", protect, removeStaff);
 
 export default router;

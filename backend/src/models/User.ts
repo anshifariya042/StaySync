@@ -7,31 +7,50 @@ export enum UserRole {
   USER = "user",
 }
 
+export enum UserStatus {
+  ACTIVE = "active",
+  MOVE_OUT_PENDING = "move-out pending",
+  ON_LEAVE = "on leave",
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  phone?: string;
   role: UserRole;
-  hostelId?: mongoose.Types.ObjectId; // linked for admin/staff/users
+  designation?: string; // e.g., Front Desk Manager, Maintenance Lead
+  tasks?: string[]; // e.g., ["Check-ins", "Billing"]
+  hostelId?: mongoose.Types.ObjectId;
+  roomId?: mongoose.Types.ObjectId;
+  status: UserStatus;
 }
 
 const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true },
-
     email: { type: String, required: true, unique: true },
-
     password: { type: String, required: true },
-
+    phone: { type: String },
     role: {
       type: String,
       enum: Object.values(UserRole),
       default: UserRole.USER,
     },
-
+    designation: { type: String },
+    tasks: [{ type: String }],
     hostelId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hostel",
+    },
+    roomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+    },
+    status: {
+      type: String,
+      enum: Object.values(UserStatus),
+      default: UserStatus.ACTIVE,
     },
   },
   { timestamps: true }

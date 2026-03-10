@@ -1,29 +1,42 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose from "mongoose";
 
-export interface IHostel extends Document {
-  name: string;
-  location: string;
-  createdBy: mongoose.Types.ObjectId;
-  isApproved: boolean;
-}
-
-const hostelSchema = new Schema<IHostel>(
+const hostelSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    location: { type: String, required: true },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+    name: {
+      type: String,
       required: true,
     },
-
-    isApproved: {
-      type: Boolean,
-      default: false,
+    ownerName: {
+      type: String,
+      required: true,
     },
+    email: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    location: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    totalRooms: {
+      type: Number,
+      default: 0,
+    },
+    price: {
+      type: Number,
+      default: 0,
+    },
+    facilities: [String],
+    images: [String],
   },
   { timestamps: true }
 );
 
-export const Hostel = mongoose.model<IHostel>("Hostel", hostelSchema);
+export default mongoose.model("Hostel", hostelSchema);

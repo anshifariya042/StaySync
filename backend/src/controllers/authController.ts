@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import  jwt from "jsonwebtoken";
-import { registerUser,loginUser } from "../services/authService";
+import jwt from "jsonwebtoken";
+import { registerUser, loginUser } from "../services/authService";
+import { googleAuth } from "../services/googleAuthService";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -55,3 +56,24 @@ export const refreshAccessToken = (req: Request, res: Response) => {
   }
 };
 
+
+export const googleLogin = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    const data = await googleAuth(token);
+
+    // Send refresh token in cookie
+    res.cookie("refreshToken", data.refreshToken, {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: "strict",
+    });
+
+    res.json({
+      user: data.user,
+      accessToken: data.accessToken,
+    });
+  } catch (err: any) {
+    res.status(400).json({ message: err.message });
+  }
+};

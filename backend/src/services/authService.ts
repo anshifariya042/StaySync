@@ -21,10 +21,10 @@ export const loginUser = async (email: string, password: string) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid credentials");
 
-  
+
   //access token
- const accessToken = jwt.sign(
-    { id: user._id, role: user.role },
+  const accessToken = jwt.sign(
+    { id: user._id, role: user.role, hostelId: user.hostelId },
     process.env.JWT_ACCESS_SECRET!,
     { expiresIn: "15m" }
   );
