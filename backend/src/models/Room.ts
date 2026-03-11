@@ -12,6 +12,8 @@ export interface IRoom extends Document {
     status: RoomStatus;
     capacity: number;
     currentOccupants: number;
+    type: string;
+    price: number;
 }
 
 const roomSchema = new Schema<IRoom>(
@@ -25,6 +27,8 @@ const roomSchema = new Schema<IRoom>(
         },
         capacity: { type: Number, required: true, default: 1 },
         currentOccupants: { type: Number, required: true, default: 0 },
+        type: { type: String, default: "Standard" },
+        price: { type: Number, default: 0 },
     },
     { timestamps: true }
 );

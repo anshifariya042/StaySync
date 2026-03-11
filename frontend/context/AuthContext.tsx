@@ -8,6 +8,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    hostelId?: string;
 }
 
 interface AuthContextType {
@@ -26,9 +27,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Optionally check if user is already logged in (e.g. by hitting a profile endpoint)
-        // For now we'll just set loading to false.
-        setLoading(false);
+        const checkAuth = async () => {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                try {
+                    const response = await api.get('/user/profile');
+                    setUser(response.data);
+                } catch (error) {
+                    console.error('Failed to restore session:', error);
+                    localStorage.removeItem('accessToken');
+                }
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
     }, []);
 
     const login = async (formData: any) => {

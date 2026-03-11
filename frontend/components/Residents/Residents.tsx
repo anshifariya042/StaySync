@@ -4,6 +4,9 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 
+import { useAuth } from '@/context/AuthContext'
+import api from '@/lib/api'
+
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
     <span className={`material-symbols-outlined ${className}`}>{name}</span>
@@ -24,15 +27,27 @@ const SidebarItem = ({ icon, label, active = false, onClick }: { icon: string, l
 
 export default function Residents() {
     const router = useRouter()
+    const { user: authUser } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('Residents')
+    const [residents, setResidents] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
 
-    const residents = [
-        { id: 1, name: 'Jordan Smith', initials: 'JS', email: 'j.smith@example.com', phone: '(555) 123-4567', room: 'B-402', joinDate: 'Jan 12, 2023', status: 'Active', statusColor: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-600' },
-        { id: 2, name: 'Amara Chen', initials: 'AC', email: 'amara.c@webmail.com', phone: '(555) 987-6543', room: 'A-108', joinDate: 'Mar 05, 2023', status: 'Active', statusColor: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-600' },
-        { id: 3, name: 'Liam Wilson', initials: 'LW', email: 'l.wilson@provider.net', phone: '(555) 234-5678', room: 'C-215', joinDate: 'Jun 22, 2023', status: 'Move-out Pending', statusColor: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400', bgColor: 'bg-amber-100 dark:bg-amber-900/30', textColor: 'text-amber-600' },
-        { id: 4, name: 'Sarah Park', initials: 'SP', email: 'sarah.park@email.com', phone: '(555) 345-6789', room: 'A-304', joinDate: 'Sep 15, 2023', status: 'Active', statusColor: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', bgColor: 'bg-pink-100 dark:bg-pink-900/30', textColor: 'text-pink-600' },
-    ]
+    React.useEffect(() => {
+        const fetchResidents = async () => {
+            if (!authUser?.hostelId) return;
+            try {
+                const response = await api.get(`/hostels/${authUser.hostelId}/residents`);
+                setResidents(response.data);
+            } catch (error) {
+                console.error("Failed to fetch residents:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchResidents();
+    }, [authUser]);
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased font-display min-h-screen">
@@ -140,20 +155,30 @@ export default function Residents() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {residents.map((resident) => (
-                                            <tr key={resident.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        {isLoading ? (
+                                            <tr><td colSpan={7} className="text-center py-10">Loading residents...</td></tr>
+                                        ) : residents.length === 0 ? (
+                                            <tr><td colSpan={7} className="text-center py-10">No residents found in database.</td></tr>
+                                        ) : residents.map((resident) => (
+                                            <tr key={resident._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`size-8 ${resident.bgColor} ${resident.textColor} rounded-full flex items-center justify-center font-bold text-xs`}>{resident.initials}</div>
+                                                        <div className={`size-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-xs`}>
+                                                            {resident.name?.charAt(0).toUpperCase() || 'U'}
+                                                        </div>
                                                         <span className="font-medium text-slate-900 dark:text-white">{resident.name}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{resident.email}</td>
-                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{resident.phone}</td>
-                                                <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{resident.room}</td>
-                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{resident.joinDate}</td>
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{resident.phone || 'N/A'}</td>
+                                                <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">
+                                                    {resident.roomId?.roomNumber || 'Not Assigned'}
+                                                </td>
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">
+                                                    {resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}
+                                                </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${resident.statusColor}`}>
+                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400`}>
                                                         {resident.status}
                                                     </span>
                                                 </td>

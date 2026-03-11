@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User, UserRole, ResidentStatus } from "../models/User";
+import { User, UserRole, UserStatus } from "../models/User";
 import { Room } from "../models/Room";
 import bcrypt from "bcrypt";
 
@@ -40,7 +40,7 @@ export const addResident = async (req: Request, res: Response) => {
             role: UserRole.USER,
             hostelId,
             roomId,
-            status: ResidentStatus.ACTIVE
+            status: UserStatus.ACTIVE
         });
 
         res.status(201).json({

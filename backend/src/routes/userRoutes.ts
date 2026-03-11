@@ -1,14 +1,19 @@
 import express from "express";
 import { protect } from "../middlewares/authMiddleware";
 import { authorizeRoles } from "../middlewares/roleMiddleware";
-import { UserRole } from "../models/User";
-
+import { UserRole, User } from "../models/User";
 
 const router = express.Router();
 
 // Only logged-in users
-router.get("/profile", protect, (req, res) => {
-  res.json({ message: "Welcome! You are authenticated" });
+router.get("/profile", protect, async (req: any, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 // Only Admin (and Super Admin)

@@ -1,6 +1,6 @@
 import express from "express";
 import upload from "../middlewares/upload";
-import { createHostel, getAllHostels } from "../controllers/hostelController";
+import { createHostel, getAllHostels, getHostelById } from "../controllers/hostelController";
 import { addRoom, getRooms, updateRoom, deleteRoom } from "../controllers/roomController";
 import { addResident, getResidents, removeResident } from "../controllers/residentController";
 import { getComplaints, updateComplaintStatus, assignStaff, createComplaint } from "../controllers/complaintController";
@@ -12,10 +12,11 @@ const router = express.Router();
 // router.post("/add-hostel", upload.array("images", 5), createHostel);
 router.post("/register-hostel", upload.array("images", 5), createHostel);
 router.get("/", getAllHostels);
+router.get("/:id", getHostelById);
 
 // Room routes
 router.post("/rooms", protect, addRoom);
-router.get("/:hostelId/rooms", protect, getRooms);
+router.get("/:hostelId/rooms", getRooms);
 router.put("/rooms/:id", protect, updateRoom);
 router.delete("/rooms/:id", protect, deleteRoom);
 

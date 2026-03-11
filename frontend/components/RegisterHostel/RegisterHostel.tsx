@@ -23,12 +23,15 @@ export default function RegisterHostel() {
         location: '',
         description: '',
         totalRooms: 10,
-        facilities: ['WiFi', 'CCTV'] as string[]
+        price: 0,
+        facilities: ['WiFi', 'CCTV'] as string[],
+        roomTypes: [] as string[]
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target
-        setFormData(prev => ({ ...prev, [name]: value }))
+        const { name, value, type } = e.target
+        const val = type === 'number' ? (value === '' ? '' : Number(value)) : value
+        setFormData(prev => ({ ...prev, [name]: val }))
     }
 
     const toggleFacility = (facility: string) => {
@@ -37,6 +40,15 @@ export default function RegisterHostel() {
             facilities: prev.facilities.includes(facility)
                 ? prev.facilities.filter(f => f !== facility)
                 : [...prev.facilities, facility]
+        }))
+    }
+
+    const toggleRoomType = (type: string) => {
+        setFormData(prev => ({
+            ...prev,
+            roomTypes: prev.roomTypes.includes(type)
+                ? prev.roomTypes.filter(t => t !== type)
+                : [...prev.roomTypes, type]
         }))
     }
 
@@ -92,20 +104,35 @@ export default function RegisterHostel() {
             formDataToSend.append('location', formData.location)
             formDataToSend.append('description', formData.description)
             formDataToSend.append('totalRooms', formData.totalRooms.toString())
+            formDataToSend.append('price', formData.price.toString())
 
             formData.facilities.forEach(facility => {
                 formDataToSend.append('facilities', facility)
+            })
+
+            formData.roomTypes.forEach(type => {
+                formDataToSend.append('roomTypes', type)
             })
 
             selectedImages.forEach(file => {
                 formDataToSend.append('images', file)
             })
 
-            await api.post('/hostels/register-hostel', formDataToSend)
+            // We must let the browser set the Content-Type automatically so it includes the correct boundary.
+            const token = localStorage.getItem('accessToken');
+            const res = await fetch('http://localhost:5000/api/hostels/register-hostel', {
+                method: 'POST',
+                credentials: 'include',
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                body: formDataToSend
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Registration failed');
+
             setSuccess(true)
             setTimeout(() => router.push('/login'), 2000)
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.')
+            setError(err.message || 'Registration failed. Please try again.')
         } finally {
             setIsLoading(false)
         }
@@ -143,7 +170,7 @@ export default function RegisterHostel() {
             </header>
 
             <main className="flex-1 w-full max-w-5xl mx-auto pb-32">
-                <form onSubmit={handleSubmit} className="px-6 py-8">
+                <form id="register-hostel-form" onSubmit={handleSubmit} className="px-6 py-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {/* Column 1: Core Details */}
                         <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#D1D5DB] space-y-8">
@@ -204,10 +231,7 @@ export default function RegisterHostel() {
                                             <input
                                                 name="phone"
                                                 value={formData.phone}
-                                                onChange={(e) => {
-                                                    const onlyNums = e.target.value.replace(/[^0-9]/g, '')
-                                                    setFormData(prev => ({ ...prev, phone: onlyNums }))
-                                                }}
+                                                onChange={handleChange}
                                                 className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
                                                 placeholder="+1 (555) 000-0000"
                                                 type="tel"
@@ -227,7 +251,22 @@ export default function RegisterHostel() {
                                                 type="text"
                                                 required
                                             />
-                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5]">location_on</span>
+                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5] pointer-events-none">location_on</span>
+                                        </div>
+                                    </label>
+                                    <label className="flex flex-col w-full">
+                                        <span className="text-[#374151] text-sm font-semibold pb-2">Monthly Price ($)</span>
+                                        <div className="relative">
+                                            <input
+                                                name="price"
+                                                value={formData.price || ''}
+                                                onChange={handleChange}
+                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 pl-12 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                placeholder="0.00"
+                                                type="number"
+                                                required
+                                            />
+                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5] pointer-events-none">payments</span>
                                         </div>
                                     </label>
                                 </div>
@@ -239,10 +278,11 @@ export default function RegisterHostel() {
                                     <span className="text-[#374151] text-sm font-semibold pb-2">Total Number of Rooms</span>
                                     <div className="flex items-center gap-4">
                                         <input
+                                            name="totalRooms"
                                             className="flex-1 rounded-xl text-[#111827] border border-[#D1D5DB] bg-[#F9FAFB] h-14 p-4 text-base outline-none"
                                             type="number"
                                             value={formData.totalRooms}
-                                            readOnly
+                                            onChange={handleChange}
                                         />
                                         <div className="flex gap-2">
                                             <button
@@ -262,6 +302,28 @@ export default function RegisterHostel() {
                                         </div>
                                     </div>
                                 </label>
+                            </section>
+
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Room Types Available</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {[
+                                        { id: 'Single Bed', label: 'Single Bed' },
+                                        { id: 'Double Sharing', label: 'Double Sharing' },
+                                        { id: 'Triple Sharing', label: 'Triple Sharing' },
+                                        { id: 'Four Sharing', label: 'Four Sharing' }
+                                    ].map((type) => (
+                                        <label key={type.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D1D5DB] bg-[#F9FAFB] cursor-pointer hover:border-[#6366F1] transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.roomTypes.includes(type.id)}
+                                                onChange={() => toggleRoomType(type.id)}
+                                                className="rounded text-[#4F46E5] focus:ring-[#6366F1] size-5 border-[#D1D5DB]"
+                                            />
+                                            <span className="text-sm font-medium text-[#374151]">{type.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </section>
                         </div>
 
@@ -367,7 +429,8 @@ export default function RegisterHostel() {
             <footer className="bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-lg ">
                 <div className="max-w-5xl mx-auto flex justify-center p-6 pb-10">
                     <button
-                        onClick={(e: any) => handleSubmit(e)}
+                        type="submit"
+                        form="register-hostel-form"
                         disabled={isLoading}
                         className="w-full max-w-md bg-[#4F46E5] hover:bg-[#4338CA] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#4F46E5]/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                     >
@@ -386,4 +449,3 @@ export default function RegisterHostel() {
         </div>
     )
 }
-

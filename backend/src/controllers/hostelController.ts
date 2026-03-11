@@ -22,6 +22,7 @@ export const createHostel = async (req: Request, res: Response) => {
       description,
       totalRooms,
       facilities,
+      roomTypes,
       images,
       password
     } = req.body;
@@ -49,7 +50,8 @@ export const createHostel = async (req: Request, res: Response) => {
       location,
       description,
       totalRooms: Number(totalRooms) || 0,
-      facilities: Array.isArray(facilities) ? facilities : [],
+      facilities: Array.isArray(facilities) ? facilities : (facilities ? [facilities] : []),
+      roomTypes: Array.isArray(roomTypes) ? roomTypes : (roomTypes ? [roomTypes] : []),
       images: imageUrls,
       price: req.body.price || 0
     };
@@ -77,49 +79,76 @@ export const createHostel = async (req: Request, res: Response) => {
   }
 };
 
-// Get all hostels (temporary static data)
-// export const getAllHostels = async (req: Request, res: Response) => {
-//   try {
-//     const hostels = [
-//       {
-//         _id: '1',
-//         name: 'Elite Living Heights',
-//         location: 'Upper East Side, New York',
-//         price: 450,
-//         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCp8Oe3I1AZBHsQGoW6t-X-7_-0MX5fKNQO94VrMaPpv4UZ5H217PgAwMO0LkSY3_alTTvcK3_boq6YRDswJulXagHoIxkIlpgGqNjR0M0vcobiqbI6cgTNpTaUGoxK9FAlOIbVaC6unZ1HFADskpl0n0_TFBAEdx_mYk0BmYjf1JFVUXUCWKkZkcvUECD8iblLrf7Nx-X6i8Bb7lpyYrSL_a9sqCTmPGMfz35D5Hv2o9vG5efDLX2RAa0bDbmshFvZZo2lUW9mYDg',
-//         rating: 4.8,
-//         facilities: ['WiFi', 'Mess', 'Security']
-//       },
-//       {
-//         _id: '2',
-//         name: 'Oxford Student Suites',
-//         location: 'Central London, UK',
-//         price: 380,
-//         image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4CI2FOcLrs7-FxT0c5qqoxkgww20I791aNiM2HQ_l_XuqilLIcBRBEBtNH2-wfeEr1rk6AVDG6RpycPGa4MDM8emMYbE48jOgEG8qmAg7Fh2UHl0nHmWGYDZ21lA6wMgHna3JhxMGSwLf8ljy8xOX23rC-xK6LIsTruVRfbxmLxOCRcnp3am0tggpF36r2_r5Bj4jznQZT0S9cY83GmKxU07D3RXYmp-_2hwN-JIjI9r80rnRMC_2Gv07_qi_yVFmAR9fs3yCJ-k',
-//         rating: 4.5,
-//         facilities: ['Laundry', 'Gym']
-//       }
-//     ];
-//     res.status(200).json({ hostels });
-//   } catch (error: any) {
-//     console.error('Get hostels error:', error);
-//     res.status(500).json({ message: error.message || 'Failed to fetch hostels' });
-//   }
-// };
+
 
 
 export const getAllHostels = async (req: Request, res: Response) => {
   try {
-    const hostels = await hostelModel.find();
+    const {
+      page = 1,
+      limit = 9,
+      search = "",
+      location = "",
+      facilities
+    } = req.query;
+
+    const query: any = {};
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    if (location && location !== "All Locations") {
+      query.location = { $regex: location, $options: "i" };
+    }
+
+    if (facilities) {
+      const facilityArray = Array.isArray(facilities) ? facilities : (facilities as string).split(',');
+      if (facilityArray.length > 0) {
+        query.facilities = { $all: facilityArray };
+      }
+    }
+
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+
+    const total = await hostelModel.countDocuments(query);
+    const hostels = await hostelModel.find(query)
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
 
     res.status(200).json({
-      hostels
+      hostels,
+      totalPages: Math.ceil(total / limitNumber),
+      currentPage: pageNumber,
+      total
     });
 
   } catch (error: any) {
     console.error("Fetch hostels error:", error);
     res.status(500).json({
       message: error.message || "Failed to fetch hostels"
+    });
+  }
+};
+
+export const getHostelById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const hostel = await hostelModel.findById(id);
+
+    if (!hostel) {
+      return res.status(404).json({ message: "Hostel not found" });
+    }
+
+    res.status(200).json({ hostel });
+  } catch (error: any) {
+    console.error("Fetch hostel by ID error:", error);
+    res.status(500).json({
+      message: error.message || "Failed to fetch hostel details"
     });
   }
 };

@@ -22,7 +22,7 @@ export default function Navbar() {
 
         <div className="hidden md:flex gap-8 text-[0.95rem] font-medium text-foreground">
           <Link href="/" className="text-black hover:text-primary-blue transition-colors cursor-pointer">Home</Link>
-          <Link href="#hostels" className="text-black hover:text-primary-blue transition-colors cursor-pointer">Find Hostels</Link>
+          <Link href="/explore-hostels" className="text-black hover:text-primary-blue transition-colors cursor-pointer">Find Hostels</Link>
           <Link href="#how-it-works" className="text-black hover:text-primary-blue transition-colors cursor-pointer">How It Works</Link>
           <Link href="#contact" className="text-black hover:text-primary-blue transition-colors cursor-pointer">Contact</Link>
         </div>

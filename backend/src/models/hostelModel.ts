@@ -34,6 +34,7 @@ const hostelSchema = new mongoose.Schema(
       default: 0,
     },
     facilities: [String],
+    roomTypes: [String],
     images: [String],
   },
   { timestamps: true }

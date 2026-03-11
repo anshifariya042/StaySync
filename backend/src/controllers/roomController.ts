@@ -16,6 +16,8 @@ export const addRoom = async (req: Request, res: Response) => {
         const room = await Room.create({
             roomNumber,
             hostelId,
+            type: type || "Standard",
+            price: price || 0,
             status: status || RoomStatus.AVAILABLE,
             capacity: capacity || 1,
         });
