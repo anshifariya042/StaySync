@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 
@@ -11,6 +11,9 @@ export default function RegisterHostel() {
     const [success, setSuccess] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
 
+    const [selectedImages, setSelectedImages] = useState<File[]>([])
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     const [formData, setFormData] = useState({
         name: '',
         ownerName: '',
@@ -20,7 +23,6 @@ export default function RegisterHostel() {
         location: '',
         description: '',
         totalRooms: 10,
-        imageUrl: '',
         facilities: ['WiFi', 'CCTV'] as string[]
     })
 
@@ -46,12 +48,21 @@ export default function RegisterHostel() {
         setFormData(prev => ({ ...prev, totalRooms: Math.max(0, prev.totalRooms - 1) }))
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setSelectedImages(prev => [...prev, ...Array.from(e.target.files!)])
+        }
+    }
+
+    const removeImage = (index: number) => {
+        setSelectedImages(prev => prev.filter((_, i) => i !== index))
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
         setError('')
 
-        // Form Validation
         if (!formData.name || !formData.ownerName || !formData.phone || !formData.location) {
             setError('Please fill all required fields.')
             setIsLoading(false)
@@ -72,11 +83,25 @@ export default function RegisterHostel() {
         }
 
         try {
-            const submissionData = {
-                ...formData,
-                images: formData.imageUrl ? [formData.imageUrl] : []
-            }
-            await api.post('/hostels/register-hostel', submissionData)
+            const formDataToSend = new FormData()
+            formDataToSend.append('name', formData.name)
+            formDataToSend.append('ownerName', formData.ownerName)
+            formDataToSend.append('email', formData.email)
+            formDataToSend.append('password', formData.password)
+            formDataToSend.append('phone', formData.phone)
+            formDataToSend.append('location', formData.location)
+            formDataToSend.append('description', formData.description)
+            formDataToSend.append('totalRooms', formData.totalRooms.toString())
+
+            formData.facilities.forEach(facility => {
+                formDataToSend.append('facilities', facility)
+            })
+
+            selectedImages.forEach(file => {
+                formDataToSend.append('images', file)
+            })
+
+            await api.post('/hostels/register-hostel', formDataToSend)
             setSuccess(true)
             setTimeout(() => router.push('/login'), 2000)
         } catch (err: any) {
@@ -88,272 +113,277 @@ export default function RegisterHostel() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-                    <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
+            <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center">
+                <div className="size-20 bg-green-50 text-[#16A34A] rounded-full flex items-center justify-center mb-6 border border-[#16A34A]/20">
+                    <svg className="size-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Hostel Registered!</h2>
-                <p className="text-gray-500 mt-2">Your admin account has been created. Redirecting to login...</p>
+                <h2 className="text-2xl font-bold text-[#111827] tracking-tight">Hostel Registered!</h2>
+                <p className="text-[#374151] mt-2">Your admin account has been created. Redirecting to login...</p>
             </div>
         )
     }
 
     return (
-        <div className="max-w-screen-md mx-auto bg-white min-h-screen font-sans selection:bg-indigo-100">
-            {/* Header */}
-            <header className="flex items-center justify-between px-4 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-                <button
+        <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-[#F9FAFB] font-sans text-[#111827]">
+            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+            <header className="sticky top-0 z-50 flex items-center bg-[#F9FAFB]/80 backdrop-blur-md p-4 justify-between border-b border-[#D1D5DB]">
+                <div
                     onClick={() => router.back()}
-                    aria-label="Go back"
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    className="text-[#4F46E5] flex size-10 shrink-0 items-center justify-center rounded-lg hover:bg-[#4F46E5]/10 cursor-pointer transition-colors"
                 >
-                    <svg className="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                    </svg>
-                </button>
-                <h1 className="text-xl font-bold text-gray-900">Register Hostel</h1>
-                <button aria-label="Information" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                    <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                    </svg>
-                </button>
+                    <span className="material-symbols-outlined">arrow_back</span>
+                </div>
+                <h2 className="text-[#111827] text-lg font-bold leading-tight tracking-tight flex-1 text-center">Register Hostel</h2>
+                <div className="size-10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#4F46E5]">info</span>
+                </div>
             </header>
 
-            <main className="p-6 space-y-8 pb-4">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    {/* Hostel Details Section */}
-                    <section>
-                        <h2 className="text-lg font-bold text-gray-800 border-l-4 border-[#4F46E5] pl-3 mb-6">Hostel Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Left Column */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Hostel Name</label>
-                                    <input
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                        placeholder="Blue Sky Residency"
-                                        type="text"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Owner Full Name</label>
-                                    <input
-                                        name="ownerName"
-                                        value={formData.ownerName}
-                                        onChange={handleChange}
-                                        className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                        placeholder="John Doe"
-                                        type="text"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                                    <input
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                        placeholder="owner@staysync.com"
-                                        type="email"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Create Password</label>
-                                    <div className="relative">
+            <main className="flex-1 w-full max-w-5xl mx-auto pb-32">
+                <form onSubmit={handleSubmit} className="px-6 py-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Column 1: Core Details */}
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#D1D5DB] space-y-8">
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Hostel Details</h3>
+                                <div className="space-y-4">
+                                    <label className="flex flex-col w-full">
+                                        <span className="text-[#374151] text-sm font-semibold pb-2">Hostel Name</span>
                                         <input
-                                            name="password"
-                                            value={formData.password}
+                                            name="name"
+                                            value={formData.name}
                                             onChange={handleChange}
-                                            className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                            placeholder="Enter a strong password"
-                                            type={showPassword ? "text" : "password"}
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                        >
-                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Right Column */}
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                    <input
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={(e) => {
-                                            const onlyNums = e.target.value.replace(/[^0-9]/g, '')
-                                            setFormData(prev => ({ ...prev, phone: onlyNums }))
-                                        }}
-                                        className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                        placeholder="Enter phone number"
-                                        type="tel"
-                                        inputMode="numeric"
-                                        pattern="[0-9]*"
-                                        required
-                                    />
-
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                                                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-                                            </svg>
-                                        </span>
-                                        <input
-                                            name="location"
-                                            value={formData.location}
-                                            onChange={handleChange}
-                                            className="rounded-xl border border-gray-300 pl-10 pr-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                                            placeholder="City, Street Address"
+                                            className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                            placeholder="e.g. Blue Sky Residency"
                                             type="text"
                                             required
                                         />
+                                    </label>
+                                    <label className="flex flex-col w-full">
+                                        <span className="text-[#374151] text-sm font-semibold pb-2">Owner Full Name</span>
+                                        <input
+                                            name="ownerName"
+                                            value={formData.ownerName}
+                                            onChange={handleChange}
+                                            className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                            placeholder="John Doe"
+                                            type="text"
+                                            required
+                                        />
+                                    </label>
+                                    <div className="space-y-4">
+                                        <label className="flex flex-col w-full">
+                                            <span className="text-[#374151] text-sm font-semibold pb-2">Contact Email</span>
+                                            <input
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                placeholder="owner@staysync.com"
+                                                type="email"
+                                                required
+                                            />
+                                        </label>
+                                        <label className="flex flex-col w-full">
+                                            <span className="text-[#374151] text-sm font-semibold pb-2">Create Password</span>
+                                            <input
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handleChange}
+                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                placeholder="••••••••"
+                                                type="password"
+                                                required
+                                            />
+                                        </label>
+                                        <label className="flex flex-col w-full">
+                                            <span className="text-[#374151] text-sm font-semibold pb-2">Phone Number</span>
+                                            <input
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={(e) => {
+                                                    const onlyNums = e.target.value.replace(/[^0-9]/g, '')
+                                                    setFormData(prev => ({ ...prev, phone: onlyNums }))
+                                                }}
+                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                placeholder="+1 (555) 000-0000"
+                                                type="tel"
+                                                required
+                                            />
+                                        </label>
                                     </div>
+                                    <label className="flex flex-col w-full">
+                                        <span className="text-[#374151] text-sm font-semibold pb-2">Location</span>
+                                        <div className="relative">
+                                            <input
+                                                name="location"
+                                                value={formData.location}
+                                                onChange={handleChange}
+                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 pl-12 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                placeholder="City, Street Address"
+                                                type="text"
+                                                required
+                                            />
+                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5]">location_on</span>
+                                        </div>
+                                    </label>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                                    <textarea
-                                        name="description"
-                                        value={formData.description}
-                                        onChange={handleChange}
-                                        className="rounded-xl border border-gray-300 px-4 py-3 w-full transition-all focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 resize-none"
-                                        placeholder="Add a brief description of your hostel"
-                                        rows={4}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+                            </section>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Capacity Section */}
-                        <section>
-                            <h2 className="text-lg font-bold text-gray-800 border-l-4 border-[#4F46E5] pl-3 mb-6">Capacity & Rooms</h2>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Total Number of Rooms</label>
-                                <div className="flex items-center w-full max-w-[280px] bg-white border border-gray-300 rounded-xl overflow-hidden">
-                                    <input
-                                        className="w-full border-none focus:ring-0 text-center text-gray-900 font-medium bg-transparent cursor-default"
-                                        readOnly
-                                        type="number"
-                                        value={formData.totalRooms}
-                                    />
-                                    <div className="flex">
-                                        <button
-                                            type="button"
-                                            className="bg-indigo-600  px-4 py-3 hover:bg-indigo-700 transition-colors border-l border-indigo-500 flex items-center justify-center"
-                                            onClick={decrementRooms}
-                                        >
-                                            -
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="bg-indigo-600  px-4 py-3 hover:bg-indigo-700 transition-colors border-l border-indigo-500 flex items-center justify-center"
-                                            onClick={incrementRooms}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Images Section */}
-                        <section>
-                            <h2 className="text-lg font-bold text-gray-800 mb-6 font-sans">Images</h2>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                                <input
-                                    name="file"
-                                    value={formData.imageUrl}
-                                    onChange={handleChange}
-                                    className="rounded-xl border border-gray-300 px-4 py-3 w-full focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all"
-                                    placeholder="https://your-hostel-images.com/photo1.jpg"
-                                    type="url"
-                                />
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* Facilities Section */}
-                    <section>
-                        <h2 className="text-lg font-bold text-gray-800 border-l-4 border-[#4F46E5] pl-3 mb-6">Facilities</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
-                                { id: 'WiFi', label: 'Free Wi-Fi', icon: true, iconSvg: <path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071a10.5 10.5 0 0114.142 0M1.414 8.414a16.5 16.5 0 0121.172 0" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path> },
-                                { id: 'CCTV', label: 'CCTV', icon: true, iconSvg: <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path> },
-                                { id: 'Laundry', label: 'Laundry' },
-                                { id: 'AC', label: 'Air Condition' },
-                                { id: 'Mess', label: 'Mess/Food' },
-                                { id: 'Parking', label: 'Parking' }
-                            ].map((facility) => (
-                                <label key={facility.id} className={`flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-indigo-300 hover:bg-indigo-50 transition-all ${formData.facilities.includes(facility.id) ? 'bg-indigo-50 border-indigo-300 shadow-sm' : ''}`}>
-                                    <input
-                                        type="checkbox"
-                                        className="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 pointer-events-none"
-                                        checked={formData.facilities.includes(facility.id)}
-                                        onChange={() => toggleFacility(facility.id)}
-                                    />
-                                    <div className="ml-3 flex items-center space-x-2">
-                                        {facility.icon && (
-                                            <span className="p-1.5 bg-indigo-600 rounded-lg text-white flex items-center justify-center">
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    {facility.iconSvg}
-                                                </svg>
-                                            </span>
-                                        )}
-                                        <span className="text-sm font-medium text-gray-700">{facility.label}</span>
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Capacity</h3>
+                                <label className="flex flex-col w-full">
+                                    <span className="text-[#374151] text-sm font-semibold pb-2">Total Number of Rooms</span>
+                                    <div className="flex items-center gap-4">
+                                        <input
+                                            className="flex-1 rounded-xl text-[#111827] border border-[#D1D5DB] bg-[#F9FAFB] h-14 p-4 text-base outline-none"
+                                            type="number"
+                                            value={formData.totalRooms}
+                                            readOnly
+                                        />
+                                        <div className="flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={decrementRooms}
+                                                className="size-14 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center hover:bg-[#4F46E5]/20 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined">remove</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={incrementRooms}
+                                                className="size-14 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center hover:bg-[#4F46E5]/20 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined">add</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </label>
-                            ))}
+                            </section>
                         </div>
-                    </section>
+
+                        {/* Column 2: Specifics & Multimedia */}
+                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#D1D5DB] space-y-8">
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Facilities</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { id: 'WiFi', label: 'Free Wi-Fi' },
+                                        { id: 'Laundry', label: 'Laundry' },
+                                        { id: 'CCTV', label: 'CCTV' },
+                                        { id: 'Mess', label: 'Mess/Food' },
+                                        { id: 'AC', label: 'Air Condition' },
+                                        { id: 'Parking', label: 'Parking' }
+                                    ].map((facility) => (
+                                        <label key={facility.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D1D5DB] bg-[#F9FAFB] cursor-pointer hover:border-[#6366F1] transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.facilities.includes(facility.id)}
+                                                onChange={() => toggleFacility(facility.id)}
+                                                className="rounded text-[#4F46E5] focus:ring-[#6366F1] size-5 border-[#D1D5DB]"
+                                            />
+                                            <span className="text-sm font-medium text-[#374151]">{facility.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </section>
+
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Description</h3>
+                                <textarea
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    className="w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 min-h-[120px] p-4 text-base outline-none resize-none transition-all placeholder:text-[#D1D5DB]"
+                                    placeholder="Describe your hostel's vibe..."
+                                ></textarea>
+                            </section>
+
+                            <section className="space-y-6">
+                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Hostel Images</h3>
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex flex-col items-center justify-center w-full aspect-video rounded-2xl border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#4F46E5] hover:bg-[#4F46E5]/5 transition-colors cursor-pointer group"
+                                >
+                                    <div className="flex flex-col items-center gap-2 text-center px-4">
+                                        <span className="material-symbols-outlined text-4xl text-[#4F46E5]">cloud_upload</span>
+                                        <p className="text-sm font-semibold text-[#374151]">Upload Images</p>
+                                        <p className="text-xs text-slate-500">PNG or JPG (Max 5MB)</p>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        multiple
+                                        accept="image/*"
+                                        className="hidden"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-3">
+                                    {selectedImages.map((file, index) => (
+                                        <div key={index} className="aspect-square rounded-lg bg-slate-200 relative overflow-hidden group border border-[#D1D5DB]">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    removeImage(index)
+                                                }}
+                                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white"
+                                            >
+                                                <span className="material-symbols-outlined">delete</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {[...Array(Math.max(0, 3 - selectedImages.length))].map((_, i) => (
+                                        <div
+                                            key={`empty-${i}`}
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="aspect-square rounded-lg bg-[#F9FAFB] border-2 border-dashed border-[#D1D5DB] flex items-center justify-center cursor-pointer hover:border-[#4F46E5] transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[#D1D5DB]">add</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
 
                     {error && (
-                        <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-sm font-bold text-center">
+                        <div className="bg-red-50 text-[#DC2626] p-4 rounded-xl border border-[#DC2626]/20 text-sm font-bold text-center mt-8">
                             {error}
                         </div>
                     )}
-
-                    {/* Footer Action */}
-                    <div className="p-6 pb-10">
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700  font-bold py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Processing...
-                                </>
-                            ) : 'Submit'}
-                        </button>
-                    </div>
                 </form>
             </main>
+
+            <footer className="bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-lg ">
+                <div className="max-w-5xl mx-auto flex justify-center p-6 pb-10">
+                    <button
+                        onClick={(e: any) => handleSubmit(e)}
+                        disabled={isLoading}
+                        className="w-full max-w-md bg-[#4F46E5] hover:bg-[#4338CA] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#4F46E5]/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Sending...
+                            </>
+                        ) : 'Register Hostel'}
+                    </button>
+                </div>
+            </footer>
         </div>
     )
 }
+
