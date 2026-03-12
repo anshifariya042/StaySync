@@ -92,22 +92,19 @@ export default function BookingConfirmation() {
 
     return (
         <div className="bg-[#f6f6f8] font-sans text-slate-900 min-h-screen flex flex-col">
-            <header className="flex items-center bg-white border-b border-slate-200 p-4 sticky top-0 z-10">
-                <div className="flex-1">
+            {/* <header className="flex items-center bg-white border-b border-slate-200 p-4 sticky top-0 z-10"> */}
+                {/* <div className="flex-1">
                     <button onClick={() => router.push('/')} className="flex items-center justify-center size-10 rounded-full hover:bg-slate-100 transition-colors">
-                        <span className="material-symbols-outlined text-slate-600">arrow_back</span>
                     </button>
-                </div>
-                <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Confirmation</h2>
-                <div className="flex-1"></div>
-            </header>
+                </div> */}
+                {/* <h2 className="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Confirmation</h2> */}
+                {/* <div className="flex-1"></div>
+            </header> */}
 
             <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-8">
                 <div className="w-full max-w-lg bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div className="flex flex-col items-center gap-6 p-8 text-center border-b border-slate-100">
-                        <div className="size-20 bg-green-500/10 rounded-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-green-500 !text-5xl">check_circle</span>
-                        </div>
+                        
                         <div className="space-y-2">
                             <h1 className="text-2xl font-bold tracking-tight">Booking Request Submitted Successfully!</h1>
                             <p className="text-slate-500 text-sm leading-relaxed px-4">
@@ -156,10 +153,10 @@ export default function BookingConfirmation() {
 
                     <div className="p-6 bg-slate-50 flex flex-col gap-3">
                         <button
-                            onClick={() => router.push('/bookings')}
+                            onClick={() => router.push('/user/my-hostel')}
                             className="w-full bg-[#5048e5] hover:bg-[#5048e5]/90 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-sm active:scale-[0.98]"
                         >
-                            View My Bookings
+                            View My Hostel
                         </button>
                         <button
                             onClick={() => router.push('/explore-hostels')}

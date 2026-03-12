@@ -8,7 +8,10 @@ const router = express.Router();
 // Only logged-in users
 router.get("/profile", protect, async (req: any, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id)
+      .select("-password")
+      .populate("hostelId")
+      .populate("roomId");
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {

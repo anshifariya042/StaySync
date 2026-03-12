@@ -15,14 +15,20 @@ interface Hostel {
     roomTypes: string[];
 }
 
+import { useSearchParams } from "next/navigation";
+
 export default function ExploreHostels() {
+    const searchParams = useSearchParams();
+    
     const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Search and Filters
-    const [search, setSearch] = useState("");
-    const [location, setLocation] = useState("All Locations");
-    const [filterFacilities, setFilterFacilities] = useState<string[]>([]);
+    const [search, setSearch] = useState(searchParams.get('search') || "");
+    const [location, setLocation] = useState(searchParams.get('location') || "All Locations");
+    const [filterFacilities, setFilterFacilities] = useState<string[]>(
+        searchParams.get('facilities') ? searchParams.get('facilities')!.split(',') : []
+    );
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -55,6 +61,13 @@ export default function ExploreHostels() {
     useEffect(() => {
         fetchHostels();
     }, [currentPage]);
+
+    // Fetch on initial load if there are filters in URL
+    useEffect(() => {
+        if (search || location !== "All Locations" || filterFacilities.length > 0) {
+            fetchHostels();
+        }
+    }, []);
 
     const handleSearch = () => {
         if (currentPage === 1) {
@@ -182,7 +195,7 @@ export default function ExploreHostels() {
                                             ))}
                                             {hostel.roomTypes && hostel.roomTypes.map((type, idx) => (
                                                 <span key={`type-${idx}`} className="px-2 py-1 bg-amber-50 rounded-lg text-[10px] font-semibold text-amber-700 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs">bed</span> {type}
+                                                    <span className="material-symbols-outlined text-xs"></span> {type}
                                                 </span>
                                             ))}
                                         </div>

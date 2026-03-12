@@ -27,9 +27,9 @@ export default function Hero() {
                         <Link href="/explore-hostels">
                             <button className="bg-primary-blue text-white px-7 py-3 rounded-lg font-semibold text-base border-none cursor-pointer hover:opacity-90 transition-opacity">Explore Hostels</button>
                         </Link>
-                        <Link href="/register-hostel">
+                        {/* <Link href="/register-hostel">
                             <button className="bg-transparent text-foreground border border-border-color px-7 py-3 rounded-lg font-semibold text-base cursor-pointer hover:bg-gray-50 transition-colors">Register Hostel</button>
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
 

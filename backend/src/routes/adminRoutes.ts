@@ -1,5 +1,5 @@
 import express from "express";
-import { getDashboardOverview } from "../controllers/adminController";
+import { getDashboardOverview, updateComplaintStatus, assignStaff } from "../controllers/adminController";
 import { protect } from "../middlewares/authMiddleware";
 import { authorizeRoles } from "../middlewares/roleMiddleware";
 import { UserRole } from "../models/User";
@@ -7,12 +7,27 @@ import { UserRole } from "../models/User";
 const router = express.Router();
 
 // Get Dashboard Overview
-// Protected to logged-in users who are admins
 router.get(
     "/dashboard-overview",
     protect,
     authorizeRoles(UserRole.ADMIN, UserRole.SUPER_ADMIN),
     getDashboardOverview
+);
+
+// Update complaint status
+router.put(
+    "/complaints/:id/status",
+    protect,
+    authorizeRoles(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    updateComplaintStatus
+);
+
+// Assign staff to complaint
+router.put(
+    "/complaints/:id/assign",
+    protect,
+    authorizeRoles(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    assignStaff
 );
 
 export default router;

@@ -8,7 +8,11 @@ interface User {
     name: string;
     email: string;
     role: string;
-    hostelId?: string;
+    hostelId?: any;
+    roomId?: any;
+    status?: string;
+    profileImage?: string;
+    createdAt?: string;
 }
 
 interface AuthContextType {
@@ -61,8 +65,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const register = async (formData: any) => {
         try {
             const response = await api.post('/auth/register', formData);
-            const userData = response.data.user || response.data;
+            const userData = response.data.user;
             setUser(userData);
+            if (response.data.accessToken) {
+                localStorage.setItem('accessToken', response.data.accessToken);
+            }
             return userData;
         } catch (error) {
             throw error;

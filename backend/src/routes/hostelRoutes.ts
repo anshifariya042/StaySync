@@ -27,7 +27,7 @@ router.delete("/residents/:id", protect, removeResident);
 
 // Complaint routes
 router.get("/:hostelId/complaints", protect, getComplaints);
-router.post("/complaints", protect, createComplaint);
+router.post("/complaints", protect, upload.array("images", 5), createComplaint);
 router.put("/complaints/:id/status", protect, updateComplaintStatus);
 router.put("/complaints/:id/assign", protect, assignStaff);
 

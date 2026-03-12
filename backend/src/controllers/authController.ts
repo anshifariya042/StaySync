@@ -5,8 +5,19 @@ import { googleAuth } from "../services/googleAuthService";
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const user = await registerUser(req.body);
-    res.status(201).json(user);
+    const data = await registerUser(req.body);
+
+    // Send refresh token in cookie
+    res.cookie("refreshToken", data.refreshToken, {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: "strict",
+    });
+
+    res.status(201).json({
+      user: data.user,
+      accessToken: data.accessToken,
+    });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }

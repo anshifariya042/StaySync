@@ -23,6 +23,7 @@ export interface IUser extends Document {
   tasks?: string[]; // e.g., ["Check-ins", "Billing"]
   hostelId?: mongoose.Types.ObjectId;
   roomId?: mongoose.Types.ObjectId;
+  roomType?: string;
   status: UserStatus;
 }
 
@@ -47,6 +48,7 @@ const userSchema = new Schema<IUser>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Room",
     },
+    roomType: { type: String },
     status: {
       type: String,
       enum: Object.values(UserStatus),

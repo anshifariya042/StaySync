@@ -11,7 +11,9 @@ export interface IComplaint extends Document {
     title: string;
     description?: string;
     roomNumber: string;
-    category: string; // Maintenance, Electrical, Housekeeping, Technical, etc.
+    category: string;
+    priority: string;
+    images?: string[];
     hostelId: mongoose.Types.ObjectId;
     userId: mongoose.Types.ObjectId;
     assignedStaff?: mongoose.Types.ObjectId;
@@ -28,6 +30,8 @@ const complaintSchema = new Schema<IComplaint>(
         description: { type: String },
         roomNumber: { type: String, required: true },
         category: { type: String, required: true },
+        priority: { type: String, default: "Normal" },
+        images: [{ type: String }],
         hostelId: { type: mongoose.Schema.Types.ObjectId, ref: "Hostel", required: true },
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         assignedStaff: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

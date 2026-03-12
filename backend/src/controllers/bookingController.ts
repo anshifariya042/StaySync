@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Booking, BookingStatus } from "../models/Booking";
 import { Room, RoomStatus } from "../models/Room";
+import { User } from "../models/User";
 
 export const createBooking = async (req: Request, res: Response) => {
     try {
@@ -54,9 +55,24 @@ export const createBooking = async (req: Request, res: Response) => {
             status: BookingStatus.PENDING
         });
 
-        // Optionally update room status to OCCUPIED or PENDING
-        // room.status = RoomStatus.OCCUPIED;
-        // await room.save();
+        // Update User profile to link with the hostel and room
+        await User.findByIdAndUpdate(userId, {
+            hostelId: hostelId,
+            roomId: validatedRoomId,
+            roomType: selectedRoomType
+        });
+
+        // Update room occupancy if a room was selected
+        if (validatedRoomId) {
+            const room = await Room.findById(validatedRoomId);
+            if (room) {
+                room.currentOccupants += 1;
+                if (room.currentOccupants >= room.capacity) {
+                    room.status = RoomStatus.OCCUPIED;
+                }
+                await room.save();
+            }
+        }
 
         res.status(201).json({
             message: "Booking request submitted successfully!",

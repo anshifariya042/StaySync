@@ -108,7 +108,12 @@ export default function BookRoom() {
             router.push(`/hostel/${hostelId}/book/${roomId}/confirmation?${params.toString()}`);
         } catch (error: any) {
             console.error("Booking failed:", error);
-            alert(error.response?.data?.message || "Booking failed. Please try again.");
+            if (error.response?.status === 401) {
+                alert("Your session has expired. Please login again.");
+                router.push('/login');
+            } else {
+                alert(error.response?.data?.message || "Booking failed. Please try again.");
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -248,21 +253,21 @@ export default function BookRoom() {
                     <section className="pt-6 border-t border-slate-100">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-slate-600">Monthly Rent</span>
-                            <span className="font-medium">${monthlyRent.toFixed(2)}</span>
+                            <span className="font-medium">₹{monthlyRent.toFixed(2)}</span>
                         </div>
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-slate-600">Security Deposit</span>
-                            <span className="font-medium">${securityDeposit.toFixed(2)}</span>
+                            <span className="font-medium">₹{securityDeposit.toFixed(2)}</span>
                         </div>
                         <div className="bg-[#5048e5]/5 rounded-xl p-4 mb-6">
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-slate-900 font-bold">Total Amount Due</span>
-                                <span className="text-[#5048e5] text-xl font-bold">${totalAmount.toFixed(2)}</span>
+                                <span className="text-[#5048e5] text-xl font-bold">₹{totalAmount.toFixed(2)}</span>
                             </div>
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-semibold text-[#5048e5] uppercase">Advance Payment Required</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">₹</span>
                                     <input
                                         className="w-full bg-white border-[#5048e5]/20 rounded-lg h-10 pl-8 pr-4 text-[#5048e5] font-bold focus:ring-[#5048e5]"
                                         type="number"
@@ -278,7 +283,6 @@ export default function BookRoom() {
                             disabled={isSubmitting}
                         >
                             <span>{isSubmitting ? "Processing..." : "Proceed to Confirm"}</span>
-                            <span className="material-symbols-outlined">chevron_right</span>
                         </button>
                         <p className="text-center text-xs text-slate-400 mt-4">By proceeding, you agree to StaySync Terms of Service and Privacy Policy.</p>
                     </section>

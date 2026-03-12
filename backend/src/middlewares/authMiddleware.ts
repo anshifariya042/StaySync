@@ -9,6 +9,7 @@ export const protect = (req: any, res: any, next: any) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
+    console.warn("Authorization header missing or invalid format:", authHeader);
     return res.status(401).json({ message: "Not authorized" });
   }
 

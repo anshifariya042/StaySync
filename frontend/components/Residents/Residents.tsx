@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-
+import { getResidents, addResident, deleteResident, getRooms } from '@/services/adminService'
 import { useAuth } from '@/context/AuthContext'
-import api from '@/lib/api'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -27,27 +26,87 @@ const SidebarItem = ({ icon, label, active = false, onClick }: { icon: string, l
 
 export default function Residents() {
     const router = useRouter()
-    const { user: authUser } = useAuth()
+    const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('Residents')
     const [residents, setResidents] = useState<any[]>([])
+    const [rooms, setRooms] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
 
-    React.useEffect(() => {
-        const fetchResidents = async () => {
-            if (!authUser?.hostelId) return;
-            try {
-                const response = await api.get(`/hostels/${authUser.hostelId}/residents`);
-                setResidents(response.data);
-            } catch (error) {
-                console.error("Failed to fetch residents:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    // Modal States
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: 'Password123!', // Default password for new residents
+        phone: '',
+        roomId: ''
+    })
 
-        fetchResidents();
-    }, [authUser]);
+    const fetchResidents = async () => {
+        if (!user?.hostelId) return;
+        try {
+            const data = await getResidents(user.hostelId);
+            setResidents(data);
+        } catch (error) {
+            console.error("Failed to fetch residents:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const fetchRooms = async () => {
+        if (!user?.hostelId) return;
+        try {
+            const data = await getRooms(user.hostelId);
+            setRooms(data);
+        } catch (error) {
+            console.error("Failed to fetch rooms:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchResidents();
+            fetchRooms();
+        }
+    }, [user]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        try {
+            await addResident({ ...formData, hostelId: user?.hostelId })
+            setIsModalOpen(false)
+            setFormData({
+                name: '',
+                email: '',
+                password: 'Password123!',
+                phone: '',
+                roomId: ''
+            })
+            fetchResidents()
+        } catch (error) {
+            console.error("Error adding resident:", error)
+            alert("Failed to add resident. Please check if email is already in use.")
+        }
+    }
+
+    const handleDelete = async (residentId: string) => {
+        if (!window.confirm("Are you sure you want to remove this resident?")) return
+        try {
+            await deleteResident(residentId)
+            fetchResidents()
+        } catch (error) {
+            console.error("Error deleting resident:", error)
+        }
+    }
+
+    const filteredResidents = residents.filter(resident => 
+        (resident.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (resident.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (resident.roomId?.roomNumber?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false)
+    )
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased font-display min-h-screen">
@@ -83,13 +142,10 @@ export default function Residents() {
                     </nav>
 
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <Icon name="person" />
-                            </div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">Admin User</p>
-                                <p className="text-xs text-slate-500 truncate">admin@staysync.com</p>
+                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">{user?.name || 'Admin User'}</p>
+                                <p className="text-xs text-slate-500 truncate">{user?.email || 'admin@staysync.com'}</p>
                             </div>
                         </div>
                     </div>
@@ -106,8 +162,16 @@ export default function Residents() {
                             <h1 className="text-xl font-bold">Residents</h1>
                         </div>
                         <div className="flex items-center gap-4">
-                            <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                            <button className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
                                 <Icon name="notifications" />
+                                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                            </button>
+                            <button
+                                onClick={() => setIsModalOpen(true)}
+                                className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 text-sm transition-colors"
+                            >
+                                <Icon name="add" className="text-lg" />
+                                Add Resident
                             </button>
                         </div>
                     </header>
@@ -118,25 +182,20 @@ export default function Residents() {
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="relative flex-1 max-w-md">
                                 <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl" />
-                                <input className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm placeholder:text-slate-400 transition-all" placeholder="Search residents by name, email or room..." type="text" />
+                                <input 
+                                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm placeholder:text-slate-400 transition-all" 
+                                    placeholder="Search residents by name, email or room..." 
+                                    type="text" 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
                             <div className="flex items-center gap-3">
                                 <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                     <Icon name="filter_list" className="text-xl" />
                                     Filter
                                 </button>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
-                                    <Icon name="add" className="text-xl" />
-                                    Add Resident
-                                </button>
                             </div>
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="flex border-b border-slate-200 dark:border-slate-800">
-                            <button className="px-4 py-2 border-b-2 border-primary text-primary text-sm font-semibold">All Residents</button>
-                            <button className="px-4 py-2 text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-slate-700">Active</button>
-                            <button className="px-4 py-2 text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-slate-700">Move-out Pending</button>
                         </div>
 
                         {/* Table Card */}
@@ -156,15 +215,21 @@ export default function Residents() {
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                         {isLoading ? (
-                                            <tr><td colSpan={7} className="text-center py-10">Loading residents...</td></tr>
-                                        ) : residents.length === 0 ? (
-                                            <tr><td colSpan={7} className="text-center py-10">No residents found in database.</td></tr>
-                                        ) : residents.map((resident) => (
+                                            <tr><td colSpan={7} className="text-center py-20">
+                                                <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+                                            </td></tr>
+                                        ) : filteredResidents.length === 0 ? (
+                                            <tr><td colSpan={7} className="text-center py-20 text-slate-500">No residents found.</td></tr>
+                                        ) : filteredResidents.map((resident) => (
                                             <tr key={resident._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`size-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-xs`}>
-                                                            {resident.name?.charAt(0).toUpperCase() || 'U'}
+                                                        <div className="size-8 rounded-full overflow-hidden flex items-center justify-center font-bold text-xs bg-indigo-100 text-indigo-600">
+                                                            {resident.profileImage ? (
+                                                                <img src={resident.profileImage} alt={resident.name} className="size-full object-cover" />
+                                                            ) : (
+                                                                resident.name?.charAt(0).toUpperCase() || 'U'
+                                                            )}
                                                         </div>
                                                         <span className="font-medium text-slate-900 dark:text-white">{resident.name}</span>
                                                     </div>
@@ -178,15 +243,18 @@ export default function Residents() {
                                                     {resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400`}>
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
+                                                        resident.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                        resident.status === 'move-out pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                                        resident.status === 'on leave' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                                                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                                    }`}>
                                                         {resident.status}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
-                                                        <button className="text-primary hover:text-primary/70 text-sm font-medium">View</button>
-                                                        <span className="text-slate-300 dark:text-slate-700">|</span>
-                                                        <button className="text-red-500 hover:text-red-400 text-sm font-medium">Remove</button>
+                                                        <button onClick={() => handleDelete(resident._id)} className="text-red-500 hover:text-red-400 text-sm font-medium">Remove</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -196,14 +264,12 @@ export default function Residents() {
                             </div>
                             {/* Pagination */}
                             <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                <p className="text-sm text-slate-500">Showing 1 to 4 of 24 residents</p>
+                                <p className="text-sm text-slate-500">Showing {filteredResidents.length} residents</p>
                                 <div className="flex items-center gap-2">
                                     <button className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                         <Icon name="chevron_left" />
                                     </button>
                                     <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-sm font-medium">1</button>
-                                    <button className="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800 text-sm font-medium">2</button>
-                                    <button className="w-8 h-8 flex items-center justify-center rounded text-slate-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800 text-sm font-medium">3</button>
                                     <button className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                                         <Icon name="chevron_right" />
                                     </button>
@@ -213,6 +279,94 @@ export default function Residents() {
                     </div>
                 </main>
             </div>
+
+            {/* Add Resident Modal */}
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsModalOpen(false)}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-2xl relative z-10"
+                        >
+                            <h2 className="text-xl font-bold mb-6">Add New Resident</h2>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">Full Name</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                        placeholder="John Doe"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">Email Address</label>
+                                    <input
+                                        required
+                                        type="email"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                        placeholder="john@example.com"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">Phone Number</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                        placeholder="+91 9876543210"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1.5 ml-1">Assign Room</label>
+                                    <select
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                        value={formData.roomId}
+                                        onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
+                                    >
+                                        <option value="">Select Room (Optional)</option>
+                                        {rooms.map(room => (
+                                            <option key={room._id} value={room._id}>
+                                                Room {room.roomNumber} ({room.status})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
+                                    >
+                                        Add Resident
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Mobile Nav Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pb-3 pt-2 shadow-2xl">

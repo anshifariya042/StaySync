@@ -118,17 +118,14 @@ export default function RegisterHostel() {
                 formDataToSend.append('images', file)
             })
 
-            // We must let the browser set the Content-Type automatically so it includes the correct boundary.
-            const token = localStorage.getItem('accessToken');
-            const res = await fetch('http://localhost:5000/api/hostels/register-hostel', {
-                method: 'POST',
-                credentials: 'include',
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-                body: formDataToSend
+            // Use the axios instance for consistency
+            const response = await api.post('/hostels/register-hostel', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Registration failed');
-
+            
+            const data = response.data;
             setSuccess(true)
             setTimeout(() => router.push('/login'), 2000)
         } catch (err: any) {

@@ -59,3 +59,34 @@ export const getDashboardOverview = async (req: any, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const updateComplaintStatus = async (req: Request, res: Response) => {
+    try {
+        const { status } = req.body;
+        const complaint = await Complaint.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+        if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+        res.json(complaint);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const assignStaff = async (req: Request, res: Response) => {
+    try {
+        const { staffId } = req.body;
+        const complaint = await Complaint.findByIdAndUpdate(
+            req.params.id,
+            { assignedStaff: staffId, status: "In Progress" },
+            { new: true }
+        ).populate('assignedStaff', 'name');
+        
+        if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+        res.json(complaint);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

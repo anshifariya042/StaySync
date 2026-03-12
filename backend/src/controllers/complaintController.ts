@@ -71,26 +71,42 @@ export const assignStaff = async (req: Request, res: Response) => {
 // @desc    Create a new complaint (for testing/admin logging)
 // @route   POST /api/hostels/complaints
 // @access  Private
-export const createComplaint = async (req: Request, res: Response) => {
+export const createComplaint = async (req: any, res: Response) => {
     try {
-        const { title, roomNumber, category, hostelId, userId, description } = req.body;
+        const userId = req.user.id;
+        const { title, description, category, priority } = req.body;
 
-        // Generate a simple ticket ID: #CMP- + random 4 digits
+        // Fetch user to get hostelId and roomNumber if not provided
+        const user = await (require("../models/User").User).findById(userId).populate("roomId");
+        if (!user || !user.hostelId) {
+            return res.status(400).json({ message: "You must be assigned to a hostel to raise a complaint." });
+        }
+
+        const hostelId = user.hostelId;
+        const roomNumber = user.roomId?.roomNumber || "General";
+
+        // Handle Image Uploads
+        const images = (req.files as any[])?.map(file => file.path) || [];
+
+        // Generate Ticket ID
         const complaintId = `#CMP-${Math.floor(1000 + Math.random() * 9000)}`;
 
         const complaint = await Complaint.create({
             complaintId,
             title,
-            roomNumber,
+            description,
             category,
+            priority: priority || "Normal",
+            roomNumber: roomNumber.toString(),
             hostelId,
             userId,
-            description,
+            images,
             status: ComplaintStatus.PENDING
         });
 
         res.status(201).json(complaint);
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: (error as Error).message });
+    } catch (error: any) {
+        console.error("Complaint creation error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 };

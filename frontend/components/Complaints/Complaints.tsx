@@ -1,8 +1,10 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { getComplaints, updateComplaintStatus, assignStaff, getStaff } from '@/services/adminService'
+import { useAuth } from '@/context/AuthContext'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -24,15 +26,91 @@ const SidebarItem = ({ icon, label, active = false, onClick }: { icon: string, l
 
 export default function Complaints() {
     const router = useRouter()
+    const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('Complaints')
+    const [complaints, setComplaints] = useState<any[]>([])
+    const [staffMembers, setStaffMembers] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
 
-    const complaints = [
-        { id: 1, ticketId: '#CMP-1024', title: 'Leaking AC Unit', room: 'Room 302', category: 'Maintenance', status: 'Pending', statusColor: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', dotColor: 'bg-yellow-500', staff: 'Not Assigned', staffImg: null, date: 'Oct 24, 09:15 AM' },
-        { id: 2, ticketId: '#CMP-1023', title: 'Mini-fridge not cooling', room: 'Room 415', category: 'Electrical', status: 'In Progress', statusColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', dotColor: 'bg-blue-500', staff: 'James Chen', staffImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMcLEtNdluUgYnOcI33_4sk96SoLmrfCyQjAij-l8DsWjY8zC4U0U2bM7DxNi79Y2oiXacaOk3lM9MM3YUrHZmha_1vQC6MYcV7iA458NsUVhlYsDibZ4KBUk0rGr6zL1bQKkZgKaj4BLPUdYRi2yizMvuzlkGnFV2uyLnsuBzPkKF0HUw6cjBefSHULGfG5yCVtMYPyILxGtVXMZ8HyCwQ-BggtgXEsuNc4CEiFkfx8pFT0vBq3JmZMbYVAcK6ETmYcz_h0P-r-o', date: 'Oct 23, 02:30 PM' },
-        { id: 3, ticketId: '#CMP-1020', title: 'Extra towels requested', room: 'Room 105', category: 'Housekeeping', status: 'Resolved', statusColor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', dotColor: 'bg-green-500', staff: 'Sarah Miller', staffImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOH6IqUeFq-qYoBB8tPsu_76W3RJg-DIgxH6WLNJj5ZMMZNp2W7QORDBEisL0L93kL1tKltRQ-QB_YDgghWLlVuWzLYdD2KsreEuu8fTd0JBR-HeU7qYhRTjR4myoSBqY-9cguCE5YPTHmNQwswYlMVnpqjz4j7R1diCsxDHLiQpzFK59N4-mMlioBy6U2FluHyHn2ZGLVMUcdM8VgD2RIndipTRBRdDfpfnSNAFVHIsS2EGrWTMLb3PCBy78otQGjf1miCAn_o_Y', date: 'Oct 23, 11:45 AM' },
-        { id: 4, ticketId: '#CMP-1019', title: 'Wi-Fi connection issues', room: 'Room 221', category: 'Technical', status: 'In Progress', statusColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', dotColor: 'bg-blue-500', staff: 'Alex Rivera', staffImg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCoG-dI5SAPY9nbW_fqUXF-yzMlesvwbIRNibOBjS025AYyCXGWpGjryfJYHCbWr9D48FVlxTiuOXKSJGYiuObz4N51Cualdikd9V-G_fTp5UwfOa7IseDaYimkycYfhNf0ZSciuseeiedpOKECyqOYYBzjen4gem5UJoGgFl6ofems3TBaR8U8pceeOQsOsa4bxoEoirFeUq6foCzl8Sz8nr4eVfVko2aVhwix3KM4L60SN108oWV52RaLEqRqNfLjwST2T626QbE', date: 'Oct 23, 08:20 AM' },
-    ]
+    // Assignment States
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
+    const [selectedComplaint, setSelectedComplaint] = useState<any>(null)
+
+    const fetchComplaintsData = async () => {
+        if (!user?.hostelId) return;
+        try {
+            const data = await getComplaints(user.hostelId);
+            setComplaints(data);
+        } catch (error) {
+            console.error("Failed to fetch complaints:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchStaffData = async () => {
+        if (!user?.hostelId) return;
+        try {
+            const data = await getStaff(user.hostelId);
+            setStaffMembers(data);
+        } catch (error) {
+            console.error("Failed to fetch staff:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchComplaintsData();
+            fetchStaffData();
+        }
+    }, [user]);
+
+    const handleUpdateStatus = async (id: string, status: string) => {
+        try {
+            await updateComplaintStatus(id, status);
+            fetchComplaintsData();
+        } catch (error) {
+            console.error("Error updating status:", error);
+        }
+    }
+
+    const handleAssignStaff = async (staffId: string) => {
+        if (!selectedComplaint) return;
+        try {
+            await assignStaff(selectedComplaint._id, staffId);
+            setIsAssignModalOpen(false);
+            fetchComplaintsData();
+        } catch (error) {
+            console.error("Error assigning staff:", error);
+        }
+    }
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Pending': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+            case 'In Progress': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+            case 'Resolved': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
+            case 'High Priority': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+            default: return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400';
+        }
+    }
+
+    const getDotColor = (status: string) => {
+        switch (status) {
+            case 'Pending': return 'bg-yellow-500';
+            case 'In Progress': return 'bg-blue-500';
+            case 'Resolved': return 'bg-green-500';
+            case 'High Priority': return 'bg-red-500';
+            default: return 'bg-slate-500';
+        }
+    }
+
+    const filteredComplaints = complaints.filter(complaint => 
+        (complaint.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (complaint.roomNumber?.toString().toLowerCase().includes(searchTerm.toLowerCase()) || false)
+    )
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-200 min-h-screen">
@@ -68,13 +146,10 @@ export default function Complaints() {
                     </nav>
 
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                            <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                <Icon name="person" />
-                            </div>
+                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">Admin User</p>
-                                <p className="text-xs text-slate-500 truncate">admin@staysync.com</p>
+                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">{user?.name || 'Admin User'}</p>
+                                <p className="text-xs text-slate-500 truncate">{user?.email || 'admin@staysync.com'}</p>
                             </div>
                         </div>
                     </div>
@@ -94,9 +169,6 @@ export default function Complaints() {
                             <button className="text-slate-500 hover:text-primary transition-colors">
                                 <Icon name="notifications" />
                             </button>
-                            <div className="size-8 rounded-full bg-slate-200 overflow-hidden border border-slate-200 dark:border-slate-700">
-                                <Icon name="person" className="text-xl flex items-center justify-center h-full" />
-                            </div>
                         </div>
                     </header>
 
@@ -107,81 +179,99 @@ export default function Complaints() {
                             <div className="flex gap-2 w-full md:w-auto">
                                 <div className="relative w-full md:w-64">
                                     <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
-                                    <input className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" placeholder="Search complaints..." type="text" />
+                                    <input 
+                                        className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm" 
+                                        placeholder="Search complaints..." 
+                                        type="text" 
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
                                 </div>
-                                <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all">
-                                    <span>Filter: All</span>
-                                    <Icon name="expand_more" className="text-lg" />
-                                </button>
                             </div>
-                            <button className="w-full md:w-auto px-4 py-2 bg-primary text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:bg-primary/90 transition-all">
-                                <Icon name="add" className="text-lg" />
-                                New Complaint
-                            </button>
                         </div>
 
                         {/* Table Container */}
                         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium border-b border-slate-200 dark:border-slate-800">
-                                            <th className="px-6 py-4">Complaint Title</th>
-                                            <th className="px-6 py-4">Room</th>
-                                            <th className="px-6 py-4">Category</th>
-                                            <th className="px-6 py-4">Status</th>
-                                            <th className="px-6 py-4">Assigned Staff</th>
-                                            <th className="px-6 py-4">Date</th>
-                                            <th className="px-6 py-4 text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {complaints.map((complaint) => (
-                                            <tr key={complaint.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="font-medium text-slate-900 dark:text-slate-100">{complaint.title}</div>
-                                                    <div className="text-xs text-slate-500 mt-0.5">ID: {complaint.ticketId}</div>
-                                                </td>
-                                                <td className="px-6 py-4">{complaint.room}</td>
-                                                <td className="px-6 py-4">{complaint.category}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${complaint.statusColor}`}>
-                                                        <span className={`w-1.5 h-1.5 rounded-full ${complaint.dotColor}`}></span>
-                                                        {complaint.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-6 rounded-full bg-slate-200 overflow-hidden border border-slate-100 dark:border-slate-800">
-                                                            {complaint.staffImg ? (
-                                                                <img className="w-full h-full object-cover" src={complaint.staffImg} alt={complaint.staff} />
-                                                            ) : (
-                                                                <Icon name="person" className="text-xs flex items-center justify-center h-full" />
-                                                            )}
-                                                        </div>
-                                                        <span className="text-slate-700 dark:text-slate-300">{complaint.staff}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-slate-500">{complaint.date}</td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button className="p-1 text-slate-400 hover:text-primary transition-colors" title="Assign Staff"><Icon name="person_add" className="text-lg" /></button>
-                                                        <button className="p-1 text-slate-400 hover:text-primary transition-colors" title="View Details"><Icon name="visibility" className="text-lg" /></button>
-                                                        <button className="p-1 text-slate-400 hover:text-primary transition-colors" title="Close Ticket"><Icon name="check_circle" className="text-lg" /></button>
-                                                    </div>
-                                                </td>
+                                {loading ? (
+                                    <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+                                ) : (
+                                    <table className="w-full text-left text-sm border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium border-b border-slate-200 dark:border-slate-800">
+                                                <th className="px-6 py-4">Complaint Title</th>
+                                                <th className="px-6 py-4">Room</th>
+                                                <th className="px-6 py-4">Category</th>
+                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Assigned Staff</th>
+                                                <th className="px-6 py-4">Date</th>
+                                                <th className="px-6 py-4 text-right">Actions</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                            {filteredComplaints.length > 0 ? (
+                                                filteredComplaints.map((complaint) => (
+                                                    <tr key={complaint._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="font-medium text-slate-900 dark:text-slate-100">{complaint.title}</div>
+                                                            <div className="text-xs text-slate-500 mt-0.5">ID: #{complaint._id.slice(-6).toUpperCase()}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4">{complaint.roomNumber}</td>
+                                                        <td className="px-6 py-4">{complaint.category}</td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(complaint.status)}`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full ${getDotColor(complaint.status)}`}></span>
+                                                                {complaint.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="size-6 rounded-full bg-slate-200 overflow-hidden border border-slate-100 dark:border-slate-800">
+                                                                    {complaint.assignedStaff?.profileImage ? (
+                                                                        <img className="w-full h-full object-cover" src={complaint.assignedStaff.profileImage} alt={complaint.assignedStaff.name} />
+                                                                    ) : (
+                                                                        <Icon name="person" className="text-xs flex items-center justify-center h-full" />
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-slate-700 dark:text-slate-300">{complaint.assignedStaff?.name || 'Not Assigned'}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-slate-500">{new Date(complaint.createdAt).toLocaleDateString()}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <button 
+                                                                    onClick={() => { setSelectedComplaint(complaint); setIsAssignModalOpen(true); }}
+                                                                    className="p-1 text-slate-400 hover:text-primary transition-colors" 
+                                                                    title="Assign Staff"
+                                                                >
+                                                                    <Icon name="person_add" className="text-lg" />
+                                                                </button>
+                                                                {complaint.status !== 'Resolved' && (
+                                                                    <button 
+                                                                        onClick={() => handleUpdateStatus(complaint._id, 'Resolved')}
+                                                                        className="p-1 text-slate-400 hover:text-green-500 transition-colors" 
+                                                                        title="Close Ticket"
+                                                                    >
+                                                                        <Icon name="check_circle" className="text-lg" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr><td colSpan={7} className="text-center py-20 text-slate-500">No complaints found.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
                             {/* Pagination Footer */}
                             <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm text-slate-500 bg-slate-50 dark:bg-slate-800/30">
-                                <span>Showing 1 to 4 of 24 results</span>
+                                <span>Showing {filteredComplaints.length} results</span>
                                 <div className="flex gap-2">
                                     <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50" disabled>Previous</button>
                                     <button className="px-3 py-1.5 rounded-lg bg-primary text-white transition-colors">1</button>
-                                    <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">2</button>
                                     <button className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Next</button>
                                 </div>
                             </div>
@@ -189,6 +279,64 @@ export default function Complaints() {
                     </div>
                 </main>
             </div>
+
+            {/* Assign Staff Modal */}
+            <AnimatePresence>
+                {isAssignModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsAssignModalOpen(false)}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-2xl p-6 shadow-2xl relative z-10"
+                        >
+                            <h3 className="text-lg font-bold mb-4">Assign Staff</h3>
+                            <p className="text-sm text-slate-500 mb-6">Select a staff member to handle this complaint: <span className="font-semibold text-slate-900 dark:text-white">"{selectedComplaint?.title}"</span></p>
+                            
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                {staffMembers.length > 0 ? (
+                                    staffMembers.map(staff => (
+                                        <button
+                                            key={staff._id}
+                                            onClick={() => handleAssignStaff(staff._id)}
+                                            className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-primary/5 hover:border-primary/30 transition-all text-left group"
+                                        >
+                                            <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                                                {staff.profileImage ? (
+                                                    <img src={staff.profileImage} alt={staff.name} className="size-full object-cover" />
+                                                ) : (
+                                                    <Icon name="person" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-sm">{staff.name}</p>
+                                                <p className="text-xs text-slate-500">{staff.designation || 'Staff'}</p>
+                                            </div>
+                                            <Icon name="chevron_right" className="ml-auto text-slate-300 group-hover:text-primary transition-colors" />
+                                        </button>
+                                    ))
+                                ) : (
+                                    <p className="text-center py-4 text-slate-500">No staff members found.</p>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => setIsAssignModalOpen(false)}
+                                className="w-full mt-6 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Mobile Nav Bar */}
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pb-3 pt-2 shadow-2xl">

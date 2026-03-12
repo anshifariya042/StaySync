@@ -57,16 +57,23 @@ export const createHostel = async (req: Request, res: Response) => {
     };
 
     const hostel = await createHostelService(hostelData);
+    console.log("Hostel created successfully:", hostel._id);
 
     // If password is provided, create an admin user for this hostel
     if (password) {
-      await registerUser({
-        name: ownerName,
-        email: email,
-        password: password,
-        role: UserRole.ADMIN,
-        hostelId: hostel._id as any
-      });
+      try {
+        await registerUser({
+          name: ownerName,
+          email: email,
+          password: password,
+          role: UserRole.ADMIN,
+          hostelId: hostel._id as any
+        });
+        console.log("Admin user created for hostel:", email);
+      } catch (userError: any) {
+        console.error("Admin user creation failed for hostel:", userError.message);
+        throw new Error(`Hostel created but admin account failed: ${userError.message}`);
+      }
     }
 
     res.status(201).json({
@@ -75,7 +82,7 @@ export const createHostel = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Hostel registration error:", error);
-    res.status(500).json({ message: error.message || "Hostel registration failed" });
+    res.status(400).json({ message: error.message || "Hostel registration failed" });
   }
 };
 

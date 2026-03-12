@@ -10,7 +10,21 @@ export const registerUser = async (data: Partial<IUser>) => {
     password: hashedPassword,
   });
 
-  return user;
+  //access token
+  const accessToken = jwt.sign(
+    { id: user._id.toString(), role: user.role, hostelId: user.hostelId?.toString() },
+    process.env.JWT_ACCESS_SECRET!,
+    { expiresIn: "1h" }
+  );
+
+  // Refresh Token 
+  const refreshToken = jwt.sign(
+    { id: user._id.toString() },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "7d" }
+  );
+
+  return { user, accessToken, refreshToken };
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -24,14 +38,14 @@ export const loginUser = async (email: string, password: string) => {
 
   //access token
   const accessToken = jwt.sign(
-    { id: user._id, role: user.role, hostelId: user.hostelId },
+    { id: user._id.toString(), role: user.role, hostelId: user.hostelId?.toString() },
     process.env.JWT_ACCESS_SECRET!,
-    { expiresIn: "15m" }
+    { expiresIn: "1h" }
   );
 
   // Refresh Token 
   const refreshToken = jwt.sign(
-    { id: user._id },
+    { id: user._id.toString() },
     process.env.JWT_REFRESH_SECRET!,
     { expiresIn: "7d" }
   );

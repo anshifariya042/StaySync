@@ -339,8 +339,8 @@ export default function HostelDetails() {
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold">{selectedRoom?.type || 'Standard Room'}</p>
-                                                <p className="text-xs text-slate-500">1 Room • 1 Guest</p>
+                                                <p className="text-sm font-bold">{selectedRoom?.type || ''}</p>
+                                                {/* <p className="text-xs text-slate-500">1 Room • 1 Guest</p> */}
                                             </div>
                                         </div>
                                         {/* <button className="text-xs font-bold text-[#5048e5]">Change</button> */}
@@ -349,21 +349,18 @@ export default function HostelDetails() {
                                     <div className="space-y-3 border-b border-slate-100 pb-4 mt-2">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-500">Monthly Rent</span>
-                                            <span className="font-medium">${selectedRoom?.price || hostel.price || 850}.00</span>
+                                            <span className="font-medium">₹{selectedRoom?.price || hostel.price || 850}.00</span>
                                         </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-500">Service Fee</span>
-                                            <span className="font-medium">$15.00</span>
-                                        </div>
+                            
                                         <div className="flex justify-between text-sm">
                                             <span className="text-slate-500">Security Deposit</span>
-                                            <span className="font-medium">${(selectedRoom?.price || hostel.price || 850) * 0.5}.00</span>
+                                            <span className="font-medium">₹{(selectedRoom?.price || hostel.price || 850) * 0.5}</span>
                                         </div>
                                     </div>
 
                                     <div className="flex justify-between items-center py-2">
                                         <span className="font-bold text-lg">Total Monthly</span>
-                                        <span className="font-bold text-2xl text-[#5048e5]">${(selectedRoom?.price || hostel.price || 850) + 15}.00</span>
+                                        <span className="font-bold text-2xl text-[#5048e5]">₹{(selectedRoom?.price || hostel.price || 850) }.0</span>
                                     </div>
 
                                     <button
