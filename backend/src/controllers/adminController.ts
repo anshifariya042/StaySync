@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { User, UserRole } from "../models/User";
 import { Room, RoomStatus } from "../models/Room";
 import { Complaint } from "../models/Complaint";
+import Hostel from "../models/hostelModel";
 import mongoose from "mongoose";
 
 export const getDashboardOverview = async (req: any, res: Response) => {
@@ -13,8 +14,9 @@ export const getDashboardOverview = async (req: any, res: Response) => {
             return;
         }
 
-        // 1. Total rooms
-        const totalRooms = await Room.countDocuments({ hostelId });
+        // 1. Fetch Hostel details for totalRooms capacity
+        const hostel = await Hostel.findById(hostelId);
+        const totalRooms = hostel ? (hostel as any).totalRooms : 0;
 
         // 2. Occupied rooms
         const occupiedRooms = await Room.countDocuments({
