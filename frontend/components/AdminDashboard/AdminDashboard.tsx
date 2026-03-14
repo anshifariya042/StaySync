@@ -3,76 +3,30 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { getDashboardOverview } from '@/services/adminService'
-import { useAuth } from '@/context/AuthContext'
+import { useAuthStore as useAuth } from '@/store/useAuthStore'
+import { useDashboardOverview } from '@/hooks/useDashboard'
 
-// Helper for Material Symbols
-const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-)
-
-const SidebarItem = ({ icon, label, active = false, onClick }: { icon: string, label: string, active?: boolean, onClick?: () => void }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl w-full font-medium transition-colors ${active
-            ? 'bg-primary/10 text-primary'
-            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-    >
-        <Icon name={icon} />
-        {label}
-    </button>
-)
-
-const StatsCard = ({ icon, label, value, subtext, trend, trendColor }: {
-    icon: string, label: string, value: string | number, subtext: string, trend?: string, trendColor?: string
-}) => (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-            <span className={`p-2 rounded-lg ${trendColor ? trendColor.replace('text-', 'bg-').replace('600', '100 dark:bg-') + '900/30' : 'bg-primary/10 dark:bg-primary/20'} ${trendColor || 'text-primary'}`}>
-                <Icon name={icon} />
-            </span>
-            {trend ? (
-                <span className={`text-xs font-semibold ${trendColor || 'text-slate-400 uppercase tracking-wider'}`}>{trend}</span>
-            ) : (
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total</span>
-            )}
-        </div>
-        <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
-        <p className="text-sm text-slate-500 mt-1">{subtext}</p>
-    </div>
-)
+import Icon from '@/components/ui/Icon'
+import AdminSidebar from '@/components/ui/AdminSidebar'
+import AdminHeader from '@/components/ui/AdminHeader'
+import StatsCard from '@/components/ui/StatsCard'
 
 export default function AdminDashboard() {
     const router = useRouter()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('Dashboard')
-    const [stats, setStats] = useState({
+
+    const { data: dashboardData, isLoading: loading } = useDashboardOverview(user?.hostelId)
+
+    const stats = dashboardData?.stats || {
         totalRooms: 0,
         occupiedRooms: 0,
         pendingComplaints: 0,
         staffCount: 0,
         capacityPercentage: 0
-    })
-    const [recentComplaints, setRecentComplaints] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const data = await getDashboardOverview()
-                setStats(data.stats)
-                setRecentComplaints(data.recentComplaints)
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error)
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchDashboardData()
-    }, [])
+    }
+    const recentComplaints = dashboardData?.recentComplaints || []
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -106,65 +60,11 @@ export default function AdminDashboard() {
             `}</style>
 
             <div className="flex min-h-screen">
-                {/* Sidebar */}
-                <aside className={`
-                    fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 transform transition-transform duration-300 lg:translate-x-0 lg:static
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                `}>
-                    <div className="p-6">
-                        <div className="flex items-center gap-2 text-primary">
-                            <Icon name="sync_alt" className="text-3xl font-bold" />
-                            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">StaySync</span>
-                        </div>
-                    </div>
-                    <nav className="flex-1 px-4 space-y-1">
-                        <SidebarItem icon="dashboard" label="Dashboard" active={activeTab === 'Dashboard'} onClick={() => router.push('/admin/dashboard')} />
-                        <SidebarItem icon="bed" label="Rooms" active={activeTab === 'Rooms'} onClick={() => router.push('/admin/rooms')} />
-                        <SidebarItem icon="group" label="Residents" active={activeTab === 'Residents'} onClick={() => router.push('/admin/residents')} />
-                        <SidebarItem icon="report_problem" label="Complaints" active={activeTab === 'Complaints'} onClick={() => router.push('/admin/complaints')} />
-                        <SidebarItem icon="badge" label="Staff" active={activeTab === 'Staff'} onClick={() => router.push('/admin/staff')} />
-
-                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
-                            <SidebarItem icon="settings" label="Settings" active={activeTab === 'Settings'} onClick={() => router.push('/admin/settings')} />
-                        </div>
-                    </nav>
-
-                    <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">{user?.name || 'Admin User'}</p>
-                                <p className="text-xs text-slate-500 truncate">{user?.email || 'admin@staysync.com'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
+                <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                 {/* Main Content */}
                 <main className="flex-1 flex flex-col min-w-0 min-h-screen">
-                    {/* Header */}
-                    <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-                        <div className="flex items-center lg:hidden">
-                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-600 dark:text-slate-400">
-                                <Icon name={sidebarOpen ? "close" : "menu"} />
-                            </button>
-                            <span className="ml-2 font-bold text-slate-900 dark:text-white">StaySync</span>
-                        </div>
-                        <h1 className="hidden lg:block text-lg font-semibold text-slate-900 dark:text-white">
-                            {activeTab} Overview
-                        </h1>
-                        <div className="flex items-center gap-4">
-                            <button className="relative p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
-                                <Icon name="notifications" />
-                                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                            </button>
-                            <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
-                            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors hidden sm:flex">
-                                <Icon name="add" className="text-sm" />
-                                New Task
-                            </button>
-                        </div>
-                    </header>
-
+                    <AdminHeader title="Dashboard Overview" onMenuClick={() => setSidebarOpen(true)} />
                     {/* Dashboard Body */}
                     <div className="p-6 space-y-8 flex-1 pb-24 lg:pb-6">
                         {loading ? (
@@ -219,7 +119,7 @@ export default function AdminDashboard() {
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                                 {recentComplaints.length > 0 ? (
-                                                    recentComplaints.map(item => (
+                                                    recentComplaints.map((item: any) => (
                                                         <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                                             <td className="px-6 py-4">
                                                                 <p className="font-semibold text-slate-900 dark:text-white">{item.title}</p>
@@ -255,28 +155,6 @@ export default function AdminDashboard() {
                         )}
                     </div>
                 </main>
-            </div>
-
-            {/* Mobile Nav Bar */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pb-3 pt-2 shadow-2xl">
-                <div className="flex gap-2 justify-around">
-                    {[
-                        { icon: 'dashboard', label: 'Home', path: '/admin/dashboard' },
-                        { icon: 'bed', label: 'Rooms', path: '/admin/rooms' },
-                        { icon: 'group', label: 'Residents', path: '/admin/residents' },
-                        { icon: 'report_problem', label: 'Reports', path: '/admin/complaints' },
-                        { icon: 'settings', label: 'Settings', path: '/admin/settings' }
-                    ].map(item => (
-                        <button
-                            key={item.label}
-                            onClick={() => router.push(item.path)}
-                            className={`flex flex-col items-center gap-1 ${(activeTab === (item.label === 'Home' ? 'Dashboard' : item.label)) ? 'text-primary' : 'text-slate-400'}`}
-                        >
-                            <Icon name={item.icon} />
-                            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">{item.label}</p>
-                        </button>
-                    ))}
-                </div>
             </div>
 
             {/* Backdrop for mobile sidebar */}

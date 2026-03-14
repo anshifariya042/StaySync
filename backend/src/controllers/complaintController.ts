@@ -6,12 +6,39 @@ import { Complaint, ComplaintStatus } from "../models/Complaint";
 // @access  Private
 export const getComplaints = async (req: Request, res: Response) => {
     try {
-        const complaints = await Complaint.find({ hostelId: req.params.hostelId })
-            .populate("userId", "name email profileImage")
-            .populate("assignedStaff", "name email profileImage")
-            .sort({ createdAt: -1 });
+        const { search, page = 1, limit = 10, userId } = req.query;
+        let query: any = { hostelId: req.params.hostelId };
 
-        res.json(complaints);
+        if (userId) {
+            query.userId = userId;
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search as string, 'i');
+            query.$or = [
+                { title: searchRegex },
+                { roomNumber: searchRegex }
+            ];
+        }
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const [complaints, totalCount] = await Promise.all([
+            Complaint.find(query)
+                .populate("userId", "name email profileImage")
+                .populate("assignedStaff", "name email profileImage")
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(Number(limit)),
+            Complaint.countDocuments(query)
+        ]);
+
+        res.json({
+            complaints,
+            totalCount,
+            totalPages: Math.ceil(totalCount / Number(limit)),
+            currentPage: Number(page)
+        });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: (error as Error).message });
     }

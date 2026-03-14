@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { useFeaturedHostels } from '@/hooks/useHostel';
 
 interface Hostel {
     _id: string;
@@ -14,23 +13,7 @@ interface Hostel {
 }
 
 export default function FeaturedHostels() {
-    const [hostels, setHostels] = useState<Hostel[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchHostels = async () => {
-            try {
-                const response = await api.get('/hostels?limit=3');
-                setHostels(response.data.hostels || []);
-            } catch (error) {
-                console.error('Failed to fetch featured hostels:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchHostels();
-    }, []);
+    const { data: hostels = [], isLoading } = useFeaturedHostels(3);
 
     return (
         <section className="container mx-auto px-6 py-24" id="hostels">
@@ -56,7 +39,7 @@ export default function FeaturedHostels() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {hostels.map((hostel) => (
+                    {hostels.map((hostel: any) => (
                         <div key={hostel._id} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:translate-y-[-5px] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all border border-border-color p-4 flex flex-col">
                             <div className="relative w-full h-[220px] rounded-xl overflow-hidden mb-5">
                                 <img 
@@ -64,12 +47,12 @@ export default function FeaturedHostels() {
                                     alt={hostel.name} 
                                     className="w-full h-full object-cover" 
                                 />
-                                <div className="absolute top-4 right-4 bg-white px-2.5 py-1 rounded-full text-[0.85rem] font-bold flex items-center gap-1 text-foreground shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
+                                {/* <div className="absolute top-4 right-4 bg-white px-2.5 py-1 rounded-full text-[0.85rem] font-bold flex items-center gap-1 text-foreground shadow-[0_4px_10px_rgba(0,0,0,0.1)]">
                                     <svg className="text-[#f59e0b]" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                                     </svg>
                                     {hostel.rating || '4.5'}
-                                </div>
+                                </div> */}
                             </div>
 
                             <div className="flex flex-col flex-grow">

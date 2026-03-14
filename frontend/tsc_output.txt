@@ -1,0 +1,2 @@
+.next/dev/types/validator.ts(60,39): error TS2306: File 'C:/Users/ANSHIFA/Desktop/staysync project/frontend/app/admin/add-hostel/page.tsx' is not a module.
+app/hostel/[id]/book/[roomId]/page.tsx(5,25): error TS2307: Cannot find module '@/context/AuthContext' or its corresponding type declarations.

@@ -33,7 +33,18 @@ export const addRoom = async (req: Request, res: Response) => {
 // @access  Private
 export const getRooms = async (req: Request, res: Response) => {
     try {
-        const rooms = await Room.find({ hostelId: req.params.hostelId });
+        const { search } = req.query;
+        let query: any = { hostelId: req.params.hostelId };
+
+        if (search) {
+            const searchRegex = new RegExp(search as string, 'i');
+            query.$or = [
+                { roomNumber: searchRegex },
+                { type: searchRegex }
+            ];
+        }
+
+        const rooms = await Room.find(query);
         res.json(rooms);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: (error as Error).message });

@@ -5,6 +5,8 @@ interface UserProfile {
     _id: string;
     name: string;
     email: string;
+    phone?: string;
+    role?: string;
     profileImage?: string;
     hostelId?: any;
     roomId?: any;

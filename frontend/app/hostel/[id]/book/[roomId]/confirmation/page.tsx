@@ -146,7 +146,7 @@ export default function BookingConfirmation() {
                             </div>
                             <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-center">
                                 <span className="font-bold text-slate-900">Total Price</span>
-                                <span className="text-xl font-bold text-[#5048e5]">${totalAmount.toFixed(2)}</span>
+                                <span className="text-xl font-bold text-[#5048e5]">₹{totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

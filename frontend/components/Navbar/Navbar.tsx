@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore as useAuth } from '@/store/useAuthStore';
 
 import { motion, AnimatePresence } from 'framer-motion';
 

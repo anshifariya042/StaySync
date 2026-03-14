@@ -239,7 +239,7 @@ export default function HostelDetails() {
                                                 </div>
                                                 <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                                                     <div className="flex flex-col">
-                                                        <span className="text-2xl font-bold text-[#5048e5]">${hostel.price}</span>
+                                                        <span className="text-2xl font-bold text-[#5048e5]">₹{hostel.price}</span>
                                                         <span className="text-xs text-slate-500">per month</span>
                                                     </div>
                                                     <button
@@ -271,7 +271,7 @@ export default function HostelDetails() {
                                             </div>
                                             <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="text-2xl font-bold text-[#5048e5]">${hostel.price || 850}</span>
+                                                    <span className="text-2xl font-bold text-[#5048e5]">₹{hostel.price || 850}</span>
                                                     <span className="text-xs text-slate-500">per month</span>
                                                 </div>
                                                 <button

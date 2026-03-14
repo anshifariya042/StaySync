@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore as useAuth } from '@/store/useAuthStore';
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -85,21 +85,27 @@ export default function BookRoom() {
 
         setIsSubmitting(true);
         try {
-            // In a real app, you'd upload the file first or use FormData
-            const bookingData = {
-                hostelId,
-                roomId,
-                fullName: user.name,
-                email: user.email,
-                phone: formData.phone,
-                moveInDate: formData.moveInDate,
-                roomType: room?.type || currentRoomType || 'Standard Room',
-                additionalNotes: formData.additionalNotes,
-                totalAmount: (room?.price || hostel?.price || 0) + ((room?.price || hostel?.price || 0) * 0.5),
-                advancePayment: (room?.price || hostel?.price || 0) * 0.5
-            };
+            const formDataToSend = new FormData();
+            formDataToSend.append('hostelId', hostelId as string);
+            formDataToSend.append('roomId', roomId as string);
+            formDataToSend.append('fullName', user.name);
+            formDataToSend.append('email', user.email);
+            formDataToSend.append('phone', formData.phone);
+            formDataToSend.append('moveInDate', formData.moveInDate);
+            formDataToSend.append('roomType', room?.type || currentRoomType || 'Standard Room');
+            formDataToSend.append('additionalNotes', formData.additionalNotes);
+            formDataToSend.append('totalAmount', ((room?.price || hostel?.price || 0) + ((room?.price || hostel?.price || 0) * 0.5)).toString());
+            formDataToSend.append('advancePayment', ((room?.price || hostel?.price || 0) * 0.5).toString());
+            
+            if (formData.idProof) {
+                formDataToSend.append('idProof', formData.idProof);
+            }
 
-            await api.post('/bookings', bookingData);
+            await api.post('/bookings', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
             // Redirect to confirmation page
             const params = new URLSearchParams();

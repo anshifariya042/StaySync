@@ -52,10 +52,22 @@ export const addStaff = async (req: Request, res: Response) => {
 // @access  Private
 export const getStaff = async (req: Request, res: Response) => {
     try {
-        const staff = await User.find({
+        const { search } = req.query;
+        let query: any = {
             hostelId: req.params.hostelId,
             role: UserRole.STAFF
-        });
+        };
+
+        if (search) {
+            const searchRegex = new RegExp(search as string, 'i');
+            query.$or = [
+                { name: searchRegex },
+                { email: searchRegex },
+                { designation: searchRegex }
+            ];
+        }
+
+        const staff = await User.find(query);
 
         res.json(staff);
     } catch (error) {

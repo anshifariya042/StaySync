@@ -1,37 +1,25 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getStaff, addStaff, updateStaff, deleteStaff } from '@/services/adminService'
-import { useAuth } from '@/context/AuthContext'
+import { useAuthStore as useAuth } from '@/store/useAuthStore'
+import { useStaff, useAddStaff, useUpdateStaff, useDeleteStaff } from '@/hooks/useStaff'
 
-// Helper for Material Symbols
-const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
-)
-
-const SidebarItem = ({ icon, label, active = false, onClick }: { icon: string, label: string, active?: boolean, onClick?: () => void }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl w-full font-medium transition-colors ${active
-            ? 'bg-primary/10 text-primary'
-            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-    >
-        <Icon name={icon} />
-        {label}
-    </button>
-)
+import Icon from '@/components/ui/Icon'
+import AdminSidebar from '@/components/ui/AdminSidebar'
+import AdminHeader from '@/components/ui/AdminHeader'
+import Badge from '@/components/ui/Badge'
+import SearchInput from '@/components/ui/SearchInput'
+import Modal from '@/components/ui/Modal'
 
 export default function Staff() {
     const router = useRouter()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [activeTab, setActiveTab] = useState('Staff')
-    const [staffMembers, setStaffMembers] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
+
+    // Fetch queries
+    const { data: staffMembers = [], isLoading: loading } = useStaff(user?.hostelId, searchTerm)
 
     // Modal States
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -46,23 +34,10 @@ export default function Staff() {
         status: 'active'
     })
 
-    const fetchStaffMembers = async () => {
-        if (!user?.hostelId) return;
-        try {
-            const data = await getStaff(user.hostelId);
-            setStaffMembers(data);
-        } catch (error) {
-            console.error("Failed to fetch staff:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (user) {
-            fetchStaffMembers();
-        }
-    }, [user]);
+    // Mutations
+    const addStaffMutation = useAddStaff()
+    const updateStaffMutation = useUpdateStaff()
+    const deleteStaffMutation = useDeleteStaff()
 
     const handleOpenModal = (mode: 'add' | 'edit', staff?: any) => {
         setModalMode(mode)
@@ -84,7 +59,7 @@ export default function Staff() {
                 password: 'StaffPassword123!',
                 phone: '',
                 designation: '',
-                status: 'Active'
+                status: 'active'
             })
         }
         setIsModalOpen(true)
@@ -94,15 +69,13 @@ export default function Staff() {
         e.preventDefault()
         try {
             if (modalMode === 'add') {
-                await addStaff({ ...formData, hostelId: user?.hostelId })
+                await addStaffMutation.mutateAsync({ ...formData, hostelId: user?.hostelId })
             } else {
-                // Remove password from update if it's empty
                 const updateData = { ...formData };
                 if (!updateData.password) delete (updateData as any).password;
-                await updateStaff(currentStaff._id, updateData)
+                await updateStaffMutation.mutateAsync({ staffId: currentStaff._id, staffData: updateData })
             }
             setIsModalOpen(false)
-            fetchStaffMembers()
         } catch (error) {
             console.error("Error saving staff member:", error)
             alert("Failed to save staff information.")
@@ -112,17 +85,20 @@ export default function Staff() {
     const handleDelete = async (staffId: string) => {
         if (!window.confirm("Are you sure you want to remove this staff member?")) return
         try {
-            await deleteStaff(staffId)
-            fetchStaffMembers()
+            await deleteStaffMutation.mutateAsync(staffId)
         } catch (error) {
             console.error("Error deleting staff:", error)
         }
     }
 
-    const filteredStaff = staffMembers.filter(staff => 
-        (staff.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-        (staff.designation?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
-    )
+    const getBadgeVariant = (status: string) => {
+        const s = status?.toLowerCase();
+        switch (s) {
+            case 'active': return 'resolved';
+            case 'on leave': return 'pending';
+            default: return 'default';
+        }
+    }
 
     return (
         <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-200 min-h-screen">
@@ -134,152 +110,116 @@ export default function Staff() {
             `}</style>
 
             <div className="flex min-h-screen">
-                {/* Sidebar */}
-                <aside className={`
-                    fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 transform transition-transform duration-300 md:translate-x-0 md:static
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                `}>
-                    <div className="p-6">
-                        <div className="flex items-center gap-2 text-primary">
-                            <Icon name="sync_alt" className="text-3xl font-bold" />
-                            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">StaySync</span>
-                        </div>
-                    </div>
-                    <nav className="flex-1 px-4 space-y-1">
-                        <SidebarItem icon="dashboard" label="Dashboard" active={activeTab === 'Dashboard'} onClick={() => router.push('/admin/dashboard')} />
-                        <SidebarItem icon="bed" label="Rooms" active={activeTab === 'Rooms'} onClick={() => router.push('/admin/rooms')} />
-                        <SidebarItem icon="group" label="Residents" active={activeTab === 'Residents'} onClick={() => router.push('/admin/residents')} />
-                        <SidebarItem icon="report_problem" label="Complaints" active={activeTab === 'Complaints'} onClick={() => router.push('/admin/complaints')} />
-                        <SidebarItem icon="badge" label="Staff" active={activeTab === 'Staff'} onClick={() => router.push('/admin/staff')} />
-
-                        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
-                            <SidebarItem icon="settings" label="Settings" active={activeTab === 'Settings'} onClick={() => router.push('/admin/settings')} />
-                        </div>
-                    </nav>
-
-                    <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate text-slate-900 dark:text-white">{user?.name || 'Admin User'}</p>
-                                <p className="text-xs text-slate-500 truncate">{user?.email || 'admin@staysync.com'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
+                <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
                 {/* Main Content Area */}
                 <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
-                    {/* Header */}
-                    <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-40">
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-slate-600 dark:text-slate-400">
-                                <Icon name={sidebarOpen ? "close" : "menu"} />
-                            </button>
-                            <h2 className="text-lg font-semibold">Staff Management</h2>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <button className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
-                                <Icon name="notifications" />
-                            </button>
+                    <AdminHeader title="Staff Management" onMenuClick={() => setSidebarOpen(true)}>
+                         <div className="flex items-center gap-4">
+                            <SearchInput 
+                                value={searchTerm} 
+                                onChange={setSearchTerm} 
+                                placeholder="Search staff..." 
+                                className="hidden md:block w-72"
+                            />
                             <button 
                                 onClick={() => handleOpenModal('add')}
-                                className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition-colors shrink-0 flex items-center gap-2"
+                                className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition-all active:scale-95 shrink-0 flex items-center gap-2"
                             >
                                 <Icon name="add" className="text-[20px]" />
-                                Add Staff
+                                <span className="hidden sm:inline">Add Staff</span>
+                                <span className="sm:hidden">Add</span>
                             </button>
                         </div>
-                    </header>
+                    </AdminHeader>
 
                     {/* Table Section */}
                     <section className="p-4 md:p-8 flex-1 overflow-y-auto pb-24 md:pb-8">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                            <div className="relative w-full max-sm-md max-w-md">
-                                <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                <input 
-                                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" 
-                                    placeholder="Search staff by name or designation..." 
-                                    type="text" 
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
+                        <div className="md:hidden mb-6">
+                            <SearchInput 
+                                value={searchTerm} 
+                                onChange={setSearchTerm} 
+                                placeholder="Search staff..." 
+                            />
                         </div>
 
                         {/* Table Card */}
-                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
-                                {loading ? (
-                                    <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-                                ) : (
-                                    <table className="w-full text-left border-collapse border-b-0">
-                                        <thead>
-                                            <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Name & Designation</th>
-                                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Contact</th>
-                                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Status</th>
-                                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Staff Member</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Contact Details</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Employment Status</th>
+                                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {loading ? (
+                                            <tr><td colSpan={4} className="text-center py-20">
+                                                <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+                                            </td></tr>
+                                        ) : staffMembers.length === 0 ? (
+                                            <tr><td colSpan={4} className="text-center py-20 text-slate-500 font-medium">No staff members found.</td></tr>
+                                        ) : staffMembers.map((staff: any) => (
+                                            <tr key={staff._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-11 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+                                                            {staff.profileImage ? (
+                                                                <img alt={staff.name} src={staff.profileImage} className="size-full object-cover" />
+                                                            ) : (
+                                                                <Icon name="engineering" className="text-slate-400" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-sm text-slate-900 dark:text-white">{staff.name}</p>
+                                                            <p className="text-xs text-slate-500">{staff.designation || 'Technical Staff'}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{staff.email}</p>
+                                                    <p className="text-xs text-slate-500">{staff.phone || 'N/A'}</p>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant={getBadgeVariant(staff.status)}>
+                                                        {staff.status}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => handleOpenModal('edit', staff)} 
+                                                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                                            title="Edit Details"
+                                                        >
+                                                            <Icon name="edit" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDelete(staff._id)} 
+                                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            title="Remove Staff"
+                                                        >
+                                                            <Icon name="delete" />
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                            {filteredStaff.length > 0 ? (
-                                                filteredStaff.map((staff) => (
-                                                    <tr key={staff._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
-                                                                    {staff.profileImage ? (
-                                                                        <img alt={staff.name} src={staff.profileImage} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <Icon name="person" className="text-xl" />
-                                                                    )}
-                                                                </div>
-                                                                <div>
-                                                                    <p className="font-semibold text-sm text-slate-900 dark:text-white text-left">{staff.name}</p>
-                                                                    <p className="text-xs text-slate-500 text-left">{staff.designation || 'Staff Member'}</p>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <p className="text-sm text-slate-700 dark:text-slate-300 text-left">{staff.email}</p>
-                                                            <p className="text-xs text-slate-500 text-left">{staff.phone || 'N/A'}</p>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                                                                staff.status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                                            }`}>
-                                                                <span className={`size-1.5 rounded-full ${staff.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                                                                {staff.status}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                <button onClick={() => handleOpenModal('edit', staff)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
-                                                                    <Icon name="edit" className="text-[18px]" />
-                                                                </button>
-                                                                <button onClick={() => handleDelete(staff._id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-400 transition-colors">
-                                                                    <Icon name="delete" className="text-[18px]" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))
-                                            ) : (
-                                                <tr><td colSpan={4} className="text-center py-20 text-slate-500">No staff members found.</td></tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                )}
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                            {/* Pagination */}
-                            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/30">
-                                <p className="text-sm text-slate-500">Showing {filteredStaff.length} staff members</p>
-                                <div className="flex items-center gap-2">
-                                    <button className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50" disabled>
-                                        <Icon name="chevron_left" className="text-[20px]" />
+                            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm bg-slate-50 dark:bg-slate-800/30">
+                                <span className="text-slate-500 font-medium font-sans">Total Staff: {staffMembers.length}</span>
+                                <div className="flex gap-2">
+                                    <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30" disabled>
+                                        <Icon name="chevron_left" />
                                     </button>
-                                    <button className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                        <Icon name="chevron_right" className="text-[20px]" />
+                                    <button className="px-4 py-2 rounded-lg bg-primary text-white font-bold shadow-sm">1</button>
+                                    <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30" disabled>
+                                        <Icon name="chevron_right" />
                                     </button>
                                 </div>
                             </div>
@@ -289,148 +229,98 @@ export default function Staff() {
             </div>
 
             {/* Staff Modal */}
-            <AnimatePresence>
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsModalOpen(false)}
-                            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={modalMode === 'add' ? 'Add New Staff Member' : 'Edit Staff Details'}
+            >
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Full Name</label>
+                        <input
+                            required
+                            type="text"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                            placeholder="e.g., Jane Doe"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-2xl relative z-10"
-                        >
-                            <h2 className="text-xl font-bold mb-6">{modalMode === 'add' ? 'Add New Staff Member' : 'Edit Staff Details'}</h2>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5 ml-1">Full Name</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                        placeholder="Staff Name"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5 ml-1">Email</label>
-                                    <input
-                                        required
-                                        type="email"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                        placeholder="email@example.com"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
-                                {modalMode === 'add' && (
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1.5 ml-1">Password</label>
-                                        <input
-                                            required
-                                            type="password"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        />
-                                    </div>
-                                )}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1.5 ml-1">Phone</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                            placeholder="+91..."
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1.5 ml-1">Designation</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                            placeholder="e.g. Warden"
-                                            value={formData.designation}
-                                            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1.5 ml-1">Status</label>
-                                    <select
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                        value={formData.status}
-                                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    >
-                                        <option value="active">Active</option>
-                                        <option value="on leave">On Leave</option>
-                                    </select>
-                                </div>
-                                <div className="flex gap-3 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
-                                    >
-                                        {modalMode === 'add' ? 'Add Staff' : 'Save Changes'}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
                     </div>
-                )}
-            </AnimatePresence>
-
-            {/* Mobile Nav Bar */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 pb-3 pt-2 shadow-2xl">
-                <div className="flex gap-2 justify-around">
-                    {[
-                        { icon: 'dashboard', label: 'Home', path: '/admin/dashboard' },
-                        { icon: 'bed', label: 'Rooms', path: '/admin/rooms' },
-                        { icon: 'group', label: 'Residents', path: '/admin/residents' },
-                        { icon: 'report_problem', label: 'Reports', path: '/admin/complaints' },
-                        { icon: 'settings', label: 'Settings', path: '/admin/settings' }
-                    ].map(item => (
-                        <button
-                            key={item.label}
-                            onClick={() => router.push(item.path)}
-                            className={`flex flex-col items-center gap-1 ${(activeTab === (item.label === 'Home' ? 'Dashboard' : item.label)) ? 'text-primary' : 'text-slate-400'}`}
+                    <div>
+                        <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Email Address</label>
+                        <input
+                            required
+                            type="email"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                            placeholder="email@staysync.com"
+                            value={formData.email}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+                    {modalMode === 'add' && (
+                        <div>
+                            <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Initial Password</label>
+                            <input
+                                required
+                                type="password"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            />
+                        </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Phone</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                placeholder="+91..."
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Role</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                placeholder="e.g., Warden"
+                                value={formData.designation}
+                                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold mb-1.5 ml-1 text-slate-700 dark:text-slate-300">Current Status</label>
+                        <select
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm appearance-none"
+                            value={formData.status}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                         >
-                            <Icon name={item.icon} />
-                            <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">{item.label}</p>
+                            <option value="active">Active</option>
+                            <option value="on leave">On Leave</option>
+                        </select>
+                    </div>
+                    <div className="flex gap-4 pt-6">
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(false)}
+                            className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 transition-all"
+                        >
+                            Cancel
                         </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Mobile Sidebar Overlay */}
-            <AnimatePresence>
-                {sidebarOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setSidebarOpen(false)}
-                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                    />
-                )}
-            </AnimatePresence>
+                        <button
+                            type="submit"
+                            className="flex-1 px-4 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-95"
+                        >
+                            {modalMode === 'add' ? 'Confirm Addition' : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     )
 }

@@ -5,23 +5,29 @@ export const getDashboardOverview = async () => {
     return response.data;
 };
 
-export const getRooms = async (hostelId: string) => {
-    const response = await api.get(`/hostels/${hostelId}/rooms`);
+export const getRooms = async (hostelId: string, search?: string) => {
+    const url = search ? `/hostels/${hostelId}/rooms?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/rooms`;
+    const response = await api.get(url);
     return response.data;
 };
 
-export const getResidents = async (hostelId: string) => {
-    const response = await api.get(`/hostels/${hostelId}/residents`);
+export const getResidents = async (hostelId: string, search?: string) => {
+    const url = search ? `/hostels/${hostelId}/residents?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/residents`;
+    const response = await api.get(url);
     return response.data;
 };
 
-export const getComplaints = async (hostelId: string) => {
-    const response = await api.get(`/hostels/${hostelId}/complaints`);
+export const getComplaints = async (hostelId: string, search?: string, page: number = 1, limit: number = 10, userId?: string) => {
+    let url = `/hostels/${hostelId}/complaints?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (userId) url += `&userId=${userId}`;
+    const response = await api.get(url);
     return response.data;
 };
 
-export const getStaff = async (hostelId: string) => {
-    const response = await api.get(`/hostels/${hostelId}/staff`);
+export const getStaff = async (hostelId: string, search?: string) => {
+    const url = search ? `/hostels/${hostelId}/staff?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/staff`;
+    const response = await api.get(url);
     return response.data;
 };
 

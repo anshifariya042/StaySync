@@ -12,11 +12,18 @@ export const createBooking = async (req: Request, res: Response) => {
             email,
             phone,
             moveInDate,
-            idProof,
             additionalNotes,
             totalAmount,
             advancePayment
         } = req.body;
+
+        // Get Cloudinary URL from uploaded file
+        const idProof = req.file ? (req.file as any).path : null;
+
+        if (!idProof && !req.body.idProof) {
+            // return res.status(400).json({ message: "ID proof is required." });
+            console.log("No ID proof uploaded, continuing anyway for development...");
+        }
 
         // Check if user is authenticated
         const userId = (req as any).user?.id;

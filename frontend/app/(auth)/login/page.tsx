@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthStore as useAuth } from '@/store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {

@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/context/AuthContext'
-import api from '@/lib/api'
+import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import UserSidebar from '@/components/UserSidebar/UserSidebar'
+import { useSubmitComplaint } from '@/hooks/useUserComplaints'
+import { useProfile } from '@/hooks/useProfile'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -16,11 +17,10 @@ export default function RaiseComplaint() {
     const router = useRouter()
     const { user, logout } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [fullUser, setFullUser] = useState<any>(null)
-    const [activeTab, setActiveTab] = useState('Raise Complaint')
     const fileInputRef = useRef<HTMLInputElement>(null)
-    
+    const { data: fullUser, isLoading: profileLoading } = useProfile()
+    const submitComplaintMutation = useSubmitComplaint()
+
     const [formData, setFormData] = useState({
         category: '',
         priority: 'Normal',
@@ -30,18 +30,6 @@ export default function RaiseComplaint() {
     })
 
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const res = await api.get('/user/profile');
-                setFullUser(res.data);
-            } catch (err) {
-                console.error("Failed to fetch user profile:", err);
-            }
-        };
-        fetchProfile();
-    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -66,7 +54,6 @@ export default function RaiseComplaint() {
             return;
         }
 
-        setIsLoading(true);
         setStatus(null);
 
         try {
@@ -82,16 +69,11 @@ export default function RaiseComplaint() {
             // Check if user is actually in a hostel
             if (!fullUser?.hostelId) {
                 setStatus({ type: 'error', message: 'You must be a resident of a hostel to raise a complaint. Please book a hostel first.' });
-                setIsLoading(false);
                 return;
             }
 
             // The backend now handles extracting hostelId from the authenticated user
-            await api.post('/hostels/complaints', data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await submitComplaintMutation.mutateAsync(data);
 
             setStatus({ type: 'success', message: 'Your complaint has been submitted successfully!' });
             
@@ -113,8 +95,6 @@ export default function RaiseComplaint() {
                 type: 'error', 
                 message: error.response?.data?.message || error.message || 'Failed to submit complaint. Please try again.' 
             });
-        } finally {
-            setIsLoading(false);
         }
     }
 
@@ -136,9 +116,7 @@ export default function RaiseComplaint() {
                             </button>
                             <h2 className="text-lg font-bold">Raise a Complaint</h2>
                         </div>
-                        <div className="size-10 flex items-center justify-center">
-                            <Icon name="notifications" className="text-slate-600 dark:text-slate-400" />
-                        </div>
+                       
                     </header>
 
                     <div className="p-6 max-w-2xl mx-auto w-full">
@@ -254,11 +232,11 @@ export default function RaiseComplaint() {
                                 </div>
 
                                 <button 
-                                    disabled={isLoading}
+                                    disabled={submitComplaintMutation.isPending}
                                     className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2" 
                                     type="submit"
                                 >
-                                    {isLoading ? (
+                                    {submitComplaintMutation.isPending ? (
                                         <>
                                             <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                             <span>Submitting...</span>

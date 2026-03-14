@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import api from '@/lib/api';
 import Link from 'next/link';
 
@@ -17,7 +17,7 @@ interface Hostel {
 
 import { useSearchParams } from "next/navigation";
 
-export default function ExploreHostels() {
+function ExploreHostelsContent() {
     const searchParams = useSearchParams();
     
     const [hostels, setHostels] = useState<Hostel[]>([]);
@@ -128,7 +128,7 @@ export default function ExploreHostels() {
                                 className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors border-none text-sm md:text-base cursor-pointer"
                             >
                                 {/* <span className="material-symbols-outlined text-[20px] text-gray-500">tune</span> */}
-                                <span>Filters</span>
+                                {/* <span>Filters</span> */}
                             </button>
                         </div>
 
@@ -265,5 +265,13 @@ export default function ExploreHostels() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function ExploreHostels() {
+    return (
+        <Suspense fallback={<div className="flex justify-center p-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#4F46E5]"></div></div>}>
+            <ExploreHostelsContent />
+        </Suspense>
     );
 }
