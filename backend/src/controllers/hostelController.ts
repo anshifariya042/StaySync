@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { createHostelService } from "../services/hostelService";
-import { registerUser } from "../services/authService";
-import { UserRole } from "../models/User";
+import bcrypt from "bcrypt";
+import { User, UserRole } from "../models/User";
 import hostelModel from "../models/hostelModel";
 
 export const createHostel = async (req: Request, res: Response) => {
@@ -56,16 +55,18 @@ export const createHostel = async (req: Request, res: Response) => {
       price: req.body.price || 0
     };
 
-    const hostel = await createHostelService(hostelData);
+    const hostel = new hostelModel(hostelData);
+    await hostel.save();
     console.log("Hostel created successfully:", hostel._id);
 
     // If password is provided, create an admin user for this hostel
     if (password) {
       try {
-        await registerUser({
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await User.create({
           name: ownerName,
           email: email,
-          password: password,
+          password: hashedPassword,
           role: UserRole.ADMIN,
           hostelId: hostel._id as any
         });

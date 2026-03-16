@@ -11,7 +11,7 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
 )
 
 export default function UserProfile() {
-    const { profile, isLoading: isProfileStoreLoading, fetchProfile } = useUserStore()
+    const { profile, isLoading: isProfileLoading, fetchProfile } = useUserStore()
     const updateProfileMutation = useUpdateProfile()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     
@@ -23,33 +23,65 @@ export default function UserProfile() {
     const [isEditing, setIsEditing] = useState(false)
     const [message, setMessage] = useState({ type: '', text: '' })
 
+    // Initial fetch if needed
     useEffect(() => {
-        if (!profile && !isProfileStoreLoading) {
+        if (!profile && !isProfileLoading) {
             fetchProfile()
         }
-    }, [profile, isProfileStoreLoading, fetchProfile])
+    }, [profile, isProfileLoading, fetchProfile])
 
+    // Sync formData with profile but ONLY when not editing
     useEffect(() => {
-        if (profile) {
+        if (profile && !isEditing) {
             setFormData({
                 name: profile.name || '',
                 email: profile.email || '',
                 phone: profile.phone || ''
             })
         }
-    }, [profile])
+    }, [profile, isEditing])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        console.log("Submitting form data:", formData)
         setMessage({ type: '', text: '' })
         
         try {
-            await updateProfileMutation.mutateAsync(formData)
-            setMessage({ type: 'success', text: 'Profile updated successfully!' })
+            const result = await updateProfileMutation.mutateAsync(formData)
+            console.log("Update success:", result)
+            setMessage({ type: 'success', text: 'Profile details updated successfully!' })
             setIsEditing(false)
         } catch (error: any) {
-            setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update profile' })
+            console.error("Update failed:", error)
+            setMessage({ 
+                type: 'error', 
+                text: error.response?.data?.message || 'Update failed. Please try again.' 
+            })
         }
+    }
+
+    const handleEditToggle = () => {
+        console.log("Toggling edit mode. Current isEditing:", isEditing)
+        setIsEditing(!isEditing)
+        if (isEditing) {
+            // Reset to profile if canceling
+            setFormData({
+                name: profile?.name || '',
+                email: profile?.email || '',
+                phone: profile?.phone || ''
+            })
+        }
+    }
+
+    if (!profile && isProfileLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="size-12 border-4 border-[#ec5b13] border-t-transparent animate-spin rounded-full"></div>
+                    <p className="font-bold text-slate-500">Loading your profile...</p>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -63,16 +95,28 @@ export default function UserProfile() {
                 <main className="flex-1 lg:ml-72 min-h-screen flex flex-col p-4 md:p-10">
                     <div className="max-w-4xl mx-auto w-full">
                         
-                        <header className="flex items-center gap-4 mb-10">
-                            <div className="lg:hidden">
-                                <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
-                                    <Icon name="menu" className="text-[#ec5b13]" />
-                                </button>
+                        <header className="flex items-center justify-between mb-10">
+                            <div className="flex items-center gap-4">
+                                <div className="lg:hidden">
+                                    <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
+                                        <Icon name="menu" className="text-[#ec5b13]" />
+                                    </button>
+                                </div>
+                                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Profile</h1>
                             </div>
-                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">My Profile</h1>
+                            
+                            {!isEditing && (
+                                <button 
+                                    onClick={handleEditToggle}
+                                    className="px-6 py-2.5 bg-white border border-slate-200 text-[#ec5b13] rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-50 shadow-sm transition-all"
+                                >
+                                    <Icon name="edit" className="text-lg" />
+                                    Edit
+                                </button>
+                            )}
                         </header>
 
-                        <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-100 overflow-hidden relative">
+                        <div className="bg-white rounded-[2.5rem] p-6 md:p-12 shadow-sm border border-slate-100 overflow-hidden relative">
                             {/* Decorative background element */}
                             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ec5b13]/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
                             
@@ -89,13 +133,15 @@ export default function UserProfile() {
                                         </div>
                                     </div>
                                     
-                                    <div className="text-center md:text-left">
+                                    <div className="text-center md:text-left flex-1">
                                         <h2 className="text-2xl font-black text-slate-900">{profile?.name}</h2>
-                                        <p className="text-[#ec5b13] font-bold uppercase tracking-widest text-xs mt-1">Active Resident Member</p>
+                                        <p className="text-[#ec5b13] font-bold uppercase tracking-widest text-[10px] bg-[#ec5b13]/5 px-3 py-1 rounded-full inline-block mt-2">
+                                            StaySync {profile?.role?.toUpperCase() || 'RESIDENT'}
+                                        </p>
                                         <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
                                             <span className="px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-full text-xs font-bold text-slate-500 flex items-center gap-2">
                                                 <Icon name="domain" className="text-[14px]" />
-                                                {profile?.hostelId?.name || 'StaySync Premium'}
+                                                {profile?.hostelId?.name || 'Assigned hostel name'}
                                             </span>
                                             <span className="px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-full text-xs font-bold text-slate-500 flex items-center gap-2">
                                                 <Icon name="meeting_room" className="text-[14px]" />
@@ -118,114 +164,97 @@ export default function UserProfile() {
                                     </motion.div>
                                 )}
 
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <form onSubmit={handleSubmit} className="space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Full Name</label>
-                                            <div className="relative group">
-                                                <Icon name="person" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#ec5b13] transition-colors" />
+                                            <div className={`relative group ${!isEditing ? 'opacity-70' : ''}`}>
+                                                <Icon name="person" className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#ec5b13]' : 'text-slate-300'}`} />
                                                 <input 
                                                     type="text"
                                                     value={formData.name}
                                                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                                    disabled={!isEditing}
-                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:opacity-60"
-                                                    placeholder="Your name"
+                                                    readOnly={!isEditing}
+                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:cursor-not-allowed"
+                                                    placeholder="Enter your name"
                                                 />
                                             </div>
                                         </div>
                                         
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Email Address</label>
-                                            <div className="relative group">
-                                                <Icon name="mail" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#ec5b13] transition-colors" />
+                                            <div className={`relative group ${!isEditing ? 'opacity-70' : ''}`}>
+                                                <Icon name="mail" className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#ec5b13]' : 'text-slate-300'}`} />
                                                 <input 
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                                    disabled={!isEditing}
-                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:opacity-60"
-                                                    placeholder="your@email.com"
+                                                    readOnly={!isEditing}
+                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:cursor-not-allowed"
+                                                    placeholder="your.email@example.com"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Phone Number</label>
-                                            <div className="relative group">
-                                                <Icon name="call" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#ec5b13] transition-colors" />
+                                            <div className={`relative group ${!isEditing ? 'opacity-70' : ''}`}>
+                                                <Icon name="call" className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#ec5b13]' : 'text-slate-300'}`} />
                                                 <input 
                                                     type="tel"
                                                     value={formData.phone}
                                                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                                    disabled={!isEditing}
-                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:opacity-60"
-                                                    placeholder="Your phone number"
+                                                    readOnly={!isEditing}
+                                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:border-[#ec5b13] focus:ring-4 focus:ring-[#ec5b13]/5 transition-all outline-none font-bold text-slate-700 disabled:cursor-not-allowed"
+                                                    placeholder="Phone number"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Account Role</label>
-                                            <div className="relative group">
+                                            <div className="relative group opacity-60">
                                                 <Icon name="verified_user" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
                                                 <input 
                                                     type="text"
-                                                    value={profile?.role || 'User'}
-                                                    disabled
+                                                    value={(profile?.role || 'user').toUpperCase()}
+                                                    readOnly
                                                     className="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-100 bg-slate-100 transition-all outline-none font-bold text-slate-500 cursor-not-allowed"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="pt-8 flex flex-col md:flex-row gap-4">
-                                        {!isEditing ? (
+                                    {isEditing && (
+                                        <div className="pt-6 border-t border-slate-100 flex flex-col md:flex-row gap-4">
+                                            <button 
+                                                type="submit"
+                                                disabled={updateProfileMutation.isPending}
+                                                className="flex-1 md:flex-none px-12 py-4 bg-[#ec5b13] text-white rounded-2xl font-black shadow-lg shadow-[#ec5b13]/20 hover:scale-[1.05] active:scale-[0.95] disabled:opacity-50 disabled:scale-100 transition-all flex items-center justify-center gap-3"
+                                            >
+                                                {updateProfileMutation.isPending ? (
+                                                    <div className="size-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
+                                                ) : (
+                                                    <Icon name="save" className="text-sm font-bold" />
+                                                )}
+                                                Save Changes
+                                            </button>
                                             <button 
                                                 type="button"
-                                                onClick={() => setIsEditing(true)}
-                                                className="flex-1 md:flex-none px-10 py-4 bg-[#ec5b13] text-white rounded-2xl font-black shadow-lg shadow-[#ec5b13]/20 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3"
+                                                onClick={handleEditToggle}
+                                                className="flex-1 md:flex-none px-12 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
                                             >
-                                                <Icon name="edit" className="text-sm" />
-                                                Edit Profile
+                                                Cancel
                                             </button>
-                                        ) : (
-                                            <>
-                                                <button 
-                                                    type="submit"
-                                                    disabled={updateProfileMutation.isPending}
-                                                    className="flex-1 md:flex-none px-10 py-4 bg-[#ec5b13] text-white rounded-2xl font-black shadow-lg shadow-[#ec5b13]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-                                                >
-                                                    {updateProfileMutation.isPending ? (
-                                                        <div className="size-5 border-2 border-white border-t-transparent animate-spin rounded-full"></div>
-                                                    ) : (
-                                                        <Icon name="save" className="text-sm" />
-                                                    )}
-                                                    Save Changes
-                                                </button>
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setIsEditing(false)
-                                                        setFormData({
-                                                            name: profile?.name || '',
-                                                            email: profile?.email || '',
-                                                            phone: profile?.phone || ''
-                                                        })
-                                                    }}
-                                                    className="flex-1 md:flex-none px-10 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
                                 </form>
                             </div>
                         </div>
                     </div>
                 </main>
             </div>
+            {/* Nav spacer for mobile */}
             <div className="lg:hidden h-24"></div>
         </div>
     )
