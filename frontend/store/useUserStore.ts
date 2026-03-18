@@ -26,7 +26,7 @@ interface UserState {
 
 export const useUserStore = create<UserState>((set) => ({
     profile: null,
-    isLoading: false,
+    isLoading: true,
     error: null,
 
     fetchProfile: async () => {

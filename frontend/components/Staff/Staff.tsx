@@ -56,7 +56,7 @@ export default function Staff() {
             setFormData({
                 name: '',
                 email: '',
-                password: 'StaffPassword123!',
+                password: '',
                 phone: '',
                 designation: '',
                 status: 'active'

@@ -36,6 +36,14 @@ const hostelSchema = new mongoose.Schema(
     facilities: [String],
     roomTypes: [String],
     images: [String],
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    numberOfReviews: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

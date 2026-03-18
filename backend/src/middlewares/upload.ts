@@ -7,8 +7,8 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: "hostels",
-      format: "png", // optional
-      public_id: file.originalname,
+      resource_type: "image",
+      public_id: Date.now() + "-" + file.originalname,
     };
   },
 });

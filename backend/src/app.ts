@@ -6,6 +6,10 @@ import userRoutes from "./routes/userRoutes";
 import hostelRoutes from "./routes/hostelRoutes"
 import adminRoutes from "./routes/adminRoutes";
 import bookingRoutes from "./routes/bookingRoutes";
+import reviewRoutes from "./routes/reviewRoutes";
+import staffRoutes from "./routes/staffRoutes";
+
+
 
 
 const app = express();
@@ -25,6 +29,9 @@ app.use("/api/user", userRoutes);
 app.use("/api/hostels", hostelRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/staff", staffRoutes);
+
 
 
 

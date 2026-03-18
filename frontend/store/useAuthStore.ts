@@ -21,6 +21,9 @@ interface AuthState {
     googleLogin: (token: string) => Promise<User>;
     logout: () => void;
     checkAuth: () => Promise<void>;
+    requestOTP: (email: string) => Promise<void>;
+    verifyOTP: (email: string, otp: string) => Promise<void>;
+    resetPassword: (data: any) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -76,5 +79,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         if (typeof window !== 'undefined') {
             localStorage.removeItem('accessToken');
         }
+    },
+
+    requestOTP: async (email: string) => {
+        await api.post('/auth/forgot-password', { email });
+    },
+
+    verifyOTP: async (email: string, otp: string) => {
+        await api.post('/auth/verify-otp', { email, otp });
+    },
+
+    resetPassword: async (data: any) => {
+        await api.post('/auth/reset-password', data);
     }
 }));

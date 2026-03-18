@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
+import { useUserStore } from "@/store/useUserStore";
+
 
 interface Room {
     _id: string;
@@ -26,28 +28,53 @@ interface Hostel {
     roomTypes: string[];
     images: string[];
     price: number;
+    averageRating: number;
+    numberOfReviews: number;
+    createdAt: string;
+}
+
+interface User {
+    _id: string;
+    name: string;
+}
+
+interface Review {
+    _id: string;
+    userId: User;
+    rating: number;
+    comment: string;
     createdAt: string;
 }
 
 export default function HostelDetails() {
+    const { profile } = useUserStore();
     const { id } = useParams();
+
     const router = useRouter();
     const [hostel, setHostel] = useState<Hostel | null>(null);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [newRating, setNewRating] = useState(5);
+    const [newComment, setNewComment] = useState("");
+    const [submittingReview, setSubmittingReview] = useState(false);
+
 
     useEffect(() => {
         const fetchDetails = async () => {
             try {
                 if (id) {
-                    const [hostelRes, roomsRes] = await Promise.all([
+                     const [hostelRes, roomsRes, reviewsRes] = await Promise.all([
                         api.get(`/hostels/${id}`),
-                        api.get(`/hostels/${id}/rooms`)
+                        api.get(`/hostels/${id}/rooms`),
+                        api.get(`/reviews/hostel/${id}`)
                     ]);
                     setHostel(hostelRes.data.hostel);
                     const fetchedRooms = roomsRes.data || [];
                     setRooms(fetchedRooms);
+                    setReviews(reviewsRes.data || []);
                     if (fetchedRooms.length > 0) {
                         setSelectedRoom(fetchedRooms[0]);
                     }
@@ -61,6 +88,40 @@ export default function HostelDetails() {
 
         fetchDetails();
     }, [id]);
+
+    const handleSubmitReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!id || !newComment || submittingReview) return;
+        
+        setSubmittingReview(true);
+        try {
+            const res = await api.post('/reviews', {
+                hostelId: id,
+                rating: newRating,
+                comment: newComment
+            });
+            
+            // Refresh reviews and hostel details
+            const [reviewsRes, hostelRes] = await Promise.all([
+                api.get(`/reviews/hostel/${id}`),
+                api.get(`/hostels/${id}`)
+            ]);
+            setReviews(reviewsRes.data);
+            setHostel(hostelRes.data.hostel);
+            
+            // Reset form
+            setShowReviewForm(false);
+            setNewRating(5);
+            setNewComment("");
+            alert("Review submitted successfully!");
+        } catch (error: any) {
+            console.error("Failed to submit review:", error);
+            alert(error.response?.data?.message || "Failed to submit review");
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
 
     if (loading) {
         return (
@@ -128,9 +189,10 @@ export default function HostelDetails() {
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-sm text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                            <span className="text-sm font-semibold text-slate-900">4.8</span>
-                                            {/* <span className="text-sm">(120 reviews)</span> */}
+                                            <span className="text-sm font-semibold text-slate-900">{hostel.averageRating || "New"}</span>
+                                            <span className="text-sm text-slate-500">({hostel.numberOfReviews || 0} reviews)</span>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -288,38 +350,127 @@ export default function HostelDetails() {
 
                         {/* Reviews Section Placeholder */}
                         <section className="bg-white p-6 rounded-xl border border-slate-200">
-                            <h2 className="text-xl font-bold mb-6">User Reviews</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold">User Reviews</h2>
+                                {profile && (
+                                    <button 
+                                        onClick={() => setShowReviewForm(!showReviewForm)}
+                                        className="text-sm font-bold text-[#5048e5] hover:underline"
+                                    >
+                                        {showReviewForm ? 'Cancel' : 'Write a Review'}
+                                    </button>
+                                )}
+                            </div>
+
+                            {showReviewForm && (
+                                <form onSubmit={handleSubmitReview} className="mb-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <h3 className="font-bold mb-4 text-slate-800">Share your experience</h3>
+                                    <div className="flex gap-2 mb-4">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <button
+                                                key={star}
+                                                type="button"
+                                                onClick={() => setNewRating(star)}
+                                                className="focus:outline-none transition-transform hover:scale-110"
+                                            >
+                                                <span 
+                                                    className={`material-symbols-outlined text-2xl ${
+                                                        star <= newRating ? 'text-amber-500' : 'text-slate-300'
+                                                    }`}
+                                                    style={star <= newRating ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                                >
+                                                    star
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder="Tell others about your stay..."
+                                        className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#5048e5] focus:border-transparent outline-none min-h-[100px] mb-4 text-sm"
+                                        required
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={submittingReview}
+                                        className="px-6 py-2 bg-[#5048e5] text-white font-bold rounded-lg text-sm disabled:opacity-50"
+                                    >
+                                        {submittingReview ? 'Submitting...' : 'Post Review'}
+                                    </button>
+                                </form>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                 <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-xl text-center">
-                                    <span className="text-5xl font-bold text-slate-900">4.8</span>
+                                    <span className="text-5xl font-bold text-slate-900">{hostel.averageRating || "0.0"}</span>
                                     <div className="flex text-amber-500 my-2">
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                        <span className="material-symbols-outlined">star_half</span>
+                                        {[1, 2, 3, 4, 5].map((s) => (
+                                            <span 
+                                                key={s} 
+                                                className="material-symbols-outlined" 
+                                                style={s <= Math.round(hostel.averageRating) ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                            >
+                                                {s <= Math.round(hostel.averageRating) ? 'star' : (s - 0.5 <= hostel.averageRating ? 'star_half' : 'star')}
+                                            </span>
+                                        ))}
                                     </div>
-                                    <span className="text-sm text-slate-500">Based on 120 reviews</span>
+                                    <span className="text-sm text-slate-500">Based on {hostel.numberOfReviews || 0} reviews</span>
                                 </div>
                                 <div className="space-y-2">
-                                    {[
-                                        { star: 5, pct: 85 },
-                                        { star: 4, pct: 10 },
-                                        { star: 3, pct: 3 },
-                                        { star: 2, pct: 1 },
-                                        { star: 1, pct: 1 },
-                                    ].map((row) => (
-                                        <div key={row.star} className="flex items-center gap-3">
-                                            <span className="text-sm w-4 text-center">{row.star}</span>
-                                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                <div className="bg-amber-500 h-full" style={{ width: `${row.pct}%` }}></div>
+                                    {[5, 4, 3, 2, 1].map((star) => {
+                                        const count = reviews.filter(r => Math.round(r.rating) === star).length;
+                                        const pct = hostel.numberOfReviews > 0 ? (count / hostel.numberOfReviews) * 100 : 0;
+                                        return (
+                                            <div key={star} className="flex items-center gap-3">
+                                                <span className="text-sm w-4 text-center">{star}</span>
+                                                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="bg-amber-500 h-full transition-all duration-500" style={{ width: `${pct}%` }}></div>
+                                                </div>
+                                                <span className="text-sm text-slate-500 w-8">{Math.round(pct)}%</span>
                                             </div>
-                                            <span className="text-sm text-slate-500 w-8">{row.pct}%</span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
+
+                            {/* Individual Reviews */}
+                            <div className="space-y-6">
+                                {reviews.length > 0 ? (
+                                    reviews.map((review) => (
+                                        <div key={review._id} className="pb-6 border-b border-slate-100 last:border-0">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-bold text-slate-900">{review.userId?.name || 'Anonymous'}</p>
+                                                    <div className="flex text-amber-500 scale-75 -ml-4 origin-left">
+                                                        {[1, 2, 3, 4, 5].map((s) => (
+                                                            <span 
+                                                                key={s} 
+                                                                className="material-symbols-outlined" 
+                                                                style={s <= review.rating ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                                            >
+                                                                {s <= review.rating ? 'star' : 'star'}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <span className="text-xs text-slate-400">
+                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-600 text-sm italic leading-relaxed">
+                                                "{review.comment}"
+                                            </p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-8 bg-slate-50 rounded-xl">
+                                        <p className="text-slate-500 text-sm">No reviews yet. Be the first to review!</p>
+                                    </div>
+                                )}
+                            </div>
                         </section>
+
 
                     </div>
 

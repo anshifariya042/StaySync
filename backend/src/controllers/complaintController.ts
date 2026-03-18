@@ -103,6 +103,7 @@ export const createComplaint = async (req: any, res: Response) => {
         const userId = req.user.id;
         const { title, description, category, priority } = req.body;
 
+
         // Fetch user to get hostelId and roomNumber if not provided
         const user = await (require("../models/User").User).findById(userId).populate("roomId");
         if (!user || !user.hostelId) {
