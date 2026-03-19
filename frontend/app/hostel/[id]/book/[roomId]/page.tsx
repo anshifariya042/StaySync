@@ -243,16 +243,6 @@ export default function BookRoom() {
                                 />
                             </label>
                         </div>
-                        {/* <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-medium text-slate-700">Additional Notes (Optional)</label>
-                            <textarea
-                                className="bg-white border-slate-200 rounded-lg p-4 focus:ring-2 focus:ring-[#5048e5] focus:border-[#5048e5]"
-                                placeholder="Any specific requirements or questions?"
-                                rows={3}
-                                value={formData.additionalNotes}
-                                onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
-                            ></textarea>
-                        </div> */}
                     </section>
 
                     {/* Payment Summary */}

@@ -40,127 +40,131 @@ export default function Residents() {
     }
 
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased font-display min-h-screen">
-            <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        <div className="bg-background-dashboard text-slate-800 flex h-screen overflow-hidden antialiased">
             <style jsx global>{`
-                body { font-family: 'Public Sans', sans-serif; }
+                body { font-family: 'Inter', sans-serif; }
                 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
             `}</style>
 
-            <div className="flex min-h-screen">
-                <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                {/* Main Content */}
-                <main className="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark">
-                    <AdminHeader title="Residents Management" onMenuClick={() => setSidebarOpen(true)}>
-                         <div className="flex items-center gap-3">
-                            <SearchInput 
-                                value={searchTerm} 
-                                onChange={setSearchTerm} 
-                                placeholder="Search residents..." 
-                                className="hidden md:block w-72"
-                            />
-                        </div>
-                    </AdminHeader>
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                <AdminHeader title="Residents Management" onMenuClick={() => setSidebarOpen(true)}>
+                     <div className="flex items-center gap-3">
+                        <SearchInput 
+                            value={searchTerm} 
+                            onChange={setSearchTerm} 
+                            placeholder="Search residents..." 
+                            className="hidden md:block w-72"
+                        />
+                    </div>
+                </AdminHeader>
 
-                    {/* Table Section */}
-                    <div className="p-4 md:p-8 space-y-6 flex-1 overflow-y-auto pb-24 md:pb-8">
-                        {/* Mobile Search */}
-                        <div className="md:hidden">
-                            <SearchInput 
-                                value={searchTerm} 
-                                onChange={setSearchTerm} 
-                                placeholder="Search residents..." 
-                            />
-                        </div>
+                {/* Content Section */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                    {/* Mobile Search */}
+                    <div className="md:hidden">
+                        <SearchInput 
+                            value={searchTerm} 
+                            onChange={setSearchTerm} 
+                            placeholder="Search residents..." 
+                        />
+                    </div>
 
-                        {/* Table Card */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Resident</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contact</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Room</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Join Date</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    {/* Residents Table */}
+                    <div className="bg-white rounded-2xl border border-border-light shadow-sm overflow-hidden transition-all duration-300">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4">Resident</th>
+                                        <th className="px-6 py-4">Contact Details</th>
+                                        <th className="px-6 py-4">Room Allocation</th>
+                                        <th className="px-6 py-4">Admission Date</th>
+                                        <th className="px-6 py-4 text-center">Status</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border-light">
+                                    {isLoading ? (
+                                        <tr><td colSpan={6} className="text-center py-20">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                                                <p className="text-sm font-medium text-slate-400">Loading residents data...</p>
+                                            </div>
+                                        </td></tr>
+                                    ) : residents.length === 0 ? (
+                                        <tr><td colSpan={6} className="text-center py-24">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Icon name="person_off" className="text-5xl text-slate-200 material-symbols-outlined" />
+                                                <p className="text-slate-400 font-medium">No residents found.</p>
+                                            </div>
+                                        </td></tr>
+                                    ) : residents.map((resident: any) => (
+                                        <tr key={resident._id} className="hover:bg-slate-50/50 transition-all duration-200 group">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="size-10 rounded-2xl overflow-hidden flex items-center justify-center font-bold text-sm bg-primary/5 text-primary border border-primary/10">
+                                                        {resident.profileImage ? (
+                                                            <img src={resident.profileImage} alt={resident.name} className="size-full object-cover" />
+                                                        ) : (
+                                                            resident.name?.charAt(0).toUpperCase() || 'U'
+                                                        )}
+                                                    </div>
+                                                    <span className="font-bold text-slate-800 tracking-tight">{resident.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <p className="font-semibold text-slate-800 text-sm">{resident.email}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">{resident.phone || 'NO PHONE'}</p>
+                                            </td>
+                                            <td className="px-6 py-5 focus-within:ring-0">
+                                                <div className="flex items-center gap-2 font-bold text-slate-700">
+                                                     <Icon name="meeting_room" className="material-symbols-outlined text-sm text-slate-300 group-hover:text-primary transition-colors" />
+                                                     <span className="text-sm">{resident.roomId?.roomNumber || 'Not Assigned'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-slate-500 font-medium text-sm">
+                                                {resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-5 text-center">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${getBadgeVariant(resident.status) === 'resolved' ? 'bg-emerald-100 text-emerald-700' : getBadgeVariant(resident.status) === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                    {resident.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button 
+                                                        onClick={() => handleDelete(resident._id)} 
+                                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
+                                                        title="Remove Resident"
+                                                    >
+                                                        <Icon name="delete" className="material-symbols-outlined text-lg" />
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {isLoading ? (
-                                            <tr><td colSpan={6} className="text-center py-20">
-                                                <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-                                            </td></tr>
-                                        ) : residents.length === 0 ? (
-                                            <tr><td colSpan={6} className="text-center py-20 text-slate-500">No residents found.</td></tr>
-                                        ) : residents.map((resident: any) => (
-                                            <tr key={resident._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="size-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-xs bg-indigo-100 text-indigo-600 border border-indigo-200">
-                                                            {resident.profileImage ? (
-                                                                <img src={resident.profileImage} alt={resident.name} className="size-full object-cover" />
-                                                            ) : (
-                                                                resident.name?.charAt(0).toUpperCase() || 'U'
-                                                            )}
-                                                        </div>
-                                                        <span className="font-semibold text-slate-900 dark:text-white">{resident.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm text-slate-900 dark:text-white">{resident.email}</p>
-                                                    <p className="text-xs text-slate-500">{resident.phone || 'N/A'}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-1.5 font-medium text-slate-900 dark:text-white">
-                                                         <Icon name="meeting_room" className="text-sm text-slate-400" />
-                                                         {resident.roomId?.roomNumber || 'Not Assigned'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-slate-500 text-sm">
-                                                    {resident.createdAt ? new Date(resident.createdAt).toLocaleDateString() : 'N/A'}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge variant={getBadgeVariant(resident.status)}>
-                                                        {resident.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button 
-                                                            onClick={() => handleDelete(resident._id)} 
-                                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                                            title="Remove Resident"
-                                                        >
-                                                            <Icon name="delete" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {/* Pagination Placeholder */}
-                            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                <p className="text-sm text-slate-500">Showing {residents.length} residents</p>
-                                <div className="flex items-center gap-2">
-                                    <button className="p-1.5 text-slate-400 hover:text-primary transition-colors disabled:opacity-30" disabled>
-                                        <Icon name="chevron_left" />
-                                    </button>
-                                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-sm font-semibold">1</button>
-                                    <button className="p-1.5 text-slate-400 hover:text-primary transition-colors disabled:opacity-30" disabled>
-                                        <Icon name="chevron_right" />
-                                    </button>
-                                </div>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination Footer */}
+                        <div className="px-6 py-4 bg-slate-50 border-t border-border-light flex items-center justify-between">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Showing {residents.length} residents</p>
+                            <div className="flex items-center gap-2">
+                                <button className="p-2 text-slate-400 hover:text-primary transition-colors disabled:opacity-30" disabled>
+                                    <Icon name="chevron_left" className="material-symbols-outlined" />
+                                </button>
+                                <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-[10px] font-bold shadow-lg shadow-primary/20">1</button>
+                                <button className="p-2 text-slate-400 hover:text-primary transition-colors disabled:opacity-30" disabled>
+                                    <Icon name="chevron_right" className="material-symbols-outlined" />
+                                </button>
                             </div>
                         </div>
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
     )
 }

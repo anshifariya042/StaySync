@@ -1,24 +1,29 @@
 import api from '../lib/api';
 
+const getId = (obj: any) => (obj && typeof obj === 'object' && obj._id) ? obj._id : obj;
+
 export const getDashboardOverview = async () => {
     const response = await api.get('/admin/dashboard-overview');
     return response.data;
 };
 
 export const getRooms = async (hostelId: string, search?: string) => {
-    const url = search ? `/hostels/${hostelId}/rooms?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/rooms`;
+    const id = getId(hostelId);
+    const url = search ? `/hostels/${id}/rooms?search=${encodeURIComponent(search)}` : `/hostels/${id}/rooms`;
     const response = await api.get(url);
     return response.data;
 };
 
 export const getResidents = async (hostelId: string, search?: string) => {
-    const url = search ? `/hostels/${hostelId}/residents?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/residents`;
+    const id = getId(hostelId);
+    const url = search ? `/hostels/${id}/residents?search=${encodeURIComponent(search)}` : `/hostels/${id}/residents`;
     const response = await api.get(url);
     return response.data;
 };
 
 export const getComplaints = async (hostelId: string, search?: string, page: number = 1, limit: number = 10, userId?: string) => {
-    let url = `/hostels/${hostelId}/complaints?page=${page}&limit=${limit}`;
+    const id = getId(hostelId);
+    let url = `/hostels/${id}/complaints?page=${page}&limit=${limit}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
     if (userId) url += `&userId=${userId}`;
     const response = await api.get(url);
@@ -26,7 +31,8 @@ export const getComplaints = async (hostelId: string, search?: string, page: num
 };
 
 export const getStaff = async (hostelId: string, search?: string) => {
-    const url = search ? `/hostels/${hostelId}/staff?search=${encodeURIComponent(search)}` : `/hostels/${hostelId}/staff`;
+    const id = getId(hostelId);
+    const url = search ? `/hostels/${id}/staff?search=${encodeURIComponent(search)}` : `/hostels/${id}/staff`;
     const response = await api.get(url);
     return response.data;
 };

@@ -65,156 +65,160 @@ export default function Complaints() {
     }
 
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-200 min-h-screen">
-            <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        <div className="bg-background-dashboard text-slate-800 flex h-screen overflow-hidden antialiased">
             <style jsx global>{`
-                body { font-family: 'Public Sans', sans-serif; }
+                body { font-family: 'Inter', sans-serif; }
                 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
             `}</style>
 
-            <div className="flex min-h-screen">
-                <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                {/* Main Content Area */}
-                <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-background-light dark:bg-background-dark">
-                    <AdminHeader title="Complaints Management" onMenuClick={() => setSidebarOpen(true)}>
-                         <div className="flex items-center gap-3">
-                            <SearchInput 
-                                value={searchTerm} 
-                                onChange={setSearchTerm} 
-                                placeholder="Search complaints..." 
-                                className="hidden md:block w-72"
-                            />
-                        </div>
-                    </AdminHeader>
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                <AdminHeader title="Complaints Management" onMenuClick={() => setSidebarOpen(true)}>
+                     <div className="flex items-center gap-3">
+                        <SearchInput 
+                            value={searchTerm} 
+                            onChange={setSearchTerm} 
+                            placeholder="Search complaints tracked..." 
+                            className="hidden md:block w-72"
+                        />
+                    </div>
+                </AdminHeader>
 
-                    {/* Content Section */}
-                    <div className="p-4 md:p-8 space-y-6 flex-1 overflow-y-auto pb-24 md:pb-8">
-                        <div className="md:hidden">
-                            <SearchInput 
-                                value={searchTerm} 
-                                onChange={setSearchTerm} 
-                                placeholder="Search complaints..." 
-                            />
-                        </div>
+                {/* Content Section */}
+                <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                    <div className="md:hidden">
+                        <SearchInput 
+                            value={searchTerm} 
+                            onChange={setSearchTerm} 
+                            placeholder="Search complaints..." 
+                        />
+                    </div>
 
-                        {/* Table Container */}
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 font-medium border-b border-slate-200 dark:border-slate-800">
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Complaint</th>
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Details</th>
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Assigned Staff</th>
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Date</th>
-                                            <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {loading ? (
-                                            <tr><td colSpan={6} className="text-center py-20">
-                                                <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-                                            </td></tr>
-                                        ) : complaints.length === 0 ? (
-                                            <tr><td colSpan={6} className="text-center py-20 text-slate-500">No complaints found.</td></tr>
-                                        ) : complaints.map((complaint: any) => (
-                                            <tr key={complaint._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="font-semibold text-slate-900 dark:text-white">{complaint.title}</div>
-                                                    <div className="text-xs text-slate-500 mt-0.5">ID: #{complaint._id.slice(-6).toUpperCase()}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-1 text-sm text-slate-700 dark:text-slate-300">
-                                                         <Icon name="meeting_room" className="text-xs text-slate-400" />
-                                                         Room {complaint.roomNumber}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500">{complaint.category}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <Badge variant={getBadgeVariant(complaint.status)}>
-                                                        {complaint.status}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-                                                            {complaint.assignedStaff?.profileImage ? (
-                                                                <img className="size-full object-cover" src={complaint.assignedStaff.profileImage} alt={complaint.assignedStaff.name} />
-                                                            ) : (
-                                                                <Icon name="person" className="text-sm text-slate-400" />
-                                                            )}
-                                                        </div>
-                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{complaint.assignedStaff?.name || 'Unassigned'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-slate-500">
-                                                    {new Date(complaint.createdAt).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button 
-                                                            onClick={() => { setSelectedComplaint(complaint); setIsAssignModalOpen(true); }}
-                                                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" 
-                                                            title="Assign Staff"
-                                                        >
-                                                            <Icon name="person_add" />
-                                                        </button>
-                                                        {complaint.status !== 'Resolved' && (
-                                                            <button 
-                                                                onClick={() => handleUpdateStatus(complaint._id, 'Resolved')}
-                                                                className="p-2 text-slate-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors" 
-                                                                title="Mark as Resolved"
-                                                            >
-                                                                <Icon name="check_circle" />
-                                                            </button>
+                    {/* Complaints Table Container */}
+                    <div className="bg-white rounded-2xl border border-border-light shadow-sm overflow-hidden transition-all duration-300">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4">Complaint Header</th>
+                                        <th className="px-6 py-4">Incident Details</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Assignee</th>
+                                        <th className="px-6 py-4">Logged Date</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border-light">
+                                    {loading ? (
+                                        <tr><td colSpan={6} className="text-center py-20">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+                                                <p className="text-sm font-medium text-slate-400">Fetching incident log...</p>
+                                            </div>
+                                        </td></tr>
+                                    ) : complaints.length === 0 ? (
+                                        <tr><td colSpan={6} className="text-center py-24">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Icon name="assignment_turned_in" className="text-5xl text-slate-200 material-symbols-outlined" />
+                                                <p className="text-slate-400 font-medium">No open complaints found.</p>
+                                            </div>
+                                        </td></tr>
+                                    ) : complaints.map((complaint: any) => (
+                                        <tr key={complaint._id} className="hover:bg-slate-50/50 transition-all duration-200 group">
+                                            <td className="px-6 py-5">
+                                                <div className="font-bold text-slate-800 tracking-tight leading-none">{complaint.title}</div>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase mt-1.5 tracking-widest">INC-{complaint._id.slice(-6).toUpperCase()}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-700">
+                                                     <Icon name="meeting_room" className="material-symbols-outlined text-xs text-slate-400" />
+                                                     Room {complaint.roomNumber}
+                                                </div>
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">{complaint.category}</div>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${getBadgeVariant(complaint.status) === 'resolved' ? 'bg-emerald-100 text-emerald-700' : getBadgeVariant(complaint.status) === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {complaint.status?.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="size-8 rounded-xl bg-slate-50 overflow-hidden border border-border-light flex items-center justify-center font-bold text-[10px] text-slate-400">
+                                                        {complaint.assignedStaff?.profileImage ? (
+                                                            <img className="size-full object-cover" src={complaint.assignedStaff.profileImage} alt={complaint.assignedStaff.name} />
+                                                        ) : (
+                                                            complaint.assignedStaff?.name?.charAt(0) || <Icon name="person" className="material-symbols-outlined text-sm" />
                                                         )}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {/* Pagination Footer */}
-                            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm bg-slate-50 dark:bg-slate-800/30">
-                                <span className="text-slate-500">Showing {complaints.length} results</span>
-                                <div className="flex gap-2">
-                                    <button 
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 disabled:opacity-30 hover:bg-white transition-colors"
-                                    >
-                                        Previous
-                                    </button>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(totalPages)].map((_, i) => (
-                                            <button 
-                                                key={i}
-                                                onClick={() => setPage(i + 1)}
-                                                className={`px-3 py-1.5 rounded-lg font-semibold shadow-sm transition-all ${
-                                                    page === i + 1 ? 'bg-primary text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600'
-                                                }`}
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <button 
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 disabled:opacity-30 hover:bg-white transition-colors"
-                                    >
-                                        Next
-                                    </button>
+                                                    <span className="text-sm font-bold text-slate-700 truncate max-w-[120px]">{complaint.assignedStaff?.name || 'Unassigned'}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-5 text-sm text-slate-500 font-medium">
+                                                {new Date(complaint.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex justify-end gap-1">
+                                                    <button 
+                                                        onClick={() => { setSelectedComplaint(complaint); setIsAssignModalOpen(true); }}
+                                                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all" 
+                                                        title="Assign Personnel"
+                                                    >
+                                                        <Icon name="person_add" className="material-symbols-outlined text-lg" />
+                                                    </button>
+                                                    {complaint.status !== 'Resolved' && (
+                                                        <button 
+                                                            onClick={() => handleUpdateStatus(complaint._id, 'Resolved')}
+                                                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" 
+                                                            title="Close Ticket"
+                                                        >
+                                                            <Icon name="check_circle" className="material-symbols-outlined text-lg" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination Footer */}
+                        <div className="px-6 py-4 border-t border-border-light flex items-center justify-between bg-slate-50">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Showing {complaints.length} tickets</span>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="p-2 rounded-lg border border-border-light text-slate-300 disabled:opacity-30 hover:bg-white transition-all"
+                                >
+                                    <Icon name="chevron_left" className="material-symbols-outlined" />
+                                </button>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <button 
+                                            key={i}
+                                            onClick={() => setPage(i + 1)}
+                                            className={`w-8 h-8 rounded-lg font-bold text-[10px] transition-all ${
+                                                page === i + 1 ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' : 'bg-white border border-border-light text-slate-400 hover:border-primary/30'
+                                            }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
                                 </div>
+                                <button 
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="p-2 rounded-lg border border-border-light text-slate-300 disabled:opacity-30 hover:bg-white transition-all"
+                                >
+                                    <Icon name="chevron_right" className="material-symbols-outlined" />
+                                </button>
                             </div>
                         </div>
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
 
             {/* Assign Staff Modal */}
             <Modal
@@ -222,44 +226,47 @@ export default function Complaints() {
                 onClose={() => setIsAssignModalOpen(false)}
                 title="Assign Staff Member"
             >
-                <p className="text-sm text-slate-500 mb-6 italic">Current Complaint: <span className="font-semibold text-slate-900 dark:text-white not-italic">"{selectedComplaint?.title}"</span></p>
+                <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-border-light">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Ticket</p>
+                    <p className="font-bold text-slate-800 tracking-tight leading-tight">"{selectedComplaint?.title}"</p>
+                </div>
                 
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                     {staffMembers.length > 0 ? (
                         staffMembers.map((staff: any) => (
                             <button
                                 key={staff._id}
                                 onClick={() => handleAssignStaff(staff._id)}
-                                className="w-full flex items-center gap-3 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-primary/5 hover:border-primary/20 transition-all text-left group"
+                                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border-light hover:border-primary/30 hover:bg-primary/5 transition-all text-left group"
                             >
-                                <div className="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+                                <div className="size-11 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-border-light shadow-sm">
                                     {staff.profileImage ? (
                                         <img src={staff.profileImage} alt={staff.name} className="size-full object-cover" />
                                     ) : (
-                                        <Icon name="engineering" className="text-slate-400" />
+                                        <div className="font-bold text-xs text-primary">{staff.name?.charAt(0)}</div>
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{staff.name}</p>
-                                    <p className="text-xs text-slate-500">{staff.designation || 'Technical Staff'}</p>
+                                    <p className="font-bold text-sm text-slate-800 truncate">{staff.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{staff.designation || 'Technical Staff'}</p>
                                 </div>
-                                <Icon name="chevron_right" className="text-slate-300 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                                <Icon name="chevron_right" className="material-symbols-outlined text-slate-200 group-hover:text-primary transition-all group-hover:translate-x-1" />
                             </button>
                         ))
                     ) : (
-                        <div className="text-center py-8">
-                             <Icon name="person_off" className="text-3xl text-slate-300 mb-2" />
-                             <p className="text-slate-500 text-sm">No staff members available.</p>
+                        <div className="text-center py-12">
+                             <Icon name="person_off" className="text-4xl text-slate-100 mb-2 material-symbols-outlined" />
+                             <p className="text-slate-400 text-sm font-medium">No personnel found for assignment.</p>
                         </div>
                     )}
                 </div>
 
-                <div className="flex gap-3 pt-6 border-t border-slate-100 dark:border-slate-800 mt-4">
+                <div className="flex gap-4 mt-8 pt-6 border-t border-border-light">
                     <button
                         onClick={() => setIsAssignModalOpen(false)}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                        className="flex-1 px-4 py-3 rounded-xl border border-border-light font-bold text-slate-500 hover:bg-slate-50 transition-all uppercase text-[10px] tracking-widest"
                     >
-                        Cancel
+                        Close
                     </button>
                 </div>
             </Modal>

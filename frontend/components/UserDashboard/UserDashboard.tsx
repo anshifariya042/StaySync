@@ -233,7 +233,6 @@ import { useComplaints } from '@/hooks/useComplaints'
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
     <span className={`material-symbols-outlined ${className}`}>{name}</span>
 )
-
 export default function UserDashboard() {
     const router = useRouter()
     const { profile, isLoading: isProfileLoading, fetchProfile } = useUserStore()
@@ -266,24 +265,24 @@ export default function UserDashboard() {
             label: 'My Room Number', 
             value: profile?.roomId?.roomNumber || 'TBD', 
             icon: 'meeting_room', 
-            gradient: 'from-[#A9C9FF] to-[#CDD5FF]',
-            textColor: 'text-blue-900',
+            gradient: 'from-[#B8E3E9]/60 to-[#F8FAFC]',
+            textColor: 'text-[#0B2E33]',
             subText: 'Assigned status'
         },
         { 
             label: 'Active Complaints', 
             value: complaints.filter((c: any) => c.status !== 'Resolved').length.toString().padStart(2, '0'), 
             icon: 'pending_actions', 
-            gradient: 'from-[#FFDFA3] to-[#FFF5D1]',
-            textColor: 'text-amber-900',
+            gradient: 'from-[#4F7C82]/20 to-[#B8E3E9]/10',
+            textColor: 'text-[#4F7C82]',
             subText: 'Needs attention'
         },
         { 
             label: 'Resolved Complaints', 
             value: complaints.filter((c: any) => c.status === 'Resolved').length.toString().padStart(2, '0'), 
             icon: 'task_alt', 
-            gradient: 'from-[#A8E6CF] to-[#DCEDC1]',
-            textColor: 'text-emerald-900',
+            gradient: 'from-[#B8E3E9]/40 to-emerald-50/30',
+            textColor: 'text-emerald-800',
             subText: 'Completed tasks'
         }
     ]
@@ -299,7 +298,7 @@ export default function UserDashboard() {
     }
 
     return (
-        <div className="bg-[#F9FAFB] font-display text-slate-900 min-h-screen">
+        <div className="bg-[#F8FAFC] font-display text-[#0B2E33] min-h-screen antialiased">
             <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
             
@@ -311,30 +310,30 @@ export default function UserDashboard() {
                     <div className="max-w-6xl mx-auto w-full">
                         
                         {/* Header */}
-                        <header className="flex items-center justify-between mb-10">
+                        <header className="flex items-center justify-between mb-12">
                             <div>
                                 <div className="flex items-center gap-3 lg:hidden mb-4">
-                                    <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white rounded-xl shadow-sm border border-slate-200">
-                                        <Icon name="menu" className="text-[#ec5b13]" />
+                                    <button onClick={() => setSidebarOpen(true)} className="p-2.5 bg-white rounded-2xl shadow-sm border border-[#B8E3E9]">
+                                        <Icon name="menu" className="text-[#4F7C82]" />
                                     </button>
                                 </div>
-                                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                                <h1 className="text-3xl font-black text-[#0B2E33] tracking-tighter">
                                     Welcome back, {profile?.name?.split(' ')[0] || 'User'}
                                 </h1>
-                                <p className="text-slate-500 mt-1 font-medium">Your residency overview and updates.</p>
+                                <p className="text-[#4F7C82] mt-1.5 font-bold text-sm uppercase tracking-widest opacity-80">Resident Portal Overview</p>
                             </div>
                             
                             <div className="flex items-center gap-4">
-                                <button className="relative p-3 text-slate-400 bg-white rounded-full border border-slate-200 shadow-sm hover:text-slate-600 transition-colors">
+                                <button className="relative p-3.5 text-[#4F7C82] bg-white rounded-2xl border border-slate-100 shadow-sm hover:text-[#0B2E33] transition-all hover:shadow-md active:scale-95">
                                     <Icon name="notifications" />
-                                    <span className="absolute top-3 right-3 size-2 bg-[#ec5b13] rounded-full border-2 border-white"></span>
+                                    <span className="absolute top-4 right-4 size-2.5 bg-[#4F7C82] rounded-full border-2 border-white shadow-sm shadow-[#4F7C82]/20"></span>
                                 </button>
                                 <div 
                                      onClick={() => router.push('/user/profile')}
-                                     className="size-12 rounded-full border-2 border-white shadow-md bg-slate-200 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-lg transition-all" 
+                                     className="size-14 rounded-2xl border-4 border-white shadow-xl bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300" 
                                      style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}>
                                     {!profile?.profileImage && (
-                                        <div className="size-full flex items-center justify-center text-slate-400 font-bold bg-white">
+                                        <div className="size-full flex items-center justify-center text-[#4F7C82] font-black bg-white">
                                             {profile?.name?.charAt(0) || 'U'}
                                         </div>
                                     )}
@@ -342,86 +341,89 @@ export default function UserDashboard() {
                             </div>
                         </header>
 
-                        {/* Stats Grid - Using requested theme colors */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-14">
                             {stats.map((stat, idx) => (
                                 <motion.div 
                                     key={idx}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className={`rounded-[2rem] p-7 shadow-sm border border-white bg-gradient-to-br ${stat.gradient} relative overflow-hidden group`}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.1, type: 'spring', stiffness: 100 }}
+                                    className={`rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br ${stat.gradient} relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500`}
                                 >
-                                    <div className="flex items-center justify-between mb-6 relative z-10">
-                                        <span className={`p-2 bg-white/40 backdrop-blur-md rounded-xl ${stat.textColor} flex items-center justify-center`}>
+                                    <div className="flex items-center justify-between mb-8 relative z-10">
+                                        <div className={`p-3 bg-white/60 backdrop-blur-sm rounded-2xl ${stat.textColor} flex items-center justify-center shadow-sm`}>
                                             <Icon name={stat.icon} />
-                                        </span>
-                                        <span className={`text-[10px] font-bold uppercase tracking-[0.15em] opacity-60 ${stat.textColor}`}>
+                                        </div>
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-50 ${stat.textColor}`}>
                                             {stat.label}
                                         </span>
                                     </div>
                                     <div className="relative z-10">
                                         <p className={`text-5xl font-black ${stat.textColor} tracking-tighter`}>{stat.value}</p>
-                                        <p className={`mt-3 text-xs font-bold uppercase tracking-wide opacity-70 ${stat.textColor}`}>{stat.subText}</p>
+                                        <p className={`mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 ${stat.textColor}`}>{stat.subText}</p>
                                     </div>
-                                    {/* Subtle decorative circle */}
-                                    <div className="absolute -right-4 -bottom-4 size-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                                    {/* Glass decorative element */}
+                                    <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                                 </motion.div>
                             ))}
                         </div>
 
-                        {/* Main Container */}
-                        <div className="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-slate-100">
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Recent Complaints</h2>
+                        {/* Recent Complaints Section */}
+                        <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-sm border border-slate-50 relative overflow-hidden">
+                            <div className="flex items-center justify-between mb-10 relative z-10">
+                                <div>
+                                    <h2 className="text-2xl font-black text-[#0B2E33] tracking-tight">Recent Complaints</h2>
+                                    <p className="text-xs font-bold text-[#4F7C82] uppercase tracking-[0.1em] mt-1 opacity-70">Latest tracking updates</p>
+                                </div>
+                              
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5 relative z-10">
                                 {isLoadingComplaints ? (
-                                    <div className="py-20 text-center">
-                                        <div className="animate-spin size-6 border-2 border-[#ec5b13] border-t-transparent rounded-full mx-auto mb-4"></div>
-                                        <p className="text-sm font-medium text-slate-400">Loading your updates...</p>
+                                    <div className="py-24 text-center">
+                                        <div className="animate-spin size-8 border-4 border-[#B8E3E9] border-t-[#4F7C82] rounded-full mx-auto mb-6"></div>
+                                        <p className="text-xs font-black text-[#4F7C82] uppercase tracking-widest">Synchronizing Log...</p>
                                     </div>
                                 ) : complaints.length === 0 ? (
-                                    <div className="py-20 text-center bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
-                                        <Icon name="check_circle" className="text-4xl mb-3 text-slate-200" />
-                                        <p className="text-slate-500 font-medium">No active complaints found.</p>
+                                    <div className="py-24 text-center bg-[#F8FAFC] rounded-[2.5rem] border border-dashed border-[#B8E3E9]">
+                                        <Icon name="verified_user" className="text-5xl mb-4 text-[#B8E3E9]" />
+                                        <p className="text-[#4F7C82] font-black uppercase tracking-widest text-xs">No active maintenance logs</p>
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="space-y-4">
+                                        <div className="space-y-5">
                                             {complaints.map((complaint: any, idx: number) => (
                                                 <motion.div 
                                                     key={complaint._id}
-                                                    initial={{ opacity: 0, x: -10 }}
-                                                    animate={{ opacity: 1, x: 0 }}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
                                                     transition={{ delay: idx * 0.05 }}
-                                                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-2xl border border-slate-100 hover:bg-slate-50 hover:border-slate-200 transition-all gap-4 group"
+                                                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 rounded-[2rem] border border-slate-50 bg-white hover:bg-[#F8FAFC] hover:border-[#B8E3E9]/30 hover:shadow-lg hover:shadow-[#4F7C82]/5 transition-all duration-300 gap-5 group"
                                                 >
-                                                    <div className="flex items-center gap-5">
-                                                        <div className="size-14 rounded-2xl bg-white flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-105 transition-transform">
-                                                            <Icon name={getIconForCategory(complaint.category)} className="text-[#ec5b13] text-2xl" />
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="size-16 rounded-2xl bg-white flex items-center justify-center border border-slate-100 shadow-sm group-hover:scale-110 group-hover:bg-[#B8E3E9]/20 transition-all duration-500">
+                                                            <Icon name={getIconForCategory(complaint.category)} className="text-[#4F7C82] text-3xl" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-bold text-slate-900 group-hover:text-[#ec5b13] transition-colors">{complaint.title}</h3>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                                    Case #{complaint._id.slice(-6).toUpperCase()}
+                                                            <h3 className="font-black text-lg text-[#0B2E33] group-hover:text-[#4F7C82] transition-colors duration-300 leading-none">{complaint.title}</h3>
+                                                            <div className="flex items-center gap-3 mt-2.5">
+                                                                <p className="text-[10px] text-[#4F7C82] font-black uppercase tracking-wider bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md">
+                                                                    ID: {complaint._id.slice(-6).toUpperCase()}
                                                                 </p>
-                                                                <span className="text-slate-200">•</span>
-                                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                                                    {new Date(complaint.createdAt).toLocaleDateString()}
+                                                                <span className="text-slate-200">/</span>
+                                                                <p className="text-[10px] text-[#4F7C82] font-black uppercase tracking-widest opacity-60">
+                                                                    {new Date(complaint.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                                                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                                            complaint.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                                                    <div className="flex items-center gap-4 w-full sm:w-auto self-stretch sm:self-center">
+                                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${
+                                                            complaint.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
                                                         }`}>
                                                             {complaint.status}
                                                         </span>
-                                                       
                                                     </div>
                                                 </motion.div>
                                             ))}
@@ -429,22 +431,22 @@ export default function UserDashboard() {
 
                                         {/* Pagination Controls */}
                                         {totalPages > 1 && (
-                                            <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-6">
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                            <div className="mt-12 flex items-center justify-between border-t border-slate-50 pt-8">
+                                                <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-[0.2em] opacity-50">
                                                     Page {page} of {totalPages}
                                                 </p>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-3">
                                                     <button 
                                                         disabled={page === 1}
                                                         onClick={() => setPage((p: number) => Math.max(1, p - 1))}
-                                                        className="size-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        className="size-12 rounded-2xl border border-slate-100 flex items-center justify-center text-[#4F7C82] hover:bg-white hover:shadow-lg transition-all disabled:opacity-20 bg-[#F8FAFC]"
                                                     >
                                                         <Icon name="chevron_left" />
                                                     </button>
                                                     <button 
                                                         disabled={page === totalPages}
                                                         onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
-                                                        className="size-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                                        className="size-12 rounded-2xl border border-slate-100 flex items-center justify-center text-[#4F7C82] hover:bg-white hover:shadow-lg transition-all disabled:opacity-20 bg-[#F8FAFC]"
                                                     >
                                                         <Icon name="chevron_right" />
                                                     </button>

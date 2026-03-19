@@ -17,19 +17,11 @@ const SidebarItem = ({ icon, label, active, onClick }: { icon: string, label: st
     <button
         onClick={onClick}
         className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl w-full transition-all duration-300 group relative ${active
-            ? 'bg-[#ec5b13]/5 text-[#ec5b13]'
-            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+            ? 'bg-[#0B2E33] text-white shadow-lg shadow-[#0B2E33]/20'
+            : 'text-[#4F7C82] hover:bg-white/50 hover:text-[#0B2E33]'
             }`}
     >
-        {/* Active Indicator Line */}
-        {active && (
-            <motion.div 
-                layoutId="activeNav"
-                className="absolute left-0 w-1 h-6 bg-[#ec5b13] rounded-r-full"
-            />
-        )}
-        
-        <Icon name={icon} className={`${active ? 'text-[#ec5b13] font-fill' : 'text-slate-400 group-hover:text-slate-600'} transition-colors duration-200`} />
+        <Icon name={icon} className={`${active ? 'text-white' : 'text-[#4F7C82] group-hover:text-[#0B2E33]'} transition-colors duration-200`} />
         <span className={`text-[15px] tracking-tight ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
     </button>
 )
@@ -74,13 +66,13 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setSidebarOpen(false)}
-                        className="fixed inset-0 z-[60] bg-slate-900/20 backdrop-blur-md lg:hidden"
+                        className="fixed inset-0 z-[60] bg-[#0B2E33]/10 backdrop-blur-sm lg:hidden"
                     />
                 )}
             </AnimatePresence>
 
             <aside className={`
-                fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-white border-r border-slate-100 flex flex-col p-6 transition-transform duration-500 ease-in-out
+                fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-[#B8E3E9] border-r border-[#4F7C82]/10 flex flex-col p-6 transition-transform duration-500 ease-in-out
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 {/* Brand Logo */}
@@ -89,14 +81,14 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
                     className="flex items-center gap-3 mb-12 px-2 group"
                     onClick={() => setSidebarOpen(false)}
                 >
-                    <div className="size-10 bg-[#ec5b13] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#ec5b13]/20 group-hover:rotate-12 transition-transform duration-300">
+                    <div className="size-10 bg-[#0B2E33] rounded-xl flex items-center justify-center text-[#B8E3E9] shadow-lg shadow-[#0B2E33]/10 group-hover:rotate-12 transition-transform duration-300">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-slate-900 tracking-tighter">StaySync</h1>
+                        <h1 className="text-xl font-black text-[#0B2E33] tracking-tighter">StaySync</h1>
                     </div>
                 </Link>
 
@@ -121,30 +113,19 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
                 </nav>
 
                 {/* Profile Card Section */}
-                <div className="mt-auto pt-6 border-t border-slate-100">
+                <div className="mt-auto pt-6 border-t border-[#4F7C82]/10">
                     <div 
                         onClick={() => {
                             router.push('/user/profile')
                             setSidebarOpen(false)
-                        }}
-                        className="bg-slate-50 rounded-[2rem] p-4 mb-4 flex items-center gap-3 border border-slate-100/50 cursor-pointer hover:bg-slate-100 transition-colors group"
-                    >
-                        <div className="size-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm group-hover:scale-105 transition-transform">
-                            {profile?.profileImage ? (
-                                <img src={profile.profileImage} className="w-full h-full object-cover" alt="User avatar" />
-                            ) : (
-                                <Icon name="person" className="text-slate-300" />
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold truncate text-slate-900">{profile?.name || 'User'}</p>
-                            <p className="text-[10px] font-bold text-[#ec5b13] truncate uppercase tracking-tight">Active Resident</p>
-                        </div>
+                        }}                    
+                        >
+                       
                     </div>
 
                     <button 
                         onClick={handleLogout} 
-                        className="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl w-full transition-all duration-300 text-[14px] font-bold group"
+                        className="flex items-center gap-4 px-4 py-3 text-[#4F7C82] hover:text-[#0B2E33] hover:bg-white/30 rounded-2xl w-full transition-all duration-300 text-[14px] font-bold group"
                     >
                         <Icon name="logout" className="text-[20px] group-hover:-translate-x-1 transition-transform" />
                         <span>Sign Out</span>

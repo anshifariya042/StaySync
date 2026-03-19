@@ -56,10 +56,6 @@ export default function HostelDetails() {
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
-    const [showReviewForm, setShowReviewForm] = useState(false);
-    const [newRating, setNewRating] = useState(5);
-    const [newComment, setNewComment] = useState("");
-    const [submittingReview, setSubmittingReview] = useState(false);
 
 
     useEffect(() => {
@@ -89,38 +85,6 @@ export default function HostelDetails() {
         fetchDetails();
     }, [id]);
 
-    const handleSubmitReview = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!id || !newComment || submittingReview) return;
-        
-        setSubmittingReview(true);
-        try {
-            const res = await api.post('/reviews', {
-                hostelId: id,
-                rating: newRating,
-                comment: newComment
-            });
-            
-            // Refresh reviews and hostel details
-            const [reviewsRes, hostelRes] = await Promise.all([
-                api.get(`/reviews/hostel/${id}`),
-                api.get(`/hostels/${id}`)
-            ]);
-            setReviews(reviewsRes.data);
-            setHostel(hostelRes.data.hostel);
-            
-            // Reset form
-            setShowReviewForm(false);
-            setNewRating(5);
-            setNewComment("");
-            alert("Review submitted successfully!");
-        } catch (error: any) {
-            console.error("Failed to submit review:", error);
-            alert(error.response?.data?.message || "Failed to submit review");
-        } finally {
-            setSubmittingReview(false);
-        }
-    };
 
 
     if (loading) {
@@ -187,10 +151,20 @@ export default function HostelDetails() {
                                             <span className="material-symbols-outlined text-sm">location_on</span>
                                             <span className="text-sm">{hostel.location}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                            <span className="text-sm font-semibold text-slate-900">{hostel.averageRating || "New"}</span>
-                                            <span className="text-sm text-slate-500">({hostel.numberOfReviews || 0} reviews)</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-0.5 text-amber-500">
+                                                {[1, 2, 3, 4, 5].map((s) => (
+                                                    <span 
+                                                        key={s} 
+                                                        className="material-symbols-outlined text-lg" 
+                                                        style={s <= Math.round(hostel.averageRating) ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                                    >
+                                                        {s <= Math.round(hostel.averageRating) ? 'star' : (s - 0.5 <= hostel.averageRating ? 'star_half' : 'star')}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <span className="text-sm font-bold text-slate-900">{hostel.averageRating || "New"}</span>
+                                            <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span>
                                         </div>
 
                                     </div>
@@ -348,124 +322,101 @@ export default function HostelDetails() {
                             </div>
                         </section>
 
-                        {/* Reviews Section Placeholder */}
-                        <section className="bg-white p-6 rounded-xl border border-slate-200">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">User Reviews</h2>
-                                {profile && (
-                                    <button 
-                                        onClick={() => setShowReviewForm(!showReviewForm)}
-                                        className="text-sm font-bold text-[#5048e5] hover:underline"
-                                    >
-                                        {showReviewForm ? 'Cancel' : 'Write a Review'}
-                                    </button>
-                                )}
+                        {/* Reviews Section */}
+                        <section className="bg-white p-8 rounded-2xl border border-slate-200">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                                    User Reviews
+                                    <span className="px-3 py-1 bg-[#5048e5]/10 text-[#5048e5] text-xs font-bold rounded-full">
+                                        {hostel.numberOfReviews || 0} reviews
+                                    </span>
+                                </h2>
                             </div>
 
-                            {showReviewForm && (
-                                <form onSubmit={handleSubmitReview} className="mb-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                    <h3 className="font-bold mb-4 text-slate-800">Share your experience</h3>
-                                    <div className="flex gap-2 mb-4">
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star}
-                                                type="button"
-                                                onClick={() => setNewRating(star)}
-                                                className="focus:outline-none transition-transform hover:scale-110"
-                                            >
-                                                <span 
-                                                    className={`material-symbols-outlined text-2xl ${
-                                                        star <= newRating ? 'text-amber-500' : 'text-slate-300'
-                                                    }`}
-                                                    style={star <= newRating ? { fontVariationSettings: "'FILL' 1" } : {}}
-                                                >
-                                                    star
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <textarea
-                                        value={newComment}
-                                        onChange={(e) => setNewComment(e.target.value)}
-                                        placeholder="Tell others about your stay..."
-                                        className="w-full p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#5048e5] focus:border-transparent outline-none min-h-[100px] mb-4 text-sm"
-                                        required
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={submittingReview}
-                                        className="px-6 py-2 bg-[#5048e5] text-white font-bold rounded-lg text-sm disabled:opacity-50"
-                                    >
-                                        {submittingReview ? 'Submitting...' : 'Post Review'}
-                                    </button>
-                                </form>
-                            )}
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                                <div className="flex flex-col items-center justify-center p-6 bg-slate-50 rounded-xl text-center">
-                                    <span className="text-5xl font-bold text-slate-900">{hostel.averageRating || "0.0"}</span>
-                                    <div className="flex text-amber-500 my-2">
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
+                                {/* Rating Summary Box */}
+                                <div className="md:col-span-4 flex flex-col items-center justify-center p-8 bg-slate-50 rounded-3xl text-center border border-slate-100">
+                                    <span className="text-6xl font-black text-slate-900 tracking-tighter">{hostel.averageRating || "0.0"}</span>
+                                    <div className="flex text-amber-500 my-4 gap-1">
                                         {[1, 2, 3, 4, 5].map((s) => (
                                             <span 
                                                 key={s} 
-                                                className="material-symbols-outlined" 
+                                                className="material-symbols-outlined text-2xl" 
                                                 style={s <= Math.round(hostel.averageRating) ? { fontVariationSettings: "'FILL' 1" } : {}}
                                             >
                                                 {s <= Math.round(hostel.averageRating) ? 'star' : (s - 0.5 <= hostel.averageRating ? 'star_half' : 'star')}
                                             </span>
                                         ))}
                                     </div>
-                                    <span className="text-sm text-slate-500">Based on {hostel.numberOfReviews || 0} reviews</span>
+                                    <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Global Rating</span>
                                 </div>
-                                <div className="space-y-2">
+
+                                {/* Rating Bars */}
+                                <div className="md:col-span-8 flex flex-col justify-center space-y-4">
                                     {[5, 4, 3, 2, 1].map((star) => {
                                         const count = reviews.filter(r => Math.round(r.rating) === star).length;
                                         const pct = hostel.numberOfReviews > 0 ? (count / hostel.numberOfReviews) * 100 : 0;
                                         return (
-                                            <div key={star} className="flex items-center gap-3">
-                                                <span className="text-sm w-4 text-center">{star}</span>
-                                                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div className="bg-amber-500 h-full transition-all duration-500" style={{ width: `${pct}%` }}></div>
+                                            <div key={star} className="flex items-center gap-4 group">
+                                                <div className="flex items-center gap-1 w-12 shrink-0">
+                                                    <span className="text-sm font-bold text-slate-600">{star}</span>
+                                                    <span className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                                                 </div>
-                                                <span className="text-sm text-slate-500 w-8">{Math.round(pct)}%</span>
+                                                <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="bg-[#5048e5] h-full transition-all duration-700 ease-out rounded-full shadow-sm" 
+                                                        style={{ width: `${pct}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-400 w-10 text-right">{Math.round(pct)}%</span>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
 
-                            {/* Individual Reviews */}
+                            {/* Individual Reviews List */}
                             <div className="space-y-6">
                                 {reviews.length > 0 ? (
                                     reviews.map((review) => (
-                                        <div key={review._id} className="pb-6 border-b border-slate-100 last:border-0">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <p className="font-bold text-slate-900">{review.userId?.name || 'Anonymous'}</p>
-                                                    <div className="flex text-amber-500 scale-75 -ml-4 origin-left">
-                                                        {[1, 2, 3, 4, 5].map((s) => (
-                                                            <span 
-                                                                key={s} 
-                                                                className="material-symbols-outlined" 
-                                                                style={s <= review.rating ? { fontVariationSettings: "'FILL' 1" } : {}}
-                                                            >
-                                                                {s <= review.rating ? 'star' : 'star'}
-                                                            </span>
-                                                        ))}
+                                        <div key={review._id} className="p-6 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-300">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100 shrink-0 capitalize text-slate-500 font-bold">
+                                                        {review.userId?.name?.[0] || 'A'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-900 leading-none mb-1">{review.userId?.name || 'Anonymous'}</p>
+                                                        <div className="flex items-center gap-0.5">
+                                                            {[1, 2, 3, 4, 5].map((s) => (
+                                                                <span 
+                                                                    key={s} 
+                                                                    className={`material-symbols-outlined text-sm ${s <= review.rating ? 'text-amber-500' : 'text-slate-200'}`} 
+                                                                    style={s <= review.rating ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                                                >
+                                                                    star
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <span className="text-xs text-slate-400">
-                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded">
+                                                    {new Date(review.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </span>
                                             </div>
-                                            <p className="text-slate-600 text-sm italic leading-relaxed">
-                                                "{review.comment}"
-                                            </p>
+                                            <div className="pl-16">
+                                                <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                                                    {review.comment}
+                                                </p>
+                                            </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-8 bg-slate-50 rounded-xl">
-                                        <p className="text-slate-500 text-sm">No reviews yet. Be the first to review!</p>
+                                    <div className="text-center py-16 bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200">
+                                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                                            <span className="material-symbols-outlined text-slate-300 text-3xl font-light">reviews</span>
+                                        </div>
+                                        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">No reviews yet. Be the first to share your experience!</p>
                                     </div>
                                 )}
                             </div>

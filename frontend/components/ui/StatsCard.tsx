@@ -11,21 +11,34 @@ interface StatsCardProps {
   trendColor?: string;
 }
 
-const StatsCard = ({ icon, label, value, subtext, trend, trendColor }: StatsCardProps) => (
-  <Card>
-    <div className="flex items-center justify-between mb-4">
-      <span className={`p-2 rounded-lg ${trendColor ? trendColor.replace('text-', 'bg-').replace('600', '100 dark:bg-') + '900/30' : 'bg-primary/10 dark:bg-primary/20'} ${trendColor || 'text-primary'}`}>
-        <Icon name={icon} />
-      </span>
-      {trend ? (
-        <span className={`text-xs font-semibold ${trendColor || 'text-slate-400 uppercase tracking-wider'}`}>{trend}</span>
-      ) : (
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total</span>
-      )}
+const StatsCard = ({ icon, label, value, subtext, trend, trendColor }: StatsCardProps) => {
+  const getIconColorClasses = (iconName: string) => {
+    switch (iconName) {
+      case 'bed': return 'bg-orange-50 text-orange-600';
+      case 'door_front': 
+      case 'meeting_room': return 'bg-emerald-50 text-emerald-600';
+      case 'warning': return 'bg-amber-50 text-amber-600';
+      case 'engineering': return 'bg-purple-50 text-purple-600';
+      default: return 'bg-slate-50 text-slate-600';
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-border-light shadow-sm flex flex-col justify-between h-full">
+      <div className="flex justify-between items-start">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getIconColorClasses(icon)}`}>
+          <Icon name={icon} className="material-symbols-outlined" />
+        </div>
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${trendColor || 'text-slate-400'}`}>
+          {trend || 'Total'}
+        </span>
+      </div>
+      <div className="mt-4">
+        <h3 className="text-3xl font-bold text-slate-900">{value}</h3>
+        <p className="text-sm text-slate-500 font-medium">{subtext}</p>
+      </div>
     </div>
-    <p className="text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
-    <p className="text-sm text-slate-500 mt-1">{subtext}</p>
-  </Card>
-);
+  );
+};
 
 export default StatsCard;
