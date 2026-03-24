@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { Booking, BookingStatus } from "../models/Booking";
 import { Room, RoomStatus } from "../models/Room";
-import { User } from "../models/User";
+import { User, UserStatus } from "../models/User";
+import { sendBookingStatusEmail } from "../utils/mailer";
+import { sendNotification } from "../sockets/socket";
+import Hostel from "../models/hostelModel";
 
 export const createBooking = async (req: Request, res: Response) => {
     try {
@@ -61,12 +64,12 @@ export const createBooking = async (req: Request, res: Response) => {
             advancePayment,
             status: BookingStatus.PENDING
         });
-
         // Update User profile to link with the hostel and room
         await User.findByIdAndUpdate(userId, {
             hostelId: hostelId,
             roomId: validatedRoomId,
-            roomType: selectedRoomType
+            roomType: selectedRoomType,
+            status: UserStatus.PENDING
         });
 
         // Update room occupancy if a room was selected
@@ -100,3 +103,100 @@ export const getMyBookings = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message || "Failed to fetch bookings" });
     }
 };
+
+export const updateBookingStatus = async (req: Request, res: Response) => {
+    try {
+        const { status } = req.body;
+        const bookingId = req.params.id;
+
+        const booking = await Booking.findById(bookingId).populate("hostelId");
+        if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+        // Update booking status
+        booking.status = status as BookingStatus;
+        await booking.save();
+
+        // Update user status
+        const userStatus = status === BookingStatus.APPROVED ? UserStatus.ACTIVE : UserStatus.REJECTED;
+        await User.findByIdAndUpdate(booking.userId, { status: userStatus });
+
+        const user = await User.findById(booking.userId);
+        const hostel = booking.hostelId as any;
+
+        if (user) {
+            // Real-time notification
+            sendNotification(user._id.toString(), "booking-status-updated", {
+                status,
+                message: status === BookingStatus.APPROVED 
+                    ? `Your booking at ${hostel.name} has been approved!` 
+                    : `Your booking at ${hostel.name} has been rejected.`
+            });
+
+            // Email alert
+            sendBookingStatusEmail(user.email, user.name, status, hostel.name).catch(console.error);
+        }
+
+        res.status(200).json({ message: `Booking ${status} successfully`, booking });
+    } catch (error: any) {
+        console.error("Update booking status error:", error);
+        res.status(500).json({ message: error.message || "Failed to update booking status" });
+    }
+};
+
+export const updateResidentStatus = async (req: Request, res: Response) => {
+    try {
+        const { status } = req.body;
+        const userId = req.params.userId as string;
+
+        // Find the most recent pending booking for this user
+        const booking = await Booking.findOne({ 
+            userId, 
+            status: BookingStatus.PENDING 
+        }).populate("hostelId");
+
+        if (!booking) {
+            // If no pending booking, it might already be confirmed or the user was added manually
+            // We just update the user status directly in this case
+            const userStatus = status === "approved" ? UserStatus.ACTIVE : UserStatus.REJECTED;
+            const updatedUser = await User.findByIdAndUpdate(userId, { status: userStatus }, { new: true });
+            
+            if (updatedUser) {
+                 sendNotification(userId, "booking-status-updated", {
+                    status,
+                    message: status === "approved" 
+                        ? `Your residency has been approved!` 
+                        : `Your residency request has been rejected.`
+                });
+            }
+            
+            return res.status(200).json({ message: `Resident status updated to ${status}` });
+        }
+
+        // Reuse the logic from updateBookingStatus but with the found booking
+        booking.status = status as BookingStatus;
+        await booking.save();
+
+        const userStatus = status === BookingStatus.APPROVED ? UserStatus.ACTIVE : UserStatus.REJECTED;
+        await User.findByIdAndUpdate(userId, { status: userStatus });
+
+        const user = await User.findById(userId);
+        const hostel = booking.hostelId as any;
+
+        if (user) {
+            sendNotification(user._id.toString(), "booking-status-updated", {
+                status,
+                message: status === BookingStatus.APPROVED 
+                    ? `Your booking at ${hostel.name} has been approved!` 
+                    : `Your booking at ${hostel.name} has been rejected.`
+            });
+
+            sendBookingStatusEmail(user.email, user.name, status, hostel?.name || "StaySync").catch(console.error);
+        }
+
+        res.status(200).json({ message: `Resident status updated to ${status}`, booking });
+    } catch (error: any) {
+        console.error("Update resident status error:", error);
+        res.status(500).json({ message: error.message || "Failed to update resident status" });
+    }
+};
+

@@ -228,6 +228,7 @@ import { useRouter } from 'next/navigation'
 import UserSidebar from '@/components/UserSidebar/UserSidebar'
 import { useUserStore } from '@/store/useUserStore'
 import { useComplaints } from '@/hooks/useComplaints'
+import RestrictedAccess from '@/components/ui/RestrictedAccess'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -259,6 +260,10 @@ export default function UserDashboard() {
     const complaints = data?.complaints || []
     const totalPages = data?.totalPages || 1
     const totalCount = data?.totalCount || 0
+
+    if (profile?.status === 'pending' || profile?.status === 'rejected') {
+        return <RestrictedAccess status={profile.status as string} name={profile.name} />;
+    }
 
     const stats = [
         { 

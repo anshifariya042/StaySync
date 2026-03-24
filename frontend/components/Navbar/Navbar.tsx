@@ -3,10 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuthStore as useAuth } from '@/store/useAuthStore';
+import { useRouter } from 'next/navigation';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
 
@@ -94,6 +96,7 @@ export default function Navbar() {
                           onClick={() => {
                             logout();
                             setIsDropdownOpen(false);
+                            router.push('/');
                           }}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors text-left"
                         >

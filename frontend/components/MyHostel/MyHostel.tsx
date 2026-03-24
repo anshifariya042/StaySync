@@ -7,6 +7,7 @@ import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import UserSidebar from '@/components/UserSidebar/UserSidebar'
 import { useUserStore } from '@/store/useUserStore'
 import api from '@/lib/api'
+import RestrictedAccess from '@/components/ui/RestrictedAccess'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "", fill = false }: { name: string, className?: string, fill?: boolean }) => (
@@ -94,6 +95,10 @@ export default function MyHostel() {
                 <p className="mt-6 text-[#4F7C82] font-black text-[10px] uppercase tracking-[0.2em] opacity-60">Synchronizing Data...</p>
             </div>
         )
+    }
+
+    if (profile?.status === 'pending' || profile?.status === 'rejected') {
+        return <RestrictedAccess status={profile.status as string} name={profile.name} />;
     }
 
     return (

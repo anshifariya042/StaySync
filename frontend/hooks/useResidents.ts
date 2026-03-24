@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getResidents, addResident, deleteResident } from '@/services/adminService';
+import { getResidents, addResident, deleteResident, updateResidentStatus } from '@/services/adminService';
 
 // Keys for caching
 export const residentKeys = {
@@ -26,6 +26,17 @@ export function useAddResident() {
       if (variables.hostelId) {
         queryClient.invalidateQueries({ queryKey: residentKeys.all(variables.hostelId) });
       }
+    },
+  });
+}
+
+export function useUpdateResidentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userId, status }: { userId: string, status: string }) => updateResidentStatus(userId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['residents'] });
     },
   });
 }

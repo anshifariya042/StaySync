@@ -11,6 +11,8 @@ export enum UserStatus {
   ACTIVE = "active",
   MOVE_OUT_PENDING = "move-out pending",
   ON_LEAVE = "on leave",
+  PENDING = "pending",
+  REJECTED = "rejected",
 }
 
 export interface IUser extends Document {

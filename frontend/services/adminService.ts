@@ -64,6 +64,11 @@ export const deleteResident = async (residentId: string) => {
     return response.data;
 };
 
+export const updateResidentStatus = async (userId: string, status: string) => {
+    const response = await api.put(`/bookings/user/${userId}/status`, { status });
+    return response.data;
+};
+
 // Staff management
 export const addStaff = async (staffData: any) => {
     const response = await api.post('/hostels/staff', staffData);

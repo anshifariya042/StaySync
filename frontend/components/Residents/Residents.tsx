@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
-import { useResidents, useDeleteResident } from '@/hooks/useResidents'
+import { useResidents, useDeleteResident, useUpdateResidentStatus } from '@/hooks/useResidents'
 
 import Icon from '@/components/ui/Icon'
 import AdminSidebar from '@/components/ui/AdminSidebar'
@@ -19,6 +19,16 @@ export default function Residents() {
 
     const { data: residents = [], isLoading } = useResidents(user?.hostelId, searchTerm)
     const deleteResidentMutation = useDeleteResident()
+    const updateStatusMutation = useUpdateResidentStatus()
+
+    const handleUpdateStatus = async (userId: string, status: string) => {
+        if (!window.confirm(`Are you sure you want to ${status} this resident?`)) return
+        try {
+            await updateStatusMutation.mutateAsync({ userId, status })
+        } catch (error) {
+            console.error(`Error updating resident status to ${status}:`, error)
+        }
+    }
 
     const handleDelete = async (residentId: string) => {
         if (!window.confirm("Are you sure you want to remove this resident?")) return
@@ -135,6 +145,24 @@ export default function Residents() {
                                             </td>
                                             <td className="px-6 py-5 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    {resident.status === 'pending' && (
+                                                        <>
+                                                            <button 
+                                                                onClick={() => handleUpdateStatus(resident._id, 'approved')} 
+                                                                className="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all duration-200"
+                                                                title="Approve Resident"
+                                                            >
+                                                                <Icon name="check_circle" className="material-symbols-outlined text-lg" />
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleUpdateStatus(resident._id, 'rejected')} 
+                                                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all duration-200"
+                                                                title="Reject Resident"
+                                                            >
+                                                                <Icon name="cancel" className="material-symbols-outlined text-lg" />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                     <button 
                                                         onClick={() => handleDelete(resident._id)} 
                                                         className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-200"
