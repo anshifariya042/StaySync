@@ -13,6 +13,7 @@ import {
     Menu,
     MessageSquare
 } from "lucide-react";
+import { useSidebarStore } from "@/store/useSidebarStore";
 
 const contacts = [
     { id: 1, name: "Rahul Sharma", lastMsg: "Room 102 plumbing issue resolved?", time: "10:30 AM", unread: 2, online: true, room: "102" },
@@ -21,7 +22,8 @@ const contacts = [
     { id: 4, name: "Sara Khan", lastMsg: "My door key is stuck.", time: "Yesterday", unread: 0, online: false, room: "112" },
 ];
 
-export default function StaffChat({ onMenuClick }: { onMenuClick?: () => void }) {
+export default function StaffChat() {
+    const { setIsOpen } = useSidebarStore();
     const [selectedContact, setSelectedContact] = useState(contacts[0]);
 
     return (
@@ -33,7 +35,7 @@ export default function StaffChat({ onMenuClick }: { onMenuClick?: () => void })
             `}>
                 <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4">
                     <button 
-                        onClick={onMenuClick}
+                        onClick={() => setIsOpen(true)}
                         className="p-2 text-slate-500 hover:text-blue-600 md:hidden transition-colors"
                     >
                         <Menu className="w-6 h-6" />

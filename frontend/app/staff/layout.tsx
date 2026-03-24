@@ -2,10 +2,9 @@
 
 import StaffSidebar from "@/components/StaffSidebar/StaffSidebar";
 import { useUserStore } from "@/store/useUserStore";
+import { useSidebarStore } from "@/store/useSidebarStore";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
-
+import React, { useEffect } from "react";
 
 export default function StaffLayout({
     children,
@@ -13,8 +12,8 @@ export default function StaffLayout({
     children: React.ReactNode;
 }) {
     const { profile, isLoading } = useUserStore();
+    const { isOpen, setIsOpen } = useSidebarStore();
     const router = useRouter();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!isLoading && (!profile || profile.role !== "staff")) {
@@ -24,37 +23,25 @@ export default function StaffLayout({
 
     if (isLoading || !profile || profile.role !== "staff") {
         return (
-            <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="flex h-screen items-center justify-center bg-[#F8FAFC]">
+                <div className="animate-spin size-12 border-4 border-[#B8E3E9] border-t-[#4F7C82] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
-            <StaffSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <div className="flex min-h-screen bg-[#F8FAFC] relative overflow-hidden font-display antialiased">
+             <style jsx global>{`
+                @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&display=swap');
+                body { font-family: 'Public Sans', sans-serif; }
+                .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+            `}</style>
             
-            {/* Mobile Overlay */}
-            {sidebarOpen && (
-                <div 
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-
+            <StaffSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+            
             <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-                {React.Children.map(children, child => {
-                    if (React.isValidElement(child)) {
-                        return React.cloneElement(child, { 
-                            onMenuClick: () => setSidebarOpen(true) 
-                        } as any);
-                    }
-                    return child;
-                })}
+                {children}
             </div>
-
         </div>
     );
 }
-
-

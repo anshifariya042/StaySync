@@ -1,6 +1,10 @@
 import React from 'react';
-import Icon from './Icon';
-import Card from './Card';
+import { motion } from 'framer-motion';
+
+// Helper for Material Symbols
+const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
+    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+)
 
 interface StatsCardProps {
   icon: string;
@@ -9,35 +13,56 @@ interface StatsCardProps {
   subtext: string;
   trend?: string;
   trendColor?: string;
+  index?: number;
 }
 
-const StatsCard = ({ icon, label, value, subtext, trend, trendColor }: StatsCardProps) => {
-  const getIconColorClasses = (iconName: string) => {
+const StatsCard = ({ icon, label, value, subtext, trend, trendColor, index = 0 }: StatsCardProps) => {
+  const getGradient = (iconName: string) => {
     switch (iconName) {
-      case 'bed': return 'bg-orange-50 text-orange-600';
+      case 'bed': return 'from-[#B8E3E9]/60 to-[#F8FAFC]';
       case 'door_front': 
-      case 'meeting_room': return 'bg-emerald-50 text-emerald-600';
-      case 'warning': return 'bg-amber-50 text-amber-600';
-      case 'engineering': return 'bg-purple-50 text-purple-600';
-      default: return 'bg-slate-50 text-slate-600';
+      case 'meeting_room': return 'from-[#4F7C82]/20 to-[#B8E3E9]/10';
+      case 'warning': return 'from-[#B8E3E9]/40 to-emerald-50/30';
+      case 'engineering': return 'from-[#4F7C82]/10 to-[#B8E3E9]/30';
+      default: return 'from-slate-50 to-white';
     }
   };
 
+  const getTextColor = (iconName: string) => {
+    switch (iconName) {
+      case 'bed': return 'text-[#0B2E33]';
+      case 'door_front': 
+      case 'meeting_room': return 'text-[#4F7C82]';
+      case 'warning': return 'text-emerald-800';
+      case 'engineering': return 'text-[#0B2E33]';
+      default: return 'text-slate-800';
+    }
+  };
+
+  const textColor = getTextColor(icon);
+
   return (
-    <div className="bg-white p-6 rounded-2xl border border-border-light shadow-sm flex flex-col justify-between h-full">
-      <div className="flex justify-between items-start">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getIconColorClasses(icon)}`}>
-          <Icon name={icon} className="material-symbols-outlined" />
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
+        className={`rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br ${getGradient(icon)} relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500`}
+    >
+        <div className="flex items-center justify-between mb-8 relative z-10">
+            <div className={`p-3 bg-white/60 backdrop-blur-sm rounded-2xl ${textColor} flex items-center justify-center shadow-sm`}>
+                <Icon name={icon} />
+            </div>
+            <span className={`text-[10px] font-black uppercase tracking-[0.2em] opacity-50 ${textColor}`}>
+                {label}
+            </span>
         </div>
-        <span className={`text-[10px] font-bold uppercase tracking-wider ${trendColor || 'text-slate-400'}`}>
-          {trend || 'Total'}
-        </span>
-      </div>
-      <div className="mt-4">
-        <h3 className="text-3xl font-bold text-slate-900">{value}</h3>
-        <p className="text-sm text-slate-500 font-medium">{subtext}</p>
-      </div>
-    </div>
+        <div className="relative z-10">
+            <p className={`text-5xl font-black ${textColor} tracking-tighter`}>{value}</p>
+            <p className={`mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 ${textColor}`}>{subtext}</p>
+        </div>
+        {/* Glass decorative element */}
+        <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+    </motion.div>
   );
 };
 

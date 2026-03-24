@@ -9,7 +9,6 @@ export default function RegisterHostel() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState(false)
-    const [showPassword, setShowPassword] = useState(false)
 
     const [selectedImages, setSelectedImages] = useState<File[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -118,14 +117,12 @@ export default function RegisterHostel() {
                 formDataToSend.append('images', file)
             })
 
-            // Use the axios instance for consistency
-            const response = await api.post('/hostels/register-hostel', formDataToSend, {
+            await api.post('/hostels/register-hostel', formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
             
-            const data = response.data;
             setSuccess(true)
             setTimeout(() => router.push('/login'), 2000)
         } catch (err: any) {
@@ -143,93 +140,91 @@ export default function RegisterHostel() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-[#111827] tracking-tight">Hostel Registered!</h2>
-                <p className="text-[#374151] mt-2">Your admin account has been created. Redirecting to login...</p>
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">Hostel Registered!</h2>
+                <p className="text-text-gray mt-2">Your admin account has been created. Redirecting to login...</p>
             </div>
         )
     }
 
     return (
-        <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-[#F9FAFB] font-sans text-[#111827]">
-            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-
-            <header className="sticky top-0 z-50 flex items-center bg-[#F9FAFB]/80 backdrop-blur-md p-4 justify-between border-b border-[#D1D5DB]">
+        <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-[#F9FAFB] font-sans text-foreground">
+            <header className="sticky top-0 z-50 flex items-center bg-[#F9FAFB]/80 backdrop-blur-md p-4 justify-between border-b border-border-color shadow-sm">
                 <div
                     onClick={() => router.back()}
-                    className="text-[#4F46E5] flex size-10 shrink-0 items-center justify-center rounded-lg hover:bg-[#4F46E5]/10 cursor-pointer transition-colors"
+                    className="text-primary flex size-10 shrink-0 items-center justify-center rounded-lg hover:bg-primary/10 cursor-pointer transition-colors"
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="material-symbols-outlined font-bold">arrow_back</span>
                 </div>
-                <h2 className="text-[#111827] text-lg font-bold leading-tight tracking-tight flex-1 text-center">Register Hostel</h2>
+                <h2 className="text-foreground text-sm font-black uppercase tracking-widest flex-1 text-center">Register Hostel</h2>
                 <div className="size-10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[#4F46E5]">info</span>
+                    <span className="material-symbols-outlined text-primary font-bold">info</span>
                 </div>
             </header>
 
             <main className="flex-1 w-full max-w-5xl mx-auto pb-32">
-                <form id="register-hostel-form" onSubmit={handleSubmit} className="px-6 py-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <form id="register-hostel-form" onSubmit={handleSubmit} className="px-6 py-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {/* Column 1: Core Details */}
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#D1D5DB] space-y-8">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-border-color space-y-10">
                             <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Hostel Details</h3>
-                                <div className="space-y-4">
+                                <h3 className="text-foreground text-xl font-bold border-l-4 border-primary pl-4">Hostel Details</h3>
+                                <div className="space-y-5">
                                     <label className="flex flex-col w-full">
-                                        <span className="text-[#374151] text-sm font-semibold pb-2">Hostel Name</span>
+                                        <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Hostel Name</span>
                                         <input
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                            className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 h-14 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                             placeholder="e.g. Blue Sky Residency"
                                             type="text"
                                             required
                                         />
                                     </label>
                                     <label className="flex flex-col w-full">
-                                        <span className="text-[#374151] text-sm font-semibold pb-2">Owner Full Name</span>
+                                        <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Owner Full Name</span>
                                         <input
                                             name="ownerName"
                                             value={formData.ownerName}
                                             onChange={handleChange}
-                                            className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                            className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 h-14 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                             placeholder="John Doe"
                                             type="text"
                                             required
                                         />
                                     </label>
-                                    <div className="space-y-4">
+                                    <div className="space-y-5">
                                         <label className="flex flex-col w-full">
-                                            <span className="text-[#374151] text-sm font-semibold pb-2">Contact Email</span>
+                                            <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Contact Email</span>
                                             <input
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleChange}
-                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 h-14 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                                 placeholder="owner@staysync.com"
                                                 type="email"
                                                 required
                                             />
                                         </label>
                                         <label className="flex flex-col w-full">
-                                            <span className="text-[#374151] text-sm font-semibold pb-2">Create Password</span>
+                                            <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Create Password</span>
                                             <input
                                                 name="password"
                                                 value={formData.password}
                                                 onChange={handleChange}
-                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 h-14 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                                 placeholder="••••••••"
                                                 type="password"
                                                 required
                                             />
                                         </label>
                                         <label className="flex flex-col w-full">
-                                            <span className="text-[#374151] text-sm font-semibold pb-2">Phone Number</span>
+                                            <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Phone Number</span>
                                             <input
                                                 name="phone"
                                                 value={formData.phone}
                                                 onChange={handleChange}
-                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 h-14 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                                 placeholder="+1 (555) 000-0000"
                                                 type="tel"
                                                 required
@@ -237,46 +232,46 @@ export default function RegisterHostel() {
                                         </label>
                                     </div>
                                     <label className="flex flex-col w-full">
-                                        <span className="text-[#374151] text-sm font-semibold pb-2">Location</span>
+                                        <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Location</span>
                                         <div className="relative">
                                             <input
                                                 name="location"
                                                 value={formData.location}
                                                 onChange={handleChange}
-                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 pl-12 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                className="w-full rounded-xl text-foreground border border-border-color bg-white focus:border-primary h-14 pl-12 p-4 text-sm font-bold outline-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                                 placeholder="City, Street Address"
                                                 type="text"
                                                 required
                                             />
-                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5] pointer-events-none">location_on</span>
+                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none font-bold">location_on</span>
                                         </div>
                                     </label>
                                     <label className="flex flex-col w-full">
-                                        <span className="text-[#374151] text-sm font-semibold pb-2">Monthly Price ($)</span>
+                                        <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Monthly Price ($)</span>
                                         <div className="relative">
                                             <input
                                                 name="price"
                                                 value={formData.price || ''}
                                                 onChange={handleChange}
-                                                className="flex w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 h-14 pl-12 p-4 text-base outline-none transition-all placeholder:text-[#D1D5DB]"
+                                                className="w-full rounded-xl text-foreground border border-border-color bg-slate-50 h-14 pl-12 p-4 text-xl font-black text-primary outline-none focus:border-primary transition-all shadow-inner"
                                                 placeholder="0.00"
                                                 type="number"
                                                 required
                                             />
-                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4F46E5] pointer-events-none">payments</span>
+                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none font-bold">payments</span>
                                         </div>
                                     </label>
                                 </div>
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Capacity</h3>
+                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Capacity</h3>
                                 <label className="flex flex-col w-full">
-                                    <span className="text-[#374151] text-sm font-semibold pb-2">Total Number of Rooms</span>
+                                    <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-3 ml-1">Total Number of Rooms</span>
                                     <div className="flex items-center gap-4">
                                         <input
                                             name="totalRooms"
-                                            className="flex-1 rounded-xl text-[#111827] border border-[#D1D5DB] bg-[#F9FAFB] h-14 p-4 text-base outline-none"
+                                            className="flex-1 rounded-xl text-foreground border border-border-color bg-[#F9FAFB] h-14 p-4 text-lg font-black outline-none text-center"
                                             type="number"
                                             value={formData.totalRooms}
                                             onChange={handleChange}
@@ -285,49 +280,27 @@ export default function RegisterHostel() {
                                             <button
                                                 type="button"
                                                 onClick={decrementRooms}
-                                                className="size-14 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center hover:bg-[#4F46E5]/20 transition-colors"
+                                                className="size-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all font-black"
                                             >
-                                                <span className="material-symbols-outlined">remove</span>
+                                                <span className="material-symbols-outlined font-black">remove</span>
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={incrementRooms}
-                                                className="size-14 rounded-xl bg-[#4F46E5]/10 text-[#4F46E5] flex items-center justify-center hover:bg-[#4F46E5]/20 transition-colors"
+                                                className="size-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all font-black"
                                             >
-                                                <span className="material-symbols-outlined">add</span>
+                                                <span className="material-symbols-outlined font-black">add</span>
                                             </button>
                                         </div>
                                     </div>
                                 </label>
                             </section>
-
-                            <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Room Types Available</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {[
-                                        { id: 'Single Bed', label: 'Single Bed' },
-                                        { id: 'Double Sharing', label: 'Double Sharing' },
-                                        { id: 'Triple Sharing', label: 'Triple Sharing' },
-                                        { id: 'Four Sharing', label: 'Four Sharing' }
-                                    ].map((type) => (
-                                        <label key={type.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D1D5DB] bg-[#F9FAFB] cursor-pointer hover:border-[#6366F1] transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={formData.roomTypes.includes(type.id)}
-                                                onChange={() => toggleRoomType(type.id)}
-                                                className="rounded text-[#4F46E5] focus:ring-[#6366F1] size-5 border-[#D1D5DB]"
-                                            />
-                                            <span className="text-sm font-medium text-[#374151]">{type.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </section>
                         </div>
 
                         {/* Column 2: Specifics & Multimedia */}
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#D1D5DB] space-y-8">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-border-color space-y-10">
                             <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Facilities</h3>
+                                <h3 className="text-foreground text-xl font-bold border-l-4 border-primary pl-4">Facilities</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[
                                         { id: 'WiFi', label: 'Free Wi-Fi' },
@@ -337,40 +310,40 @@ export default function RegisterHostel() {
                                         { id: 'AC', label: 'Air Condition' },
                                         { id: 'Parking', label: 'Parking' }
                                     ].map((facility) => (
-                                        <label key={facility.id} className="flex items-center gap-3 p-3 rounded-xl border border-[#D1D5DB] bg-[#F9FAFB] cursor-pointer hover:border-[#6366F1] transition-colors">
+                                        <label key={facility.id} className="flex items-center gap-3 p-4 rounded-2xl border border-border-color bg-slate-50/50 cursor-pointer hover:border-primary hover:bg-white transition-all group">
                                             <input
                                                 type="checkbox"
                                                 checked={formData.facilities.includes(facility.id)}
                                                 onChange={() => toggleFacility(facility.id)}
-                                                className="rounded text-[#4F46E5] focus:ring-[#6366F1] size-5 border-[#D1D5DB]"
+                                                className="rounded-lg text-primary focus:ring-primary size-5 border-border-color"
                                             />
-                                            <span className="text-sm font-medium text-[#374151]">{facility.label}</span>
+                                            <span className="text-[11px] font-black uppercase tracking-widest text-text-gray group-hover:text-primary transition-colors">{facility.label}</span>
                                         </label>
                                     ))}
                                 </div>
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Description</h3>
+                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Description</h3>
                                 <textarea
                                     name="description"
                                     value={formData.description}
                                     onChange={handleChange}
-                                    className="w-full rounded-xl text-[#111827] border border-[#D1D5DB] bg-white focus:border-[#6366F1] focus:ring-2 focus:ring-[#6366F1]/20 min-h-[120px] p-4 text-base outline-none resize-none transition-all placeholder:text-[#D1D5DB]"
+                                    className="w-full rounded-[1.5rem] text-foreground border border-border-color bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 min-h-[140px] p-5 text-sm font-medium outline-none resize-none transition-all placeholder:text-text-gray/30 shadow-sm"
                                     placeholder="Describe your hostel's vibe..."
                                 ></textarea>
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-[#111827] text-xl font-bold border-l-4 border-[#4F46E5] pl-3">Hostel Images</h3>
+                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Hostel Images</h3>
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="flex flex-col items-center justify-center w-full aspect-video rounded-2xl border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#4F46E5] hover:bg-[#4F46E5]/5 transition-colors cursor-pointer group"
+                                    className="flex flex-col items-center justify-center w-full aspect-video rounded-[2rem] border-2 border-dashed border-border-color bg-slate-50 hover:border-primary hover:bg-white transition-all cursor-pointer group shadow-sm"
                                 >
-                                    <div className="flex flex-col items-center gap-2 text-center px-4">
-                                        <span className="material-symbols-outlined text-4xl text-[#4F46E5]">cloud_upload</span>
-                                        <p className="text-sm font-semibold text-[#374151]">Upload Images</p>
-                                        <p className="text-xs text-slate-500">PNG or JPG (Max 5MB)</p>
+                                    <div className="flex flex-col items-center gap-3 text-center px-4">
+                                        <span className="material-symbols-outlined text-5xl text-primary font-bold">add_photo_alternate</span>
+                                        <p className="text-xs font-black uppercase tracking-[0.2em] text-text-gray">Upload Images</p>
+                                        <p className="text-[10px] text-text-gray/50 font-bold">PNG or JPG (Max 5MB)</p>
                                     </div>
                                     <input
                                         type="file"
@@ -382,9 +355,9 @@ export default function RegisterHostel() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-3">
+                                <div className="grid grid-cols-4 gap-3">
                                     {selectedImages.map((file, index) => (
-                                        <div key={index} className="aspect-square rounded-lg bg-slate-200 relative overflow-hidden group border border-[#D1D5DB]">
+                                        <div key={index} className="aspect-square rounded-xl bg-slate-200 relative overflow-hidden group border border-border-color shadow-sm">
                                             <img
                                                 src={URL.createObjectURL(file)}
                                                 alt="Preview"
@@ -395,19 +368,19 @@ export default function RegisterHostel() {
                                                     e.stopPropagation()
                                                     removeImage(index)
                                                 }}
-                                                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white"
+                                                className="absolute inset-0 bg-red-600/90 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer text-white"
                                             >
-                                                <span className="material-symbols-outlined">delete</span>
+                                                <span className="material-symbols-outlined font-black">delete</span>
                                             </div>
                                         </div>
                                     ))}
-                                    {[...Array(Math.max(0, 3 - selectedImages.length))].map((_, i) => (
+                                    {[...Array(Math.max(0, 4 - selectedImages.length))].map((_, i) => (
                                         <div
                                             key={`empty-${i}`}
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="aspect-square rounded-lg bg-[#F9FAFB] border-2 border-dashed border-[#D1D5DB] flex items-center justify-center cursor-pointer hover:border-[#4F46E5] transition-colors"
+                                            className="aspect-square rounded-xl bg-[#F9FAFB] border-2 border-dashed border-border-color flex items-center justify-center cursor-pointer hover:border-primary transition-all opacity-50"
                                         >
-                                            <span className="material-symbols-outlined text-[#D1D5DB]">add</span>
+                                            <span className="material-symbols-outlined text-text-gray/30 font-bold">add</span>
                                         </div>
                                     ))}
                                 </div>
@@ -416,33 +389,35 @@ export default function RegisterHostel() {
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 text-[#DC2626] p-4 rounded-xl border border-[#DC2626]/20 text-sm font-bold text-center mt-8">
+                        <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 text-xs font-black uppercase tracking-widest text-center mt-12 shadow-sm animate-shake">
                             {error}
                         </div>
                     )}
+
+                    <div className="max-w-md mx-auto mt-16 pb-10">
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    Register Hostel
+                                    <span className="material-symbols-outlined font-black">arrow_forward</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
             </main>
-
-            <footer className="bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-lg ">
-                <div className="max-w-5xl mx-auto flex justify-center p-6 pb-10">
-                    <button
-                        type="submit"
-                        form="register-hostel-form"
-                        disabled={isLoading}
-                        className="w-full max-w-md bg-[#4F46E5] hover:bg-[#4338CA] text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-[#4F46E5]/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Sending...
-                            </>
-                        ) : 'Register Hostel'}
-                    </button>
-                </div>
-            </footer>
         </div>
     )
 }

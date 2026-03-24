@@ -1,38 +1,57 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-accent: #ef4444;
-  --color-surface: #ffffff;
-  --color-background-dashboard: #f8fafc;
-  --color-border-light: #e2e8f0;
-  --color-sidebar: #1e293b;
-
-  /* Existing colors if still used elsewhere */
-  --color-primary-old: #ec5b13;
-  --color-background-light: #FFFFFF;
-  --color-background-dark: #221610;
-  --color-neutral-soft: #EBEBE5;
+  --color-primary: #233170;
   --color-primary-blue: #233170;
   --color-primary-blue-light: #304cb3;
   --color-accent-teal: #0dbb9f;
+  
   --color-text-gray: #6b7280;
   --color-border-color: #f3f4f6;
-  --color-card-bg: #ffffff;
+  --color-surface: #ffffff;
+  
+  --color-background-dashboard: #F8F9FA;
+  --color-border-light: #e2e8f0;
+  --color-sidebar: #FFFFFF;
 }
 
 :root {
-  --background: var(--color-background-light);
+  --background: #FFFFFF;
   --foreground: #111827;
-}
-
-.dark {
-  --background: var(--color-background-dark);
-  --foreground: #f8fafc;
+  --primary: #233170; /* Navy Blue like the theme */
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Material Symbols Filling */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.font-fill {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

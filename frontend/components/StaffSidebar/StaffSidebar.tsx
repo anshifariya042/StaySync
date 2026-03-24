@@ -2,24 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-    LayoutDashboard, 
-    ClipboardList, 
-    MessageSquare, 
-    User,
-    LogOut,
-    RotateCw,
-    X
-} from "lucide-react";
-import { useUserStore } from "@/store/useUserStore";
+import { useAuthStore as useAuth } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
-const navItems = [
-    { label: "Dashboard", href: "/staff/dashboard", icon: LayoutDashboard },
-    { label: "Tasks", href: "/staff/tasks", icon: ClipboardList },
-    { label: "Chat", href: "/staff/chat", icon: MessageSquare },
-    { label: "Profile", href: "/staff/profile", icon: User },
-];
+// Helper for Material Symbols
+const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
+    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+)
+
+const SidebarItem = ({ icon, label, active, onClick }: { icon: string, label: string, active: boolean, onClick: () => void }) => (
+    <button
+        onClick={onClick}
+        className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl w-full transition-all duration-300 group relative ${active
+            ? 'bg-[#0B2E33] text-white shadow-lg shadow-[#0B2E33]/20'
+            : 'text-[#4F7C82] hover:bg-white/50 hover:text-[#0B2E33]'
+            }`}
+    >
+        <Icon name={icon} className={`${active ? 'text-white' : 'text-[#4F7C82] group-hover:text-[#0B2E33]'} transition-colors duration-200`} />
+        <span className={`text-[15px] tracking-tight ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
+    </button>
+)
 
 interface StaffSidebarProps {
     isOpen: boolean;
@@ -28,73 +31,101 @@ interface StaffSidebarProps {
 
 export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
     const pathname = usePathname();
-
-    const { clearProfile } = useUserStore();
     const router = useRouter();
+    const { logout, user } = useAuth();
 
     const handleLogout = () => {
-        localStorage.removeItem("accessToken");
-        clearProfile();
+        logout();
         router.push("/login");
     };
 
+    const navItems = [
+        { label: "Dashboard", href: "/staff/dashboard", icon: "grid_view" },
+        { label: "My Tasks", href: "/staff/tasks", icon: "assignment" },
+        { label: "Messages", href: "/staff/chat", icon: "forum" },
+        { label: "My Profile", href: "/staff/profile", icon: "person" },
+    ];
+
+    const isActive = (path: string) => pathname === path;
+
     return (
-        <aside className={`
-            fixed md:sticky top-0 left-0 z-50
-            w-64 h-screen 
-            bg-white dark:bg-slate-900 
-            border-r border-slate-200 dark:border-slate-800 
-            flex flex-col 
-            transition-transform duration-300 ease-in-out
-            ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        `}>
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 relative">
-                <button 
+        <>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsOpen(false)}
+                        className="fixed inset-0 z-[60] bg-[#0B2E33]/10 backdrop-blur-sm lg:hidden"
+                    />
+                )}
+            </AnimatePresence>
+
+            <aside className={`
+                fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-[#B8E3E9] border-r border-[#4F7C82]/10 flex flex-col p-6 transition-transform duration-500 ease-in-out lg:static
+                ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            `}>
+                {/* Brand Logo */}
+                <Link 
+                    href="/" 
+                    className="flex items-center gap-3 mb-12 px-2 group"
                     onClick={() => setIsOpen(false)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-slate-600 md:hidden"
                 >
-                    <X className="w-5 h-5" />
-                </button>
-                <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
-                        <RotateCw className="w-6 h-6" />
+                    <div className="size-10 bg-[#0B2E33] rounded-xl flex items-center justify-center text-[#B8E3E9] shadow-lg shadow-[#0B2E33]/10 group-hover:rotate-12 transition-transform duration-300">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        </svg>
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">StaySync</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Staff Portal</p>
+                        <h1 className="text-xl font-black text-[#0B2E33] tracking-tighter">StaySync</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#4F7C82] opacity-60">Staff Portal</p>
                     </div>
                 </Link>
-            </div>
 
-            <nav className="flex-1 p-4 space-y-2 mt-4">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                        <Link
+                <nav className="flex-1 space-y-1.5">
+                    {navItems.map((item) => (
+                        <SidebarItem
                             key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                                isActive 
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
-                                    : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                            }`}
-                        >
-                            <item.icon className={`w-5 h-5 ${isActive ? "text-white" : "text-slate-400"}`} />
-                            {item.label}
-                        </Link>
-                    )
-                })}
-            </nav>
+                            icon={item.icon}
+                            label={item.label}
+                            active={isActive(item.href)}
+                            onClick={() => {
+                                router.push(item.href)
+                                setIsOpen(false)
+                            }}
+                        />
+                    ))}
+                </nav>
 
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800">
-                <button 
-                    onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 w-full transition-colors"
-                >
-                    <LogOut className="w-5 h-5" />
-                    Logout
-                </button>
-            </div>
-        </aside>
+                {/* Profile Card Section */}
+                <div className="mt-auto pt-6 border-t border-[#4F7C82]/10">
+                    <div 
+                        onClick={() => {
+                            router.push('/staff/profile')
+                            setIsOpen(false)
+                        }}
+                        className="flex items-center gap-4 px-4 py-3 bg-white/30 rounded-[1.5rem] cursor-pointer hover:bg-white/50 transition-all duration-300 border border-white/20 mb-4"
+                    >
+                        <div className="size-10 rounded-xl bg-[#0B2E33] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                            {user?.name?.[0] || 'S'}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-black text-[#0B2E33] truncate">{user?.name || 'Staff Member'}</span>
+                            <span className="text-[10px] font-bold text-[#4F7C82] truncate uppercase tracking-widest opacity-60">Operations</span>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={handleLogout} 
+                        className="flex items-center gap-4 px-4 py-3.5 text-[#4F7C82] hover:text-[#0B2E33] hover:bg-white/30 rounded-2xl w-full transition-all duration-300 text-[14px] font-bold group"
+                    >
+                        <Icon name="logout" className="text-[20px] group-hover:-translate-x-1 transition-transform" />
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }

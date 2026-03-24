@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { 
     getStaffStats, 
@@ -9,21 +10,13 @@ import {
     acceptTask, 
     updateTaskStatus 
 } from "@/services/staffService";
-import { 
-    LayoutDashboard, 
-    ClipboardList, 
-    Clock, 
-    CheckCircle2, 
-    AlertCircle,
-    MoreHorizontal,
-    Droplets, // instead of Plumbing
-    Zap, // for electrical
-    Key, // for security
-    Wrench,
-    Bell,
-    Menu
-} from "lucide-react";
+import { useSidebarStore } from "@/store/useSidebarStore";
+import { motion, AnimatePresence } from "framer-motion";
 
+// Helper for Material Symbols
+const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
+    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+)
 
 interface Task {
     _id: string;
@@ -49,8 +42,10 @@ interface Stats {
     waitlist: number;
 }
 
-export default function StaffDashboard({ onMenuClick }: { onMenuClick?: () => void }) {
+export default function StaffDashboard() {
     const { profile } = useUserStore();
+    const { setIsOpen } = useSidebarStore();
+    const router = useRouter();
 
     const [stats, setStats] = useState<Stats | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -62,13 +57,12 @@ export default function StaffDashboard({ onMenuClick }: { onMenuClick?: () => vo
             const [statsData, tasksData, highPriorityData] = await Promise.all([
                 getStaffStats(),
                 getStaffTasks({ limit: 20 }),
-                getStaffTasks({ limit: 10 }) // This will fetch tasks for high/urgent check
+                getStaffTasks({ limit: 10 }) 
             ]);
             
             setStats(statsData);
             setTasks(tasksData as Task[]);
             
-            // Find the most urgent task (Urgent > High)
             const allFetched = [...(tasksData as Task[]), ...(highPriorityData as Task[])];
             const urgent = allFetched.find(t => t.priority === "Urgent" && t.status !== "Resolved") || 
                            allFetched.find(t => t.priority === "High" && t.status !== "Resolved");
@@ -83,8 +77,7 @@ export default function StaffDashboard({ onMenuClick }: { onMenuClick?: () => vo
 
     useEffect(() => {
         fetchData();
-        // Setup polling for "real-time" data
-        const interval = setInterval(fetchData, 30000); // 30 seconds
+        const interval = setInterval(fetchData, 30000); 
         return () => clearInterval(interval);
     }, []);
 
@@ -106,205 +99,223 @@ export default function StaffDashboard({ onMenuClick }: { onMenuClick?: () => vo
         }
     };
 
+    const getIconForCategory = (category: string) => {
+        switch (category?.toLowerCase()) {
+            case 'plumbing': return 'plumbing';
+            case 'electrical': return 'electrical_services';
+            case 'wifi': return 'wifi';
+            case 'ac': return 'ac_unit';
+            default: return 'description';
+        }
+    }
+
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="flex h-screen items-center justify-center bg-[#F8FAFC]">
+                <div className="animate-spin size-12 border-4 border-[#B8E3E9] border-t-[#4F7C82] rounded-full"></div>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 min-h-screen">
+        <div className="flex-1 overflow-y-auto bg-[#F8FAFC] font-display text-[#0B2E33] min-h-screen antialiased">
+             <style jsx global>{`
+                @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&display=swap');
+                body { font-family: 'Public Sans', sans-serif; }
+                .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+            `}</style>
+            
             {/* Top Header */}
-            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-4 md:px-8 py-4">
-                <div className="flex items-center gap-4">
+            <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#B8E3E9]/20 bg-[#F8FAFC]/80 backdrop-blur-md px-6 md:px-10 py-6">
+                <div className="flex items-center gap-6">
                     <button 
-                        onClick={onMenuClick}
-                        className="p-2 text-slate-500 hover:text-blue-600 md:hidden transition-colors"
+                        onClick={() => setIsOpen(true)}
+                        className="lg:hidden size-12 flex items-center justify-center bg-white border border-[#B8E3E9] rounded-2xl text-[#4F7C82] hover:bg-slate-50 shadow-sm transition-all active:scale-95"
                     >
-                        <Menu className="w-6 h-6" />
+                        <Icon name="menu" />
                     </button>
                     <div>
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-                        <p className="text-xs text-slate-500">Welcome back, {profile?.name}</p>
+                        <h1 className="text-2xl font-black text-[#0B2E33] tracking-tighter">Dashboard</h1>
+                        <p className="text-[10px] font-bold text-[#4F7C82] uppercase tracking-[0.2em] opacity-60 mt-0.5">Welcome back, {profile?.name}</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        <Bell className="w-5 h-5" />
-                        <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>
+                <div className="flex items-center gap-6">
+                    <button className="relative size-12 flex items-center justify-center bg-white border border-white rounded-2xl text-[#4F7C82] hover:text-[#0B2E33] shadow-sm hover:shadow-lg transition-all active:scale-95 group">
+                        <Icon name="notifications" className="group-hover:scale-110 transition-transform" />
+                        <span className="absolute top-3.5 right-3.5 size-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm ring-2 ring-red-500/10"></span>
                     </button>
-                    <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-blue-600/20 bg-slate-200">
-                        <img 
-                            alt="Profile" 
-                            className="h-full w-full object-cover" 
-                            src={profile?.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} 
-                        />
+                    <div 
+                        onClick={() => router.push('/staff/profile')}
+                        className="size-12 rounded-2xl border-4 border-white shadow-lg bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                        style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}
+                        >
+                        {!profile?.profileImage && (
+                            <div className="size-full flex items-center justify-center text-[#4F7C82] font-black bg-white">
+                                {profile?.name?.charAt(0) || 'S'}
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>
 
-            <main className="p-8 max-w-5xl mx-auto space-y-8">
-                {/* Welcome & Stats Section */}
+            <main className="p-4 md:p-10 max-w-6xl mx-auto space-y-12">
+                {/* Stats Section */}
                 <section>
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Hello, {profile?.name?.split(' ')[0]}</h2>
-                        <p className="text-slate-500 dark:text-slate-400">You have {stats?.pending} pending tasks for today.</p>
+                    <div className="mb-10">
+                        <h2 className="text-3xl font-black text-[#0B2E33] tracking-tight">Active Operations</h2>
+                        <p className="text-[#4F7C82] mt-1.5 font-bold text-sm uppercase tracking-widest opacity-80">Current performance overview</p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="flex flex-col gap-2 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 group hover:border-blue-500 transition-colors">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-slate-500">Total</span>
-                                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600">
-                                    <ClipboardList className="w-5 h-5" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                            className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#B8E3E9]/60 to-[#F8FAFC] relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
+                        >
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl text-[#0B2E33] flex items-center justify-center shadow-sm">
+                                    <Icon name="assignment" />
                                 </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 text-[#0B2E33]">Assigned</span>
                             </div>
-                            <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.assigned || 0}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned Tasks</p>
-                        </div>
+                            <p className="text-5xl font-black text-[#0B2E33] tracking-tighter">{stats?.assigned || 0}</p>
+                            <p className="mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 text-[#0B2E33]">Total Tasks</p>
+                            <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                        </motion.div>
 
-                        <div className="flex flex-col gap-2 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 group hover:border-amber-500 transition-colors">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-slate-500">Waitlist</span>
-                                <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600">
-                                    <Clock className="w-5 h-5" />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+                            className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#4F7C82]/20 to-[#B8E3E9]/10 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
+                        >
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl text-[#4F7C82] flex items-center justify-center shadow-sm">
+                                    <Icon name="history" />
                                 </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 text-[#4F7C82]">Waitlist</span>
                             </div>
-                            <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.waitlist || 0}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Available Tasks</p>
-                        </div>
+                            <p className="text-5xl font-black text-[#4F7C82] tracking-tighter">{stats?.waitlist || 0}</p>
+                            <p className="mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 text-[#4F7C82]">Available Jobs</p>
+                            <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                        </motion.div>
 
-                        <div className="flex flex-col gap-2 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 group hover:border-indigo-500 transition-colors">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-slate-500">Active</span>
-                                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600">
-                                    <Wrench className="w-5 h-5" />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
+                            className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#B8E3E9]/40 to-indigo-50/30 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
+                        >
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl text-indigo-800 flex items-center justify-center shadow-sm">
+                                    <Icon name="engineering" />
                                 </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 text-indigo-800">Active</span>
                             </div>
-                            <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.inProgress || 0}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">In Progress</p>
-                        </div>
+                            <p className="text-5xl font-black text-indigo-900 tracking-tighter">{stats?.inProgress || 0}</p>
+                            <p className="mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 text-indigo-800">In Progress</p>
+                            <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                        </motion.div>
 
-                        <div className="flex flex-col gap-2 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 group hover:border-emerald-500 transition-colors">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-slate-500">Done</span>
-                                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
-                                    <CheckCircle2 className="w-5 h-5" />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
+                            className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#4F7C82]/10 to-[#B8E3E9]/30 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
+                        >
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <div className="p-3 bg-white/60 backdrop-blur-sm rounded-2xl text-emerald-800 flex items-center justify-center shadow-sm">
+                                    <Icon name="check_circle" />
                                 </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 text-emerald-800">Done</span>
                             </div>
-                            <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.resolved || 0}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Resolved</p>
-                        </div>
+                            <p className="text-5xl font-black text-emerald-900 tracking-tighter">{stats?.resolved || 0}</p>
+                            <p className="mt-4 text-[11px] font-black uppercase tracking-widest opacity-60 text-emerald-800">Resolved</p>
+                            <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
+                        </motion.div>
                     </div>
                 </section>
 
-                {/* Priority Task Highlight */}
+                {/* Priority Highlight */}
                 {urgentTask && (
                     <section>
-                        <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">High Priority Task</h3>
-                        <div className="relative overflow-hidden rounded-2xl bg-blue-600 p-8 text-white shadow-xl shadow-blue-600/20">
-                            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3">
-                                        <span className="rounded-lg bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">
+                         <div className="relative overflow-hidden rounded-[3rem] bg-[#0B2E33] p-10 md:p-14 text-white shadow-2xl shadow-[#0B2E33]/30 border border-white/5">
+                            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <span className="rounded-xl bg-[#4F7C82] px-4 py-1.5 text-[10px] font-black uppercase tracking-widest shadow-xl shadow-black/10">
                                             {urgentTask.priority} Priority
                                         </span>
-                                        <span className="text-white/60">•</span>
-                                        <p className="text-sm text-white/80">Room {urgentTask.roomNumber}</p>
+                                        <span className="text-white/20 font-black">/</span>
+                                        <p className="text-xs font-black uppercase tracking-widest text-[#B8E3E9]">Unit {urgentTask.roomNumber}</p>
                                     </div>
-                                    <h4 className="text-2xl font-bold leading-tight">{urgentTask.title}</h4>
-                                    <p className="text-white/70 text-sm max-w-md line-clamp-1">{urgentTask.description}</p>
+                                    <h4 className="text-4xl font-black tracking-tighter leading-none">{urgentTask.title}</h4>
+                                    <p className="text-[#B8E3E9]/60 text-[15px] font-medium max-w-xl leading-relaxed">{urgentTask.description}</p>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2 text-white/80">
-                                        <Clock className="w-4 h-4" />
-                                        <span className="text-xs font-semibold">Reported {new Date(urgentTask.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    {/* <button 
-                                        onClick={() => handleMarkDone(urgentTask._id)}
-                                        className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-blue-600 hover:bg-slate-50 transition-colors shadow-lg"
-                                    >
-                                        View Details
-                                    </button> */}
+                                <div className="shrink-0">
+                                     <button className="w-full md:w-auto px-10 py-5 bg-white text-[#0B2E33] rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-white/5 hover:scale-105 transition-all active:scale-95">
+                                        Analyze Task
+                                    </button>
                                 </div>
                             </div>
                             {/* Decorative element */}
-                            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-2xl"></div>
-                            <div className="absolute -left-12 -bottom-12 h-48 w-48 rounded-full bg-black/10 blur-2xl"></div>
+                            <div className="absolute -right-20 -top-20 size-64 bg-[#4F7C82]/20 rounded-full blur-[100px]"></div>
+                            <div className="absolute -left-20 -bottom-20 size-64 bg-[#B8E3E9]/10 rounded-full blur-[100px]"></div>
                         </div>
                     </section>
                 )}
 
-                {/* Recent Tasks List */}
+                {/* Task Logs */}
                 <section>
-                    <div className="mb-6 flex items-center justify-between">
-                        <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Recent Tasks</h3>
-                        <Link href="/staff/tasks" className="text-sm font-bold text-blue-600 hover:underline">See All</Link>
+                    <div className="mb-10 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-2xl font-black text-[#0B2E33] tracking-tighter">Maintenance Logs</h3>
+                            <p className="text-xs font-bold text-[#4F7C82] uppercase tracking-[0.1em] mt-1 opacity-70">Latest tracking updates</p>
+                        </div>
+                        {/* <Link href="/staff/tasks" className="px-6 py-2.5 bg-[#B8E3E9]/30 text-[#4F7C82] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#B8E3E9]/50 transition-all active:scale-95">System View</Link> */}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {tasks.filter(t => t.status === 'In Progress').length > 0 ? (
-                            tasks.filter(t => t.status === 'In Progress').map((task) => (
-                                <div key={task._id} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h4 className="font-bold text-slate-900 dark:text-white text-lg">{task.title}</h4>
-                                        <p className="text-xs font-medium text-slate-500">Room {task.roomNumber} • {task.category}</p>
+                            tasks.filter(t => t.status === 'In Progress').map((task, idx) => (
+                                <motion.div 
+                                    key={task._id}
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
+                                    className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50 relative overflow-hidden group hover:shadow-2xl hover:shadow-[#4F7C82]/10 transition-all duration-500"
+                                >
+                                    <div className="flex justify-between items-start mb-8 relative z-10">
+                                        <div className="flex flex-col gap-1">
+                                            <h4 className="font-black text-[#0B2E33] text-2xl tracking-tighter leading-none group-hover:text-[#4F7C82] transition-colors">{task.title}</h4>
+                                            <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest mt-2 bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md inline-block">Room {task.roomNumber} • {task.category}</p>
+                                        </div>
+                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${
+                                            task.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
+                                        }`}>
+                                            {task.status}
+                                        </span>
                                     </div>
-                                    <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                                        task.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700' :
-                                        task.status === 'In Progress' ? 'bg-indigo-100 text-indigo-700' :
-                                        'bg-amber-100 text-amber-700'
-                                    }`}>
-                                        {task.status}
-                                    </span>
-                                </div>
 
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                        {task.category === 'Plumbing' ? <Droplets className="w-3 h-3" /> :
-                                         task.category === 'Electrical' ? <Zap className="w-3 h-3" /> :
-                                         task.category === 'Security' ? <Key className="w-3 h-3" /> :
-                                         <AlertCircle className="w-3 h-3" />}
-                                        {task.category}
+                                    <div className="flex items-center gap-6 mb-10 relative z-10">
+                                        <div className="size-14 rounded-2xl bg-[#B8E3E9]/20 flex items-center justify-center text-[#4F7C82] border border-[#B8E3E9]/30 group-hover:scale-110 group-hover:bg-[#B8E3E9]/40 transition-all duration-500">
+                                             <Icon name={getIconForCategory(task.category)} className="text-2xl" />
+                                        </div>
+                                        <div>
+                                             <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest opacity-60">Created At</p>
+                                             <p className="text-sm font-black text-[#0B2E33]">{new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                        </div>
                                     </div>
-                                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                        <Clock className="w-3 h-3" />
-                                        {new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                    </div>
-                                </div>
 
-                                <div className="flex gap-3">
-                                    {task.status === 'Pending' ? (
-                                        <button 
-                                            onClick={() => handleAcceptTask(task._id)}
-                                            className="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
-                                        >
-                                            Accept Task
-                                        </button>
-                                    ) : task.status === 'In Progress' ? (
+                                    <div className="flex gap-4 relative z-10">
                                         <button 
                                             onClick={() => handleMarkDone(task._id)}
-                                            className="flex-1 rounded-xl border-2 border-blue-600 py-3 text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors"
+                                            className="w-full py-4 bg-[#0B2E33] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-[#0B2E33]/20 hover:scale-105 active:scale-95 transition-all"
                                         >
-                                            Mark as Resolved
+                                            Submit Resolution
                                         </button>
-                                    ) : (
-                                        <div className="flex-1 py-3 text-center text-xs font-bold text-slate-400 italic">
-                                            Completed Task
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))
+                                    </div>
+                                    
+                                    <div className="absolute -right-10 -bottom-10 size-40 bg-[#B8E3E9]/10 rounded-full blur-3xl group-hover:bg-[#B8E3E9]/20 transition-all duration-1000"></div>
+                                </motion.div>
+                            ))
                         ) : (
-                            <div className="md:col-span-2 py-12 flex flex-col items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                                <AlertCircle className="w-10 h-10 text-slate-300 mb-3" />
-                                <p className="text-slate-500 font-medium">No tasks currently in progress.</p>
-                                <Link href="/staff/tasks" className="text-sm text-blue-600 mt-2 font-bold hover:underline">Check waitlist</Link>
+                            <div className="md:col-span-2 py-24 text-center bg-white rounded-[3rem] border border-dashed border-[#B8E3E9]">
+                                <Icon name="verified_user" className="text-6xl text-[#B8E3E9] mb-4 opacity-50" />
+                                <p className="text-[#4F7C82] font-black uppercase tracking-widest text-xs opacity-60">No active maintenance threads</p>
+                                <Link href="/staff/tasks" className="text-[10px] text-[#0B2E33] mt-4 font-black uppercase tracking-[0.2em] bg-[#B8E3E9]/50 px-6 py-2 rounded-xl inline-block hover:bg-[#B8E3E9] transition-all">Scan Available Jobs</Link>
                             </div>
                         )}
                     </div>
