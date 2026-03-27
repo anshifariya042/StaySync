@@ -71,9 +71,9 @@ export default function HostelDetails() {
                     const fetchedRooms = roomsRes.data || [];
                     setRooms(fetchedRooms);
                     setReviews(reviewsRes.data || []);
-                    if (fetchedRooms.length > 0) {
-                        setSelectedRoom(fetchedRooms[0]);
-                    }
+                    // if (fetchedRooms.length > 0) {
+                    //     setSelectedRoom(fetchedRooms[0]);
+                    // }
                 }
             } catch (error) {
                 console.error("Failed to fetch hostel details:", error);
@@ -115,6 +115,15 @@ export default function HostelDetails() {
     const primaryImage = hostel.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
     const hasFacility = (keyword: string) => {
         return hostel.facilities.some(f => f.toLowerCase().includes(keyword.toLowerCase()));
+    };
+
+    const getRoomTypeLabel = (type: string) => {
+        const mapping: { [key: string]: string } = {
+            'Standard': 'single',
+            'AC': 'Two sharing',
+            'Deluxe': 'Four sharing'
+        };
+        return mapping[type] || type;
     };
 
     return (
@@ -225,7 +234,7 @@ export default function HostelDetails() {
                                         <div key={room._id} className="bg-white border border-slate-200 rounded-xl overflow-hidden p-5 flex flex-col gap-4">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <h3 className="font-bold text-lg">{room.type || `Room ${room.roomNumber}`}</h3>
+                                                    <h3 className="font-bold text-lg">{getRoomTypeLabel(room.type) || `Room ${room.roomNumber}`}</h3>
                                                     <p className="text-sm text-slate-500">Room Number: {room.roomNumber}</p>
                                                 </div>
                                                 <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${room.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
@@ -262,7 +271,7 @@ export default function HostelDetails() {
                                             <div key={idx} className="bg-white border border-slate-200 rounded-xl overflow-hidden p-5 flex flex-col gap-4">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <h3 className="font-bold text-lg">{type}</h3>
+                                                        <h3 className="font-bold text-lg">{getRoomTypeLabel(type)}</h3>
                                                         <p className="text-sm text-slate-500">Available Room Type</p>
                                                     </div>
                                                     <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">Available</span>
@@ -441,7 +450,7 @@ export default function HostelDetails() {
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold">{selectedRoom?.type || ''}</p>
+                                                <p className="text-sm font-bold">{getRoomTypeLabel(selectedRoom?.type || '')}</p>
                                                 {/* <p className="text-xs text-slate-500">1 Room • 1 Guest</p> */}
                                             </div>
                                         </div>

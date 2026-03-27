@@ -229,6 +229,7 @@ import UserSidebar from '@/components/UserSidebar/UserSidebar'
 import { useUserStore } from '@/store/useUserStore'
 import { useComplaints } from '@/hooks/useComplaints'
 import RestrictedAccess from '@/components/ui/RestrictedAccess'
+import NotificationDropdown from '@/components/ui/NotificationDropdown'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -329,10 +330,7 @@ export default function UserDashboard() {
                             </div>
                             
                             <div className="flex items-center gap-4">
-                                <button className="relative p-3.5 text-[#4F7C82] bg-white rounded-2xl border border-slate-100 shadow-sm hover:text-[#0B2E33] transition-all hover:shadow-md active:scale-95">
-                                    <Icon name="notifications" />
-                                    <span className="absolute top-4 right-4 size-2.5 bg-[#4F7C82] rounded-full border-2 border-white shadow-sm shadow-[#4F7C82]/20"></span>
-                                </button>
+                                <NotificationDropdown />
                                 <div 
                                      onClick={() => router.push('/user/profile')}
                                      className="size-14 rounded-2xl border-4 border-white shadow-xl bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300" 

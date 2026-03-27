@@ -6,28 +6,18 @@ export const useSocket = () => {
     const { user } = useAuthStore();
 
     useEffect(() => {
-        if (user && user.id) {
+        const userId = user?.id || (user as any)?._id;
+        if (userId) {
             // Only connect if user is logged in
             if (!socket.connected) {
                 socket.connect();
             }
 
             // Join the user's personal room
-            socket.emit('join', user.id);
-
-            // Set up common listeners
-            socket.on('booking-status-updated', (data) => {
-                console.log('Booking Update:', data);
-                // In production, we would use a toast notification here
-                alert(`StaySync Update: ${data.message}`);
-                
-                // Reload profile to reflect status changes
-                window.location.reload();
-            });
+            socket.emit('join', userId);
 
             return () => {
-                socket.off('booking-status-updated');
-                socket.emit('leave', user.id);
+                socket.emit('leave', userId);
             };
         } else {
             if (socket.connected) {

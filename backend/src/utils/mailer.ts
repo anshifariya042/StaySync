@@ -69,3 +69,37 @@ export const sendBookingStatusEmail = async (email: string, name: string, status
 
   await transporter.sendMail(mailOptions);
 };
+export const sendHostelApprovalEmail = async (email: string, name: string, status: string, hostelName: string) => {
+  const transporter = getTransporter();
+  
+  const isApproved = status === "approved";
+  const subject = isApproved ? "StaySync - Hostel Approved!" : "StaySync - Hostel Registration Update";
+  const statusColor = isApproved ? "#10b981" : "#ef4444";
+  
+  const message = isApproved 
+    ? `Congratulations! Your hostel <strong>${hostelName}</strong> has been approved by the StaySync Super Admin. You can now log in to your admin dashboard and manage your rooms and residents.`
+    : `We regret to inform you that your request for registering <strong>${hostelName}</strong> has been rejected by the Super Admin. Please contact support if you have any questions.`;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: subject,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+        <h2 style="color: #4f46e5; text-align: center;">StaySync</h2>
+        <p>Hello ${name},</p>
+        <div style="background-color: #f3f4f6; padding: 20px; border-left: 4px solid ${statusColor}; border-radius: 4px; margin: 20px 0;">
+          <p style="margin: 0; font-size: 16px; color: #374151;">
+            ${message}
+          </p>
+        </div>
+        ${isApproved ? `<div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Login to Dashboard</a>
+        </div>` : ''}
+        <p>Best regards,<br>The StaySync Team</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};

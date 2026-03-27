@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import { User, UserRole } from "../models/User";
+import { User, UserRole, UserStatus } from "../models/User";
 import hostelModel from "../models/hostelModel";
+import { Room } from "../models/Room";
 
 export const createHostel = async (req: Request, res: Response) => {
   try {
     console.log("Request Body:", req.body);
-    console.log("Request Files:", req.files);
 
     if (!req.body) {
-      return res.status(400).json({ message: "Request body is missing. Ensure you are sending JSON or form-data correctly." });
+      return res.status(400).json({ message: "Request body is missing." });
     }
 
     const {
@@ -21,24 +21,34 @@ export const createHostel = async (req: Request, res: Response) => {
       description,
       totalRooms,
       facilities,
-      roomTypes,
       images,
-      password
+      password,
+      rooms // JSON string from frontend
     } = req.body;
 
     let imageUrls: string[] = [];
-
-    // If files are uploaded via multer
     if (req.files && Array.isArray(req.files)) {
-      imageUrls = (req.files as Express.Multer.File[]).map(
-        (file) => file.path
-      );
-    }
-    // If image URLs are provided in the body
-    else if (images && Array.isArray(images)) {
+      imageUrls = (req.files as Express.Multer.File[]).map((file) => file.path);
+    } else if (images && Array.isArray(images)) {
       imageUrls = images;
     } else if (typeof images === 'string') {
-      imageUrls = [images];
+      try {
+          imageUrls = JSON.parse(images);
+      } catch (e) {
+          imageUrls = [images];
+      }
+    }
+
+    // Parse rooms to get unique types
+    let parsedRooms: any[] = [];
+    let derivedRoomTypes: string[] = [];
+    if (rooms) {
+      try {
+        parsedRooms = typeof rooms === 'string' ? JSON.parse(rooms) : rooms;
+        derivedRoomTypes = [...new Set(parsedRooms.map((r: any) => r.type))];
+      } catch (e) {
+        console.error("Error parsing rooms:", e);
+      }
     }
 
     const hostelData = {
@@ -48,37 +58,41 @@ export const createHostel = async (req: Request, res: Response) => {
       phone,
       location,
       description,
-      totalRooms: Number(totalRooms) || 0,
+      totalRooms: Number(totalRooms) || parsedRooms.length || 0,
       facilities: Array.isArray(facilities) ? facilities : (facilities ? [facilities] : []),
-      roomTypes: Array.isArray(roomTypes) ? roomTypes : (roomTypes ? [roomTypes] : []),
+      roomTypes: derivedRoomTypes,
       images: imageUrls,
-      price: req.body.price || 0
+      price: req.body.price || (parsedRooms.length > 0 ? Math.min(...parsedRooms.map(r => r.price)) : 0)
     };
 
     const hostel = new hostelModel(hostelData);
     await hostel.save();
-    console.log("Hostel created successfully:", hostel._id);
 
-    // If password is provided, create an admin user for this hostel
+    // Create Admin User
     if (password) {
-      try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({
-          name: ownerName,
-          email: email,
-          password: hashedPassword,
-          role: UserRole.ADMIN,
-          hostelId: hostel._id as any
-        });
-        console.log("Admin user created for hostel:", email);
-      } catch (userError: any) {
-        console.error("Admin user creation failed for hostel:", userError.message);
-        throw new Error(`Hostel created but admin account failed: ${userError.message}`);
-      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await User.create({
+        name: ownerName,
+        email: email,
+        password: hashedPassword,
+        role: UserRole.ADMIN,
+        hostelId: hostel._id as any,
+        status: UserStatus.PENDING
+      });
+    }
+
+    // Create Rooms
+    if (parsedRooms.length > 0) {
+      const roomsToCreate = parsedRooms.map(r => ({
+        ...r,
+        hostelId: hostel._id,
+        currentOccupants: 0
+      }));
+      await Room.insertMany(roomsToCreate);
     }
 
     res.status(201).json({
-      message: "Hostel registered successfully",
+      message: "Hostel and rooms registered successfully",
       hostel
     });
   } catch (error: any) {
@@ -100,7 +114,7 @@ export const getAllHostels = async (req: Request, res: Response) => {
       facilities
     } = req.query;
 
-    const query: any = {};
+    const query: any = { status: 'approved' };
 
     if (search) {
       query.$or = [
@@ -150,6 +164,10 @@ export const getHostelById = async (req: Request, res: Response) => {
 
     if (!hostel) {
       return res.status(404).json({ message: "Hostel not found" });
+    }
+
+    if (hostel.status !== 'approved') {
+      return res.status(403).json({ message: "This hostel is pending approval and not publicly visible." });
     }
 
     res.status(200).json({ hostel });

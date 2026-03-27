@@ -13,6 +13,17 @@ export default function RegisterHostel() {
     const [selectedImages, setSelectedImages] = useState<File[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    interface RoomDetail {
+        roomNumber: string;
+        capacity: number;
+        type: string;
+        price: number;
+    }
+
+    const [rooms, setRooms] = useState<RoomDetail[]>([
+        { roomNumber: '101', capacity: 2, type: 'Standard', price: 0 }
+    ])
+
     const [formData, setFormData] = useState({
         name: '',
         ownerName: '',
@@ -21,10 +32,7 @@ export default function RegisterHostel() {
         phone: '',
         location: '',
         description: '',
-        totalRooms: 10,
-        price: 0,
         facilities: ['WiFi', 'CCTV'] as string[],
-        roomTypes: [] as string[]
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -42,21 +50,20 @@ export default function RegisterHostel() {
         }))
     }
 
-    const toggleRoomType = (type: string) => {
-        setFormData(prev => ({
-            ...prev,
-            roomTypes: prev.roomTypes.includes(type)
-                ? prev.roomTypes.filter(t => t !== type)
-                : [...prev.roomTypes, type]
-        }))
+    const addRoom = () => {
+        setRooms([...rooms, { roomNumber: '', capacity: 1, type: 'Standard', price: 0 }])
     }
 
-    const incrementRooms = () => {
-        setFormData(prev => ({ ...prev, totalRooms: prev.totalRooms + 1 }))
+    const removeRoom = (index: number) => {
+        if (rooms.length > 1) {
+            setRooms(rooms.filter((_, i) => i !== index))
+        }
     }
 
-    const decrementRooms = () => {
-        setFormData(prev => ({ ...prev, totalRooms: Math.max(0, prev.totalRooms - 1) }))
+    const handleRoomChange = (index: number, field: keyof RoomDetail, value: any) => {
+        const newRooms = [...rooms]
+        newRooms[index] = { ...newRooms[index], [field]: value }
+        setRooms(newRooms)
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +85,15 @@ export default function RegisterHostel() {
             setError('Please fill all required fields.')
             setIsLoading(false)
             return
+        }
+
+        // Validate rooms
+        for (const room of rooms) {
+            if (!room.roomNumber || room.price <= 0) {
+                setError('Please provide room number and a valid price for all rooms.')
+                setIsLoading(false)
+                return
+            }
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -102,16 +118,18 @@ export default function RegisterHostel() {
             formDataToSend.append('phone', formData.phone)
             formDataToSend.append('location', formData.location)
             formDataToSend.append('description', formData.description)
-            formDataToSend.append('totalRooms', formData.totalRooms.toString())
-            formDataToSend.append('price', formData.price.toString())
+            
+            // Calculate total rooms and average/min price for the hostel record
+            formDataToSend.append('totalRooms', rooms.length.toString())
+            const minPrice = Math.min(...rooms.map(r => r.price))
+            formDataToSend.append('price', minPrice.toString())
 
             formData.facilities.forEach(facility => {
                 formDataToSend.append('facilities', facility)
             })
 
-            formData.roomTypes.forEach(type => {
-                formDataToSend.append('roomTypes', type)
-            })
+            // Send rooms as a JSON string
+            formDataToSend.append('rooms', JSON.stringify(rooms))
 
             selectedImages.forEach(file => {
                 formDataToSend.append('images', file)
@@ -124,7 +142,6 @@ export default function RegisterHostel() {
             });
             
             setSuccess(true)
-            setTimeout(() => router.push('/login'), 2000)
         } catch (err: any) {
             setError(err.message || 'Registration failed. Please try again.')
         } finally {
@@ -134,14 +151,27 @@ export default function RegisterHostel() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center">
-                <div className="size-20 bg-green-50 text-[#16A34A] rounded-full flex items-center justify-center mb-6 border border-[#16A34A]/20">
-                    <svg className="size-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                    </svg>
+            <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                <div className="size-24 bg-green-50 text-emerald-600 rounded-[2rem] flex items-center justify-center mb-8 border border-emerald-100 shadow-sm">
+                    <span className="material-symbols-outlined text-5xl font-black">verified_user</span>
                 </div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">Hostel Registered!</h2>
-                <p className="text-text-gray mt-2">Your admin account has been created. Redirecting to login...</p>
+                <h2 className="text-3xl font-black text-foreground tracking-tight uppercase">Registration Received!</h2>
+                <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-2xl border border-border-color shadow-sm space-y-4">
+                    <p className="text-sm font-bold text-foreground">Next Steps:</p>
+                    <p className="text-xs text-text-gray leading-relaxed font-medium">
+                        Your registration for <span className="text-primary font-bold">"{formData.name}"</span> is currently <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-black uppercase tracking-widest text-[9px]">Pending Approval</span>. 
+                    </p>
+                    <p className="text-xs text-text-gray leading-relaxed font-medium mt-2">
+                        The Super Admin will review your details. You will receive an <span className="text-primary font-bold">Email Notification</span> once your account is activated.
+                    </p>
+                </div>
+                <button 
+                    onClick={() => router.push('/login')}
+                    className="mt-10 text-primary font-black uppercase tracking-widest text-xs hover:underline flex items-center gap-2 mx-auto"
+                >
+                    <span className="material-symbols-outlined text-sm">arrow_back</span>
+                    Go to Login
+                </button>
             </div>
         )
     }
@@ -246,54 +276,87 @@ export default function RegisterHostel() {
                                             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none font-bold">location_on</span>
                                         </div>
                                     </label>
-                                    <label className="flex flex-col w-full">
-                                        <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Monthly Price ($)</span>
-                                        <div className="relative">
-                                            <input
-                                                name="price"
-                                                value={formData.price || ''}
-                                                onChange={handleChange}
-                                                className="w-full rounded-xl text-foreground border border-border-color bg-slate-50 h-14 pl-12 p-4 text-xl font-black text-primary outline-none focus:border-primary transition-all shadow-inner"
-                                                placeholder="0.00"
-                                                type="number"
-                                                required
-                                            />
-                                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none font-bold">payments</span>
-                                        </div>
-                                    </label>
                                 </div>
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Capacity</h3>
-                                <label className="flex flex-col w-full">
-                                    <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-3 ml-1">Total Number of Rooms</span>
-                                    <div className="flex items-center gap-4">
-                                        <input
-                                            name="totalRooms"
-                                            className="flex-1 rounded-xl text-foreground border border-border-color bg-[#F9FAFB] h-14 p-4 text-lg font-black outline-none text-center"
-                                            type="number"
-                                            value={formData.totalRooms}
-                                            onChange={handleChange}
-                                        />
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={decrementRooms}
-                                                className="size-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all font-black"
-                                            >
-                                                <span className="material-symbols-outlined font-black">remove</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={incrementRooms}
-                                                className="size-14 rounded-xl bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-all font-black"
-                                            >
-                                                <span className="material-symbols-outlined font-black">add</span>
-                                            </button>
+                                <div className="flex items-center justify-between border-l-4 border-primary pl-4">
+                                    <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
+                                    <button 
+                                        type="button" 
+                                        onClick={addRoom}
+                                        className="text-xs font-black uppercase text-primary hover:underline flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">add_circle</span>
+                                        Add Room
+                                    </button>
+                                </div>
+                                
+                                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {rooms.map((room, index) => (
+                                        <div key={index} className="p-6 bg-[#F8FAFC] rounded-[1.5rem] border border-slate-100 flex flex-col gap-4 relative group">
+                                            {rooms.length > 1 && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => removeRoom(index)}
+                                                    className="absolute top-4 right-4 text-rose-500 hover:text-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            )}
+                                            
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Room No.</span>
+                                                    <input 
+                                                        type="text"
+                                                        value={room.roomNumber}
+                                                        onChange={(e) => handleRoomChange(index, 'roomNumber', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
+                                                        placeholder="e.g. 101"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Price / Mo</span>
+                                                    <input 
+                                                        type="number"
+                                                        value={room.price || ''}
+                                                        onChange={(e) => handleRoomChange(index, 'price', Number(e.target.value))}
+                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-primary focus:border-primary outline-none"
+                                                        placeholder="0.00"
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Capacity</span>
+                                                    <select 
+                                                        value={room.capacity}
+                                                        onChange={(e) => handleRoomChange(index, 'capacity', Number(e.target.value))}
+                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
+                                                    >
+                                                        {[1, 2, 3, 4, 5, 6].map(c => <option key={c} value={c}>{c} {c === 1 ? 'Person' : 'People'}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Room Type</span>
+                                                    <select 
+                                                        value={room.type}
+                                                        onChange={(e) => handleRoomChange(index, 'type', e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
+                                                    >
+                                                        <option value="single">single</option>
+                                                        <option value="Two sharing">Two sharing</option>
+                                                        <option value="Four sharing">Four sharing</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </label>
+                                    ))}
+                                </div>
                             </section>
                         </div>
 

@@ -32,7 +32,9 @@ export default function Login() {
             if (credentialResponse.credential) {
                 const loggedInUser = await googleLogin(credentialResponse.credential);
                 await fetchProfile(); // Sync profile store
-                if (loggedInUser.role === 'admin' || loggedInUser.role === 'superadmin') {
+                if (loggedInUser.role === 'superadmin') {
+                    router.push('/superadmin');
+                } else if (loggedInUser.role === 'admin') {
                     router.push('/admin/dashboard');
                 } else if (loggedInUser.role === 'staff') {
                     router.push('/staff/dashboard');
@@ -61,7 +63,9 @@ export default function Login() {
         try {
             const loggedInUser = await login({ email, password });
             await fetchProfile(); // Sync profile store
-            if (loggedInUser.role === 'admin' || loggedInUser.role === 'superadmin') {
+            if (loggedInUser.role === 'superadmin') {
+                router.push('/superadmin');
+            } else if (loggedInUser.role === 'admin') {
                 router.push('/admin/dashboard');
             } else if (loggedInUser.role === 'staff') {
                 router.push('/staff/dashboard');

@@ -58,6 +58,15 @@ function ExploreHostelsContent() {
         }
     };
 
+    const getRoomTypeLabel = (type: string) => {
+        const mapping: { [key: string]: string } = {
+            'Standard': 'single',
+            'AC': 'Two sharing',
+            'Deluxe': 'Four sharing'
+        };
+        return mapping[type] || type;
+    };
+
     useEffect(() => {
         fetchHostels();
     }, [currentPage]);
@@ -124,12 +133,6 @@ function ExploreHostelsContent() {
                                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">expand_more</span> */}
                             </div>
 
-                            <button
-                                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors border-none text-sm md:text-base cursor-pointer"
-                            >
-                                {/* <span className="material-symbols-outlined text-[20px] text-gray-500">tune</span> */}
-                                {/* <span>Filters</span> */}
-                            </button>
                         </div>
 
                         <button
@@ -195,7 +198,7 @@ function ExploreHostelsContent() {
                                             ))}
                                             {hostel.roomTypes && hostel.roomTypes.map((type, idx) => (
                                                 <span key={`type-${idx}`} className="px-2 py-1 bg-amber-50 rounded-lg text-[10px] font-semibold text-amber-700 flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs"></span> {type}
+                                                    <span className="material-symbols-outlined text-xs"></span> {getRoomTypeLabel(type)}
                                                 </span>
                                             ))}
                                         </div>
@@ -205,9 +208,7 @@ function ExploreHostelsContent() {
                                                 <p className="text-xl font-black text-[#2563EB]">{hostel.price || 0}<span className="text-xs text-[#374151] font-normal">/mo</span></p>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button className="bg-[#2563EB] text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-[#1d4ed8] transition-all flex items-center justify-center">
-                                                    Book now
-                                                </button>
+                                               
                                                 <Link
                                                     href={`/hostel/${hostel._id}`}
                                                     className="bg-[#2563EB] text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-[#1d4ed8] transition-all flex items-center justify-center"

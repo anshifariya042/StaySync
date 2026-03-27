@@ -69,6 +69,16 @@ export default function BookingConfirmation() {
         }
     }, [hostelId, roomId, bookingType]);
 
+    const getRoomTypeLabel = (type: string) => {
+        const mapping: { [key: string]: string } = {
+            'Standard': 'single',
+            'AC': 'Two sharing',
+            'Deluxe': 'Four sharing',
+            'Standard Room': 'single'
+        };
+        return mapping[type] || type;
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-[#f6f6f8]">
@@ -134,7 +144,7 @@ export default function BookingConfirmation() {
                             </div>
                             <div className="flex justify-between items-center py-1">
                                 <span className="text-slate-500 text-sm">Room type</span>
-                                <span className="font-medium text-sm">{room.type}</span>
+                                <span className="font-medium text-sm">{getRoomTypeLabel(room.type)}</span>
                             </div>
                             <div className="flex justify-between items-center py-1">
                                 <span className="text-slate-500 text-sm">Move-in date</span>

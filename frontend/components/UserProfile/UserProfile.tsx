@@ -1,6 +1,4 @@
-"use client"
-
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore } from '@/store/useUserStore'
 import { useUpdateProfile } from '@/hooks/useUser'
@@ -14,11 +12,13 @@ export default function UserProfile() {
     const { profile, isLoading: isProfileLoading, fetchProfile } = useUserStore()
     const updateProfileMutation = useUpdateProfile()
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        profileImage: ''
     })
     const [isEditing, setIsEditing] = useState(false)
     const [message, setMessage] = useState({ type: '', text: '' })
@@ -36,23 +36,42 @@ export default function UserProfile() {
             setFormData({
                 name: profile.name || '',
                 email: profile.email || '',
-                phone: profile.phone || ''
+                phone: profile.phone || '',
+                profileImage: profile.profileImage || ''
             })
         }
     }, [profile, isEditing])
 
+    const handleImageClick = () => {
+        if (isEditing) {
+            fileInputRef.current?.click()
+        }
+    }
+
+    const handleRemovePhoto = () => {
+        setFormData(prev => ({ ...prev, profileImage: '' }))
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, profileImage: reader.result as string }))
+            }
+            reader.readAsDataURL(file)
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        console.log("Submitting form data:", formData)
         setMessage({ type: '', text: '' })
         
         try {
-            const result = await updateProfileMutation.mutateAsync(formData)
-            console.log("Update success:", result)
+            await updateProfileMutation.mutateAsync(formData)
             setMessage({ type: 'success', text: 'Profile details updated successfully!' })
             setIsEditing(false)
         } catch (error: any) {
-            console.error("Update failed:", error)
             setMessage({ 
                 type: 'error', 
                 text: error.response?.data?.message || 'Update failed. Please try again.' 
@@ -61,14 +80,14 @@ export default function UserProfile() {
     }
 
     const handleEditToggle = () => {
-        console.log("Toggling edit mode. Current isEditing:", isEditing)
         setIsEditing(!isEditing)
         if (isEditing) {
             // Reset to profile if canceling
             setFormData({
                 name: profile?.name || '',
                 email: profile?.email || '',
-                phone: profile?.phone || ''
+                phone: profile?.phone || '',
+                profileImage: profile?.profileImage || ''
             })
         }
     }
@@ -93,9 +112,9 @@ export default function UserProfile() {
                 <UserSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
                 <main className="flex-1 lg:ml-72 min-h-screen flex flex-col p-4 md:p-10">
-                    <div className="max-w-4xl mx-auto w-full">
+                    <div className="max-w-4xl mx-auto w-full space-y-12">
                         
-                        <header className="flex items-center justify-between mb-12">
+                        <header className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="lg:hidden">
                                     <button onClick={() => setSidebarOpen(true)} className="p-2.5 bg-white rounded-2xl shadow-sm border border-[#B8E3E9]">
@@ -122,15 +141,38 @@ export default function UserProfile() {
                             
                             <div className="relative z-10">
                                 <div className="flex flex-col md:flex-row items-center gap-10 mb-16">
-                                    <div className="size-40 rounded-[3rem] bg-[#B8E3E9]/20 flex items-center justify-center border-[6px] border-white shadow-2xl overflow-hidden group/avatar relative">
-                                        {profile?.profileImage ? (
-                                            <img src={profile.profileImage} className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110" alt="Profile" />
-                                        ) : (
-                                            <Icon name="person" className="text-6xl text-[#4F7C82]" />
-                                        )}
-                                        <div className="absolute inset-0 bg-[#0B2E33]/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center cursor-pointer backdrop-blur-[2px]">
-                                            <Icon name="photo_camera" className="text-white text-3xl" />
+                                    <input 
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        accept="image/*"
+                                        className="hidden"
+                                    />
+                                    <div className="relative">
+                                        <div 
+                                            onClick={handleImageClick}
+                                            className={`size-40 rounded-[3rem] bg-[#B8E3E9]/20 flex items-center justify-center border-[6px] border-white shadow-2xl overflow-hidden group/avatar relative ${isEditing ? 'cursor-pointer' : ''}`}
+                                        >
+                                            {formData.profileImage ? (
+                                                <img src={formData.profileImage} className="w-full h-full object-cover transition-transform duration-700 group-hover/avatar:scale-110" alt="Profile" />
+                                            ) : (
+                                                <Icon name="person" className="text-6xl text-[#4F7C82]" />
+                                            )}
+                                            {isEditing && (
+                                                <div className="absolute inset-0 bg-[#0B2E33]/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                                                    <Icon name="photo_camera" className="text-white text-3xl" />
+                                                </div>
+                                            )}
                                         </div>
+                                        {isEditing && formData.profileImage && (
+                                            <button 
+                                                type="button"
+                                                onClick={handleRemovePhoto}
+                                                className="absolute -top-1 -right-1 size-8 bg-red-500 text-white rounded-full border-2 border-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors z-20"
+                                            >
+                                                <Icon name="close" className="text-sm font-bold" />
+                                            </button>
+                                        )}
                                     </div>
                                     
                                     <div className="text-center md:text-left flex-1">

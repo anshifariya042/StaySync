@@ -77,6 +77,10 @@ export const login = async (req: Request, res: Response) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    
+    if (user.status === UserStatus.REJECTED) {
+      return res.status(403).json({ message: "Your registration has been rejected. Please contact support." });
+    }
 
     const { accessToken, refreshToken } = generateTokens(user);
 

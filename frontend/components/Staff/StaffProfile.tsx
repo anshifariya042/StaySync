@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useUserStore } from '@/store/useUserStore';
 import { useSidebarStore } from '@/store/useSidebarStore';
@@ -15,11 +13,13 @@ export default function StaffProfile() {
     const { profile, isLoading: isProfileLoading, fetchProfile } = useUserStore();
     const { setIsOpen } = useSidebarStore();
     const updateProfileMutation = useUpdateProfile();
+    const fileInputRef = useRef<HTMLInputElement>(null);
     
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        profileImage: ''
     });
     const [isEditing, setIsEditing] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -35,10 +35,32 @@ export default function StaffProfile() {
             setFormData({
                 name: profile.name || '',
                 email: profile.email || '',
-                phone: profile.phone || ''
+                phone: profile.phone || '',
+                profileImage: profile.profileImage || ''
             });
         }
     }, [profile, isEditing]);
+
+    const handleImageClick = () => {
+        if (isEditing) {
+            fileInputRef.current?.click();
+        }
+    };
+
+    const handleRemovePhoto = () => {
+        setFormData(prev => ({ ...prev, profileImage: '' }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, profileImage: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -95,22 +117,45 @@ export default function StaffProfile() {
                 )}
             </header>
 
-            <main className="p-4 md:p-10 max-w-4xl mx-auto space-y-12">
+            <main className="p-4 md:p-10 max-w-4xl mx-auto space-y-12 pb-32">
                 <div className="bg-white rounded-[3rem] shadow-sm border border-slate-50 p-10 md:p-16 relative overflow-hidden group">
                     {/* Decor */}
                     <div className="absolute -right-20 -top-20 size-64 bg-[#B8E3E9]/10 rounded-full blur-[100px] group-hover:bg-[#B8E3E9]/20 transition-all duration-1000"></div>
 
                     <div className="relative z-10">
                         <div className="flex flex-col md:flex-row items-center gap-10 mb-16">
-                            <div className="size-40 rounded-[3rem] bg-[#B8E3E9]/20 flex items-center justify-center border-8 border-white shadow-2xl relative overflow-hidden group/avatar hover:scale-105 transition-all duration-500">
-                                {profile?.profileImage ? (
-                                    <img src={profile.profileImage} className="size-full object-cover" alt="Profile" />
-                                ) : (
-                                    <Icon name="person" className="text-6xl text-[#4F7C82]" />
-                                )}
-                                <div className="absolute inset-0 bg-[#0B2E33]/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                                    <Icon name="photo_camera" className="text-white text-3xl" />
+                            <input 
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                accept="image/*"
+                                className="hidden"
+                            />
+                            <div className="relative">
+                                <div 
+                                    onClick={handleImageClick}
+                                    className={`size-40 rounded-[3rem] bg-[#B8E3E9]/20 flex items-center justify-center border-8 border-white shadow-2xl relative overflow-hidden group/avatar hover:scale-105 transition-all duration-500 ${isEditing ? 'cursor-pointer' : ''}`}
+                                >
+                                    {formData.profileImage ? (
+                                        <img src={formData.profileImage} className="size-full object-cover" alt="Profile" />
+                                    ) : (
+                                        <Icon name="person" className="text-6xl text-[#4F7C82]" />
+                                    )}
+                                    {isEditing && (
+                                        <div className="absolute inset-0 bg-[#0B2E33]/60 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-md">
+                                            <Icon name="photo_camera" className="text-white text-3xl" />
+                                        </div>
+                                    )}
                                 </div>
+                                {isEditing && formData.profileImage && (
+                                    <button 
+                                        type="button"
+                                        onClick={handleRemovePhoto}
+                                        className="absolute -top-2 -right-2 size-10 bg-red-500 text-white rounded-full border-4 border-white flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all z-20"
+                                    >
+                                        <Icon name="close" className="text-xl" />
+                                    </button>
+                                )}
                             </div>
                             
                             <div className="text-center md:text-left flex-1">
@@ -173,7 +218,7 @@ export default function StaffProfile() {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4F7C82] ml-1 opacity-60">Mobile Frequency</label>
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-[#4F7C82] ml-1 opacity-60">Mobile Frequency</label>
                                 <div className="relative group">
                                     <Icon name="call" className={`absolute left-6 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? 'text-[#0B2E33]' : 'text-[#4F7C82] opacity-40'}`} />
                                     <input 
@@ -188,7 +233,7 @@ export default function StaffProfile() {
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#4F7C82] ml-1 opacity-60">Node Identification</label>
+                                <label className="text-[10px] font-black uppercase tracking-[0.25em] text-[#4F7C82] ml-1 opacity-60">Node Identification</label>
                                 <div className="relative group opacity-60">
                                     <Icon name="fingerprint" className="absolute left-6 top-1/2 -translate-y-1/2 text-[#4F7C82] opacity-40" />
                                     <input 

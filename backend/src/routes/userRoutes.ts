@@ -22,7 +22,7 @@ router.get("/profile", protect, async (req: any, res) => {
 // Update profile
 router.put("/profile", protect, async (req: any, res) => {
   try {
-    const { name, email, phone } = req.body;
+    const { name, email, phone, profileImage } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -33,6 +33,7 @@ router.put("/profile", protect, async (req: any, res) => {
     if (name !== undefined) user.name = name;
     if (email !== undefined) user.email = email;
     if (phone !== undefined) user.phone = phone;
+    if (profileImage !== undefined) user.profileImage = profileImage;
 
     await user.save();
     

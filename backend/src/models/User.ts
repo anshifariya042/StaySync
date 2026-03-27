@@ -27,6 +27,7 @@ export interface IUser extends Document {
   roomId?: mongoose.Types.ObjectId;
   roomType?: string;
   status: UserStatus;
+  profileImage?: string;
 }
 
 const userSchema = new Schema<IUser>(
@@ -56,6 +57,7 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserStatus),
       default: UserStatus.ACTIVE,
     },
+    profileImage: { type: String },
   },
   { timestamps: true }
 );

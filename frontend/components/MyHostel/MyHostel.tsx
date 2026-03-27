@@ -8,6 +8,7 @@ import UserSidebar from '@/components/UserSidebar/UserSidebar'
 import { useUserStore } from '@/store/useUserStore'
 import api from '@/lib/api'
 import RestrictedAccess from '@/components/ui/RestrictedAccess'
+import NotificationDropdown from '@/components/ui/NotificationDropdown'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "", fill = false }: { name: string, className?: string, fill?: boolean }) => (
@@ -118,6 +119,20 @@ export default function MyHostel() {
                                 <div>
                                     <h1 className="text-3xl font-black text-[#0B2E33] tracking-tighter">My Hostel</h1>
                                     <p className="text-[#4F7C82] text-xs font-black uppercase tracking-widest mt-1 opacity-70">Manage your stay & residency</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <NotificationDropdown />
+                                <div 
+                                     onClick={() => router.push('/user/profile')}
+                                     className="size-14 rounded-2xl border-4 border-white shadow-xl bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300" 
+                                     style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}>
+                                    {!profile?.profileImage && (
+                                        <div className="w-full h-full flex items-center justify-center bg-[#B8E3E9] text-[#0B2E33] font-black text-xl">
+                                            {profile?.name?.charAt(0) || <Icon name="person" />}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </header>

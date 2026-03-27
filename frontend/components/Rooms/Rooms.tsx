@@ -32,7 +32,7 @@ export default function Rooms() {
     const [currentRoom, setCurrentRoom] = useState<any>(null)
     const [formData, setFormData] = useState({
         roomNumber: '',
-        type: 'Standard',
+        type: 'single',
         price: '',
         capacity: '',
         status: 'available'
@@ -58,7 +58,7 @@ export default function Rooms() {
             setCurrentRoom(null)
             setFormData({
                 roomNumber: '',
-                type: 'Standard',
+                type: 'single',
                 price: '',
                 capacity: '',
                 status: 'available'
@@ -105,6 +105,16 @@ export default function Rooms() {
             default: return 'default';
         }
     }
+
+    const getRoomTypeLabel = (type: string) => {
+        const mapping: { [key: string]: string } = {
+            'Standard': 'single',
+            'AC': 'Two sharing',
+            'Deluxe': 'Four sharing',
+            'Single': 'single'
+        };
+        return mapping[type] || type;
+    };
 
     return (
         <div className="bg-[#F8FAFC] font-display text-[#0B2E33] min-h-screen antialiased flex">
@@ -188,7 +198,7 @@ export default function Rooms() {
                                                 <div className="space-y-2 relative z-10">
                                                     <h3 className="font-black text-3xl text-[#0B2E33] tracking-tighter leading-none group-hover:text-[#4F7C82] transition-colors">{room.roomNumber}</h3>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md">{room.type}</span>
+                                                        <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md">{getRoomTypeLabel(room.type)}</span>
                                                         <span className="text-slate-200">/</span>
                                                         <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-[0.2em] opacity-60">{room.capacity} BEDS</span>
                                                     </div>
@@ -249,9 +259,9 @@ export default function Rooms() {
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                             >
-                                <option>Standard</option>
-                                <option>Deluxe</option>
-                                <option>Premium</option>
+                                <option value="single">single</option>
+                                <option value="Two sharing">Two sharing</option>
+                                <option value="Four sharing">Four sharing</option>
                             </select>
                         </div>
                         <div className="space-y-3">

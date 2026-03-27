@@ -76,6 +76,16 @@ export default function BookRoom() {
         }
     }, [hostelId, roomId]);
 
+    const getRoomTypeLabel = (type: string) => {
+        const mapping: { [key: string]: string } = {
+            'Standard': 'single',
+            'AC': 'Two sharing',
+            'Deluxe': 'Four sharing',
+            'Standard Room': 'single'
+        };
+        return mapping[type] || type;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) {
@@ -92,7 +102,8 @@ export default function BookRoom() {
             formDataToSend.append('email', user.email);
             formDataToSend.append('phone', formData.phone);
             formDataToSend.append('moveInDate', formData.moveInDate);
-            formDataToSend.append('roomType', room?.type || currentRoomType || 'Standard Room');
+            const finalType = getRoomTypeLabel(room?.type || currentRoomType || 'Standard Room');
+            formDataToSend.append('roomType', finalType);
             formDataToSend.append('additionalNotes', formData.additionalNotes);
             formDataToSend.append('totalAmount', ((room?.price || hostel?.price || 0) + ((room?.price || hostel?.price || 0) * 0.5)).toString());
             formDataToSend.append('advancePayment', ((room?.price || hostel?.price || 0) * 0.5).toString());
@@ -110,7 +121,7 @@ export default function BookRoom() {
             // Redirect to confirmation page
             const params = new URLSearchParams();
             params.append('moveInDate', formData.moveInDate);
-            params.append('type', room?.type || 'Standard Room');
+            params.append('type', getRoomTypeLabel(room?.type || 'Standard Room'));
             router.push(`/hostel/${hostelId}/book/${roomId}/confirmation?${params.toString()}`);
         } catch (error: any) {
             console.error("Booking failed:", error);
@@ -167,7 +178,7 @@ export default function BookRoom() {
                     </div>
                     <div className="flex-1">
                         <h2 className="text-lg font-bold leading-tight">{hostel.name}</h2>
-                        <p className="text-slate-500 text-sm">{room.type || `Room ${room.roomNumber}`}</p>
+                        <p className="text-slate-500 text-sm">{getRoomTypeLabel(room.type) || `Room ${room.roomNumber}`}</p>
                         <div className="mt-2 flex items-center justify-between">
                             <span className="text-[#5048e5] font-semibold">${monthlyRent} <span className="text-xs font-normal text-slate-400">/ month</span></span>
                         </div>
@@ -200,14 +211,18 @@ export default function BookRoom() {
                         </div>
                         <div className="flex flex-col gap-1.5">
                             <label className="text-sm font-medium text-slate-700">Phone Number</label>
-                            <input
-                                className="bg-white border-slate-200 rounded-lg h-12 px-4 focus:ring-2 focus:ring-[#5048e5] focus:border-[#5048e5] transition-all"
-                                placeholder="+1 (555) 000-0000"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                required
-                            />
+                          <input
+  className="bg-white border-slate-200 rounded-lg h-12 px-4 focus:ring-2 focus:ring-[#5048e5] focus:border-[#5048e5] transition-all"
+  placeholder="+1 (555) 000-0000"
+  type="tel"
+  value={formData.phone}
+  onChange={(e) => {
+    const onlyNumbers = e.target.value.replace(/\D/g, ""); // remove non-digits
+    setFormData({ ...formData, phone: onlyNumbers });
+  }}
+  required
+/>
+
                         </div>
                     </section>
 

@@ -4,6 +4,7 @@ import { Room, RoomStatus } from "../models/Room";
 import { User, UserStatus } from "../models/User";
 import { sendBookingStatusEmail } from "../utils/mailer";
 import { sendNotification } from "../sockets/socket";
+import Notification from "../models/Notification";
 import Hostel from "../models/hostelModel";
 
 export const createBooking = async (req: Request, res: Response) => {
@@ -124,12 +125,22 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         const hostel = booking.hostelId as any;
 
         if (user) {
+            const message = status === BookingStatus.APPROVED 
+                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!` 
+                : `Your booking at ${hostel?.name || "StaySync"} has been rejected.`;
+
+            // Save notification to DB
+            await Notification.create({
+                userId: user._id,
+                title: status === BookingStatus.APPROVED ? "Booking Approved" : "Booking Rejected",
+                message,
+                type: status === BookingStatus.APPROVED ? "success" : "error"
+            });
+
             // Real-time notification
             sendNotification(user._id.toString(), "booking-status-updated", {
                 status,
-                message: status === BookingStatus.APPROVED 
-                    ? `Your booking at ${hostel.name} has been approved!` 
-                    : `Your booking at ${hostel.name} has been rejected.`
+                message
             });
 
             // Email alert
@@ -161,11 +172,20 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
             const updatedUser = await User.findByIdAndUpdate(userId, { status: userStatus }, { new: true });
             
             if (updatedUser) {
+                const message = status === "approved" 
+                    ? `Your residency has been approved!` 
+                    : `Your residency request has been rejected.`;
+
+                await Notification.create({
+                    userId,
+                    title: status === "approved" ? "Residency Approved" : "Residency Rejected",
+                    message,
+                    type: status === "approved" ? "success" : "error"
+                });
+
                  sendNotification(userId, "booking-status-updated", {
                     status,
-                    message: status === "approved" 
-                        ? `Your residency has been approved!` 
-                        : `Your residency request has been rejected.`
+                    message
                 });
             }
             
@@ -183,11 +203,20 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
         const hostel = booking.hostelId as any;
 
         if (user) {
+            const message = status === BookingStatus.APPROVED 
+                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!` 
+                : `Your booking at ${hostel?.name || "StaySync"} has been rejected.`;
+
+            await Notification.create({
+                userId,
+                title: status === BookingStatus.APPROVED ? "Residency Approved" : "Residency Rejected",
+                message,
+                type: status === BookingStatus.APPROVED ? "success" : "error"
+            });
+
             sendNotification(user._id.toString(), "booking-status-updated", {
                 status,
-                message: status === BookingStatus.APPROVED 
-                    ? `Your booking at ${hostel.name} has been approved!` 
-                    : `Your booking at ${hostel.name} has been rejected.`
+                message
             });
 
             sendBookingStatusEmail(user.email, user.name, status, hostel?.name || "StaySync").catch(console.error);
