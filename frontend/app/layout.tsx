@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   title: "StaySync",
   description: "One smart platform to manage hostel living digitally. Connect with top hostels, manage bookings, and resolve issues in real-time.",
     icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.png",
   },
 
 };

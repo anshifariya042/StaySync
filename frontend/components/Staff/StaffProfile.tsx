@@ -252,7 +252,7 @@ export default function StaffProfile() {
                                         className="flex-1 bg-[#0B2E33] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-[#0B2E33]/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                                     >
                                         <Icon name="save" className="text-lg" />
-                                        Secure Identity
+                                        Save changes
                                     </button>
                                     <button 
                                         type="button"

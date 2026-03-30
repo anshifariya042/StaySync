@@ -13,7 +13,6 @@ export const useSocket = () => {
                 socket.connect();
             }
 
-            // Join the user's personal room
             socket.emit('join', userId);
 
             return () => {

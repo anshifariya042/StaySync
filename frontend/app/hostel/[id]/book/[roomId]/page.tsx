@@ -159,12 +159,12 @@ export default function BookRoom() {
 
     return (
         <div className="bg-[#f6f6f8] text-slate-900 font-sans min-h-screen flex flex-col">
-            {/* <header className="w-full max-w-2xl mx-auto px-4 pt-8 pb-4 flex items-center gap-4">
-                <button onClick={() => router.back()} className="p-2 hover:bg-[#5048e5]/10 rounded-full transition-colors">
+            <header className="w-full max-w-2xl mx-auto px-4 pt-8 pb-4 flex items-center gap-4">
+                {/* <button onClick={() => router.back()} className="p-2 hover:bg-[#5048e5]/10 rounded-full transition-colors">
                     <span className="material-symbols-outlined text-slate-700">arrow_back</span>
                 </button>
-                <h1 className="text-2xl font-bold tracking-tight">Book Your Room</h1>
-            </header> */}
+                <h1 className="text-2xl font-bold tracking-tight">Book Your Room</h1> */}
+            </header>
 
             <main className="w-full max-w-2xl mx-auto px-4 pb-20 flex-1">
                 {/* Hostel/Room Summary Card */}
@@ -180,7 +180,7 @@ export default function BookRoom() {
                         <h2 className="text-lg font-bold leading-tight">{hostel.name}</h2>
                         <p className="text-slate-500 text-sm">{getRoomTypeLabel(room.type) || `Room ${room.roomNumber}`}</p>
                         <div className="mt-2 flex items-center justify-between">
-                            <span className="text-[#5048e5] font-semibold">${monthlyRent} <span className="text-xs font-normal text-slate-400">/ month</span></span>
+                            <span className="text-[#5048e5] font-semibold">₹{monthlyRent} <span className="text-xs font-normal text-slate-400">/ month</span></span>
                         </div>
                     </div>
                 </div>
@@ -300,27 +300,6 @@ export default function BookRoom() {
                 </form>
             </main>
 
-            {/* Bottom Nav */}
-            {/* <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200 px-6 py-3">
-                <div className="max-w-md mx-auto flex justify-between items-center">
-                    <Link className="flex flex-col items-center gap-1 text-[#5048e5]" href="/">
-                        <span className="material-symbols-outlined">home</span>
-                        <span className="text-[10px] font-medium">Home</span>
-                    </Link>
-                    <Link className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#5048e5] transition-colors" href="/bookings">
-                        <span className="material-symbols-outlined">calendar_month</span>
-                        <span className="text-[10px] font-medium">Bookings</span>
-                    </Link>
-                    <Link className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#5048e5] transition-colors" href="/inbox">
-                        <span className="material-symbols-outlined">chat_bubble</span>
-                        <span className="text-[10px] font-medium">Inbox</span>
-                    </Link>
-                    <Link className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#5048e5] transition-colors" href="/profile">
-                        <span className="material-symbols-outlined">person</span>
-                        <span className="text-[10px] font-medium">Profile</span>
-                    </Link>
-                </div>
-            </nav> */}
         </div>
     );
 }

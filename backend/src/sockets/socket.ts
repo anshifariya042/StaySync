@@ -6,7 +6,7 @@ let io: Server | null = null;
 export const initSocket = (server: HttpServer) => {
     io = new Server(server, {
         cors: {
-            origin: ["http://localhost:5174", "http://localhost:3000", "http://localhost:5173", "http://localhost:3001"],
+            origin: ["http://localhost:5174", "http://localhost:3000"],
             methods: ["GET", "POST"],
             credentials: true
         }
@@ -38,6 +38,9 @@ export const getIO = () => {
 
 export const sendNotification = (userId: string, event: string, data: any) => {
     if (io) {
-        io.to(userId).emit(event, data);
+        console.log(`📠 Socket Emitting [${event}] to User [${userId}]:`, data);
+        io.to(userId.toString()).emit(event, data);
+    } else {
+        console.warn(`⚠️ Socket.io not initialized. Could not emit [${event}]`);
     }
 };

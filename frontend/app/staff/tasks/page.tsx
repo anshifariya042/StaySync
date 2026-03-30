@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import { getStaffTasks, acceptTask, updateTaskStatus } from "@/services/staffService";
 import { useSidebarStore } from "@/store/useSidebarStore";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useUserStore } from "@/store/useUserStore";
+import NotificationDropdown from "@/components/ui/NotificationDropdown";
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -27,6 +30,8 @@ interface Task {
 }
 
 export default function StaffTasksPage() {
+    const { profile } = useUserStore();
+    const router = useRouter();
     const { setIsOpen } = useSidebarStore();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
@@ -105,6 +110,21 @@ export default function StaffTasksPage() {
                     <div>
                         <h1 className="text-2xl font-black text-[#0B2E33] tracking-tighter">Task Management</h1>
                         <p className="text-[10px] font-bold text-[#4F7C82] uppercase tracking-[0.2em] opacity-60 mt-0.5">Assigned Maintenance Threads</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <NotificationDropdown />
+                    <div 
+                        onClick={() => router.push('/staff/profile')}
+                        className="size-12 rounded-2xl border-4 border-white shadow-lg bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                        style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}
+                        >
+                        {!profile?.profileImage && (
+                            <div className="size-full flex items-center justify-center text-[#4F7C82] font-black bg-white">
+                                {profile?.name?.charAt(0) || 'S'}
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>
@@ -212,9 +232,7 @@ export default function StaffTasksPage() {
                                             resolved
                                         </div>
                                     )}
-                                    <button className="size-14 rounded-2xl border border-slate-100 bg-white flex items-center justify-center text-[#4F7C82] hover:text-[#0B2E33] hover:shadow-lg transition-all active:scale-90 shadow-sm">
-                                        <Icon name="more_horiz" />
-                                    </button>
+                                
                                 </div>
                                 
                                 {/* Decor */}

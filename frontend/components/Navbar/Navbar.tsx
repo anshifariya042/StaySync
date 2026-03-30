@@ -5,12 +5,30 @@ import Link from 'next/link';
 import { useAuthStore as useAuth } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+
+  // Define routes where navbar should be hidden
+  const hiddenRoutes = [
+    '/login',
+    '/register',
+    '/user',
+    '/admin',
+    '/staff',
+    '/superadmin'
+  ];
+
+  const shouldHideNavbar = hiddenRoutes.some(route => pathname?.startsWith(route));
+
+  if (shouldHideNavbar) {
+    return null;
+  }
 
   return (
     <nav className="container mx-auto px-6">

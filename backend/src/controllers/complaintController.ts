@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { Complaint, ComplaintStatus } from "../models/Complaint";
+import Notification from "../models/Notification";
+import { sendNotification } from "../sockets/socket";
 
 // @desc    Get all complaints for a hostel
 // @route   GET /api/hostels/:hostelId/complaints
@@ -81,13 +83,37 @@ export const assignStaff = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Complaint not found" });
         }
 
-        complaint.assignedStaff = staffId;
+        (complaint as any).assignedStaff = staffId;
         // Automatically set to In Progress if it was Pending
         if (complaint.status === ComplaintStatus.PENDING) {
             complaint.status = ComplaintStatus.IN_PROGRESS;
         }
 
         await complaint.save();
+
+        // CREATE REAL-TIME NOTIFICATION
+        console.log(`📡 Creating notification for staff [${staffId}] for task [${complaint.title}]`);
+        const notification = new Notification({
+            userId: staffId,
+            type: "info",
+            title: "New Task Assigned",
+            message: `You have been assigned to: ${complaint.title} (Room ${complaint.roomNumber})`,
+            isRead: false
+        });
+
+        await notification.save();
+
+        // EMIT SOCKET EVENT
+        sendNotification(staffId.toString(), "task-assigned", {
+            notificationId: notification._id,
+            title: notification.title,
+            message: notification.message,
+            taskDetails: {
+                id: complaint._id,
+                title: complaint.title,
+                room: complaint.roomNumber
+            }
+        });
 
         res.json(complaint);
     } catch (error) {

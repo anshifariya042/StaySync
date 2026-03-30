@@ -64,12 +64,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
 
+        const handleTaskAssigned = (data: any) => {
+            console.log("📥 Real-time notification received on frontend:", data);
+            setNotification({
+                show: true,
+                title: data.title,
+                message: data.message,
+                type: 'info'
+            });
+            // Invalidate notifications list
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+
         socket.on('booking-status-updated', handleStatusUpdate);
+        socket.on('task-assigned', handleTaskAssigned);
 
         return () => {
             socket.off('booking-status-updated', handleStatusUpdate);
+            socket.off('task-assigned', handleTaskAssigned);
         };
-    }, [user, loading, pathname, router, fetchProfile]);
+    }, [user, loading, pathname, router, fetchProfile, queryClient]);
 
     return (
         <>

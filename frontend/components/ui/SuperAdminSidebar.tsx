@@ -43,10 +43,10 @@ const SuperAdminSidebar = ({ isOpen, onClose }: SuperAdminSidebarProps) => {
   const menuItems = [
     { icon: 'grid_view', label: 'Dashboard', path: '/superadmin' },
     { icon: 'verified', label: 'Hostel Approvals', path: '/superadmin/approvals' },
-    { icon: 'domain', label: 'All Hostels', path: '/superadmin/hostels' },
+    // { icon: 'domain', label: 'All Hostels', path: '/superadmin/hostels' },
     { icon: 'group', label: 'Users', path: '/superadmin/users' },
     { icon: 'report_problem', label: 'Complaints', path: '/superadmin/complaints' },
-    { icon: 'analytics', label: 'Analytics', path: '/superadmin/analytics' },
+    // { icon: 'analytics', label: 'Analytics', path: '/superadmin/analytics' },
   ];
 
   const handleLogout = () => {

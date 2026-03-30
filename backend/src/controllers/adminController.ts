@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { User, UserRole } from "../models/User";
 import { Room, RoomStatus } from "../models/Room";
 import { Complaint } from "../models/Complaint";
+import Notification from "../models/Notification";
+import { sendNotification } from "../sockets/socket";
 import Hostel from "../models/hostelModel";
 import mongoose from "mongoose";
 
@@ -87,6 +89,31 @@ export const assignStaff = async (req: Request, res: Response) => {
         ).populate('assignedStaff', 'name');
         
         if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+        // CREATE REAL-TIME NOTIFICATION
+        const notification = new Notification({
+            userId: staffId,
+            type: "info",
+            title: "New Task Assigned",
+            message: `You have been assigned to: ${complaint.title} (Room ${complaint.roomNumber})`,
+            isRead: false
+        });
+
+        await notification.save();
+
+        // EMIT SOCKET EVENT
+        console.log(`📤 Sending real-time notification to staff: ${staffId}`);
+        sendNotification(staffId, "task-assigned", {
+            notificationId: notification._id,
+            title: notification.title,
+            message: notification.message,
+            taskDetails: {
+                id: complaint._id,
+                title: complaint.title,
+                room: complaint.roomNumber
+            }
+        });
+
         res.json(complaint);
     } catch (error: any) {
         res.status(500).json({ message: error.message });

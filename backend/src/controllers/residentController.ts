@@ -3,9 +3,7 @@ import { User, UserRole, UserStatus } from "../models/User";
 import { Room } from "../models/Room";
 import bcrypt from "bcrypt";
 
-// @desc    Add a new resident
-// @route   POST /api/hostels/residents
-// @access  Private/Admin
+
 export const addResident = async (req: Request, res: Response) => {
     try {
         const { name, email, password, phone, roomId, hostelId } = req.body;
@@ -76,16 +74,12 @@ export const getResidents = async (req: Request, res: Response) => {
                 { name: searchRegex },
                 { email: searchRegex }
             ];
-            
-            // Note: Searching by room Number requires a joined query or searching after population
-            // but for simplicity we'll handle basic fields here and let population handle the display.
+          
         }
 
         let residents = await User.find(query).populate('roomId', 'roomNumber');
 
-        // If search exists and we want to search by room number too, we can filter after population 
-        // OR use a more complex aggregate. Given the current structure, let's refine the search results
-        // if room number was specifically intended to be searched.
+        
         if (search) {
             const searchStr = (search as string).toLowerCase();
             residents = residents.filter(resident => 

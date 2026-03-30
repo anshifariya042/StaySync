@@ -116,21 +116,6 @@ function ExploreHostelsContent() {
                         </div>
                         <div className="flex items-center gap-3 w-full md:w-auto">
                             <div className="relative flex-grow md:flex-grow-0">
-                                <select
-                                    value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    className="flex items-center justify-between w-full md:w-48 px-4 py-3 pl-10 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors border-none text-sm md:text-base appearance-none focus:ring-2 focus:ring-[#2563EB] outline-none cursor-pointer"
-                                >
-                                    <option value="All Locations">Select Location</option>
-                                    <option>New York</option>
-                                    <option>London</option>
-                                    <option>Berlin</option>
-                                    <option>Bangalore</option>
-                                    <option>Kochi</option>
-                                    <option>Kasargod</option>
-                                </select>
-                                {/* <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">location_on</span>
-                                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[20px]">expand_more</span> */}
                             </div>
 
                         </div>
@@ -181,7 +166,6 @@ function ExploreHostelsContent() {
                                             <div>
                                                 <h3 className="text-lg font-bold text-[#111827] leading-tight">{hostel.name}</h3>
                                                 <div className="flex items-center gap-1 text-[#374151] mt-1">
-                                                    {/* <span className="material-symbols-outlined text-sm">location_on</span> */}
                                                     <span className="text-sm">{hostel.location}</span>
                                                 </div>
                                             </div>
@@ -276,3 +260,4 @@ export default function ExploreHostels() {
         </Suspense>
     );
 }
+

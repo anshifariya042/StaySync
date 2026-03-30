@@ -42,7 +42,7 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
     const navItems = [
         { label: "Dashboard", href: "/staff/dashboard", icon: "grid_view" },
         { label: "My Tasks", href: "/staff/tasks", icon: "assignment" },
-        { label: "Messages", href: "/staff/chat", icon: "forum" },
+        // { label: "Messages", href: "/staff/chat", icon: "forum" },
         { label: "My Profile", href: "/staff/profile", icon: "person" },
     ];
 
