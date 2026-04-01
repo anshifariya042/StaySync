@@ -18,7 +18,7 @@ export default function SuperAdminLayout({
     if (pathname.includes('/hostels')) return 'All Hostels';
     if (pathname.includes('/users')) return 'Users Management';
     if (pathname.includes('/complaints')) return 'System Complaints';
-    if (pathname.includes('/analytics')) return 'Platform Analytics';
+    // if (pathname.includes('/analytics')) return 'Platform Analytics';
     return 'Super Admin Dashboard';
   };
 
@@ -32,7 +32,7 @@ export default function SuperAdminLayout({
 
       <SuperAdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="flex-1 min-h-screen flex flex-col">
+      <main className="flex-1 min-h-screen flex flex-col lg:pl-[280px]">
         <AdminHeader title={getPageTitle()} onMenuClick={() => setSidebarOpen(true)} />
         
         <div className="flex-1 overflow-y-auto no-scrollbar relative min-h-screen lg:min-h-0 bg-transparent">

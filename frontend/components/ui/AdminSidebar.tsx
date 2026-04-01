@@ -68,8 +68,8 @@ const AdminSidebar = ({ isOpen, onClose }: AdminSidebarProps) => {
       </AnimatePresence>
 
       <aside className={`
-        fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-[#B8E3E9] border-r border-[#4F7C82]/10 flex flex-col p-6 transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-[#B8E3E9] border-r border-[#4F7C82]/10 flex flex-col p-6 transition-transform duration-500 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="flex items-center gap-3 mb-12 px-2 group cursor-pointer" onClick={() => router.push('/')}>
             <div className="size-10 bg-[#0B2E33] rounded-xl flex items-center justify-center text-[#B8E3E9] shadow-lg shadow-[#0B2E33]/10 group-hover:rotate-12 transition-transform duration-300">

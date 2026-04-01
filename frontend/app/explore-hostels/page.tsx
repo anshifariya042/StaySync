@@ -15,10 +15,12 @@ interface Hostel {
     roomTypes: string[];
 }
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 function ExploreHostelsContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
     
     const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,8 +32,11 @@ function ExploreHostelsContent() {
         searchParams.get('facilities') ? searchParams.get('facilities')!.split(',') : []
     );
 
+    const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || "");
+    const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || "");
+
     // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
     const [totalPages, setTotalPages] = useState(1);
 
     const fetchHostels = async () => {
@@ -43,6 +48,8 @@ function ExploreHostelsContent() {
             if (filterFacilities.length > 0) {
                 params.append('facilities', filterFacilities.join(','));
             }
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
             params.append('page', currentPage.toString());
 
             const res = await api.get(`/hostels?${params.toString()}`);
@@ -68,28 +75,32 @@ function ExploreHostelsContent() {
     };
 
     useEffect(() => {
-        fetchHostels();
-    }, [currentPage]);
-
-    // Fetch on initial load if there are filters in URL
-    useEffect(() => {
-        if (search || location !== "All Locations" || filterFacilities.length > 0) {
+        const timeoutId = setTimeout(() => {
             fetchHostels();
-        }
-    }, []);
+            // Sync URL
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (location && location !== "All Locations") params.set('location', location);
+            if (filterFacilities.length > 0) params.set('facilities', filterFacilities.join(','));
+            if (minPrice) params.set('minPrice', minPrice);
+            if (maxPrice) params.set('maxPrice', maxPrice);
+            if (currentPage > 1) params.set('page', currentPage.toString());
+
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [search, location, filterFacilities, minPrice, maxPrice, currentPage, pathname, router]);
 
     const handleSearch = () => {
-        if (currentPage === 1) {
-            fetchHostels();
-        } else {
-            setCurrentPage(1); // changing page will automatically trigger fetch in useEffect
-        }
+        fetchHostels();
     };
 
     const toggleFacility = (fac: string) => {
         setFilterFacilities(prev =>
             prev.includes(fac) ? prev.filter(f => f !== fac) : [...prev, fac]
         );
+        setCurrentPage(1);
     };
 
     return (

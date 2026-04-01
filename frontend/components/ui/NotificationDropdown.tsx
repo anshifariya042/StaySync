@@ -38,6 +38,7 @@ export default function NotificationDropdown() {
             case 'success': return <CheckCircle2 className="text-emerald-500" size={20} />
             case 'error': return <XCircle className="text-rose-500" size={20} />
             case 'warning': return <Info className="text-amber-500" size={20} />
+            case 'new_hostel': return <Bell className="text-indigo-500" size={20} />
             default: return <Info className="text-blue-500" size={20} />
         }
     }
@@ -48,6 +49,7 @@ export default function NotificationDropdown() {
             case 'success': return 'bg-emerald-50'
             case 'error': return 'bg-rose-50'
             case 'warning': return 'bg-amber-50'
+            case 'new_hostel': return 'bg-indigo-50'
             default: return 'bg-blue-50'
         }
     }

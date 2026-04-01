@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import { useRooms, useAddRoom, useUpdateRoom, useDeleteRoom } from '@/hooks/useRooms'
 
@@ -18,10 +18,32 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
 )
 
 export default function Rooms() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-[#4F7C82]">Initializing Unit Matrix...</div>}>
+            <RoomsContent />
+        </Suspense>
+    );
+}
+
+function RoomsContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+
+    // Sync URL
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (searchTerm) params.set('search', searchTerm);
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, pathname, router]);
 
     // Fetch queries
     const { data: rooms = [], isLoading: loading } = useRooms(user?.hostelId, searchTerm)
@@ -127,7 +149,7 @@ export default function Rooms() {
             <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main Content Area */}
-            <main className="flex-1 min-h-screen flex flex-col">
+            <main className="flex-1 min-h-screen flex flex-col lg:pl-72">
                 <AdminHeader title="Inventory Matrix" onMenuClick={() => setSidebarOpen(true)}>
                     <div className="flex items-center gap-6">
                         <div className="hidden md:block">

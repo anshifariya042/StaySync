@@ -42,7 +42,7 @@ export default function AdminDashboard() {
             <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main Content Area */}
-            <main className="flex-1 min-h-screen flex flex-col">
+            <main className="flex-1 min-h-screen flex flex-col lg:pl-72">
                 <AdminHeader title="Admin Overview" onMenuClick={() => setSidebarOpen(true)} />
                 
                 {/* Scrollable Content */}

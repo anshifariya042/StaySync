@@ -76,14 +76,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
 
+        const handleGenericNotification = (data: any) => {
+            console.log("🔔 Generic notification received:", data);
+            setNotification({
+                show: true,
+                title: data.title,
+                message: data.message,
+                type: data.type || 'info'
+            });
+
+            // Dispatch custom event for specific pages to refresh
+            if (data.type === 'new_hostel') {
+                window.dispatchEvent(new CustomEvent('refresh_hostel_registrations'));
+            }
+            if (data.type === 'new_booking') {
+                queryClient.invalidateQueries({ queryKey: ['residents'] });
+            }
+
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+
         socket.on('booking-status-updated', handleStatusUpdate);
         socket.on('task-assigned', handleTaskAssigned);
-
+        socket.on('notification', handleGenericNotification);
+        
         return () => {
             socket.off('booking-status-updated', handleStatusUpdate);
             socket.off('task-assigned', handleTaskAssigned);
+            socket.off('notification', handleGenericNotification);
         };
     }, [user, loading, pathname, router, fetchProfile, queryClient]);
+
+    // Auto-dismiss notification after 6 seconds
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (notification.show) {
+            timer = setTimeout(() => {
+                setNotification(prev => ({ ...prev, show: false }));
+            }, 6000);
+        }
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [notification.show]);
 
     return (
         <>

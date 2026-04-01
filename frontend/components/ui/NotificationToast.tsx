@@ -13,8 +13,10 @@ interface NotificationToastProps {
 }
 
 export default function NotificationToast({ show, onClose, title, message, type }: NotificationToastProps) {
-    const isApproved = type === 'approved'
-    const isInfo = type === 'info'
+    const isSuccess = type === 'approved' || type === 'success'
+    const isError = type === 'rejected' || type === 'error'
+    const isNewHostel = type === 'new_hostel'
+    const isInfo = type === 'info' || (!isSuccess && !isError && !isNewHostel)
 
     return (
         <AnimatePresence>
@@ -26,10 +28,10 @@ export default function NotificationToast({ show, onClose, title, message, type 
                     className="fixed bottom-10 right-10 z-[100] max-w-sm w-full bg-white rounded-[2.5rem] shadow-2xl shadow-[#0B2E33]/20 border border-[#B8E3E9]/30 p-8 flex items-start gap-6 overflow-hidden antialiased"
                 >
                     {/* Decorative Background */}
-                    <div className={`absolute top-0 right-0 size-32 opacity-10 rounded-full blur-3xl -mr-16 -mt-16 ${isApproved ? 'bg-emerald-500' : isInfo ? 'bg-blue-500' : 'bg-red-500'}`}></div>
+                    <div className={`absolute top-0 right-0 size-32 opacity-10 rounded-full blur-3xl -mr-16 -mt-16 ${isSuccess ? 'bg-emerald-500' : isNewHostel ? 'bg-indigo-500' : isInfo ? 'bg-blue-500' : 'bg-red-500'}`}></div>
                     
-                    <div className={`shrink-0 size-14 rounded-2xl flex items-center justify-center ${isApproved ? 'bg-emerald-50 text-emerald-600' : isInfo ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
-                        {isApproved ? <CheckCircle size={32} /> : isInfo ? <CheckCircle size={32} className="text-blue-500" /> : <XCircle size={32} />}
+                    <div className={`shrink-0 size-14 rounded-2xl flex items-center justify-center ${isSuccess ? 'bg-emerald-50 text-emerald-600' : isNewHostel ? 'bg-indigo-50 text-indigo-600' : isInfo ? 'bg-blue-50 text-blue-600' : 'bg-red-50 text-red-600'}`}>
+                        {isSuccess ? <CheckCircle size={32} /> : isNewHostel ? <CheckCircle size={32} className="text-indigo-600" /> : isInfo ? <CheckCircle size={32} className="text-blue-500" /> : <XCircle size={32} />}
                     </div>
 
                     <div className="flex-1 min-w-0">

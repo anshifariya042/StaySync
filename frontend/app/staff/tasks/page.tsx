@@ -38,10 +38,13 @@ export default function StaffTasksPage() {
     const [filter, setFilter] = useState("All");
     const [search, setSearch] = useState("");
 
-    const fetchTasks = async () => {
+    const fetchTasks = async (term: string = search, status: string = filter) => {
         setLoading(true);
         try {
-            const data = await getStaffTasks();
+            const data = await getStaffTasks({ 
+                search: term,
+                status: status !== "All" ? status : undefined
+            });
             setTasks(data);
         } catch (error) {
             console.error("Failed to fetch tasks:", error);
@@ -51,16 +54,11 @@ export default function StaffTasksPage() {
     };
 
     useEffect(() => {
-        fetchTasks();
-    }, []);
-
-    const filteredTasks = tasks.filter(task => {
-        const matchesFilter = filter === "All" || task.status === filter;
-        const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase()) || 
-                               task.roomNumber.includes(search) ||
-                               task.complaintId.toLowerCase().includes(search.toLowerCase());
-        return matchesFilter && matchesSearch;
-    });
+        const timeoutId = setTimeout(() => {
+            fetchTasks();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [search, filter]);
 
     const handleAccept = async (id: string) => {
         try {
@@ -167,14 +165,14 @@ export default function StaffTasksPage() {
                         <div className="animate-spin size-12 border-4 border-[#B8E3E9] border-t-[#4F7C82] rounded-full mx-auto mb-6"></div>
                         <p className="text-sm font-black text-[#4F7C82] uppercase tracking-[0.2em]">Synchronizing Registry...</p>
                     </div>
-                ) : filteredTasks.length === 0 ? (
+                ) : tasks.length === 0 ? (
                     <div className="py-24 text-center bg-white rounded-[3rem] border border-dashed border-[#B8E3E9]">
                         <Icon name="inbox" className="text-6xl text-[#B8E3E9] mb-4 opacity-50" />
                         <p className="text-[#4F7C82] font-black uppercase tracking-widest text-xs opacity-60">No matching tasks indexed</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-8 max-w-6xl mx-auto">
-                        {filteredTasks.map((task, idx) => (
+                        {tasks.map((task: Task, idx: number) => (
                             <motion.div 
                                 key={task._id} 
                                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}

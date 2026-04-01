@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatsCard from '@/components/ui/StatsCard';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface Staff {
     _id: string;
@@ -41,6 +42,18 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
 )
 
 export default function SuperAdminComplaints() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center uppercase font-black text-[#4F7C82]">Initializing Resolver Matrix...</div>}>
+            <ComplaintsContent />
+        </Suspense>
+    );
+}
+
+function ComplaintsContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [stats, setStats] = useState({
         total: 0,
@@ -50,11 +63,26 @@ export default function SuperAdminComplaints() {
         categories: [] as CategoryStat[]
     });
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All');
-    const [categoryFilter, setCategoryFilter] = useState('All');
-    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState(searchParams.get('search') || '');
+    const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'All');
+    const [categoryFilter, setCategoryFilter] = useState(searchParams.get('category') || 'All');
+    const [hostels, setHostels] = useState<{ _id: string, name: string }[]>([]);
+    const [hostelFilter, setHostelFilter] = useState(searchParams.get('hostel') || 'All');
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
     const [totalPages, setTotalPages] = useState(1);
+
+    const fetchHostels = async () => {
+        try {
+            const res = await api.get('/superadmin/hostels-list');
+            setHostels(res.data);
+        } catch (error) {
+            console.error('Failed to fetch hostels:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchHostels();
+    }, []);
 
     const fetchComplaints = async () => {
         setLoading(true);
@@ -63,6 +91,7 @@ export default function SuperAdminComplaints() {
                 search,
                 status: statusFilter,
                 category: categoryFilter,
+                hostelId: hostelFilter,
                 page: page.toString(),
                 limit: '8'
             });
@@ -80,9 +109,19 @@ export default function SuperAdminComplaints() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchComplaints();
+            // Sync URL
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (statusFilter !== 'All') params.set('status', statusFilter);
+            if (categoryFilter !== 'All') params.set('category', categoryFilter);
+            if (hostelFilter !== 'All') params.set('hostel', hostelFilter);
+            if (page > 1) params.set('page', page.toString());
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
         }, 500);
         return () => clearTimeout(timeoutId);
-    }, [search, statusFilter, categoryFilter, page]);
+    }, [search, statusFilter, categoryFilter, hostelFilter, page, pathname, router]);
 
     const getStatusStyles = (status: string) => {
         switch (status.toLowerCase()) {
@@ -108,14 +147,7 @@ export default function SuperAdminComplaints() {
                     <h1 className="text-4xl font-black text-[#0B2E33] tracking-tighter">System <span className="text-[#4F7C82]/50">Resolver</span></h1>
                     <p className="text-[10px] font-bold text-[#4F7C82] uppercase tracking-[0.2em] mt-2 opacity-70">Cross-platform maintenance and issue monitoring</p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-3 px-6 py-4 bg-white border border-[#B8E3E9]/30 rounded-2xl text-[11px] font-black uppercase tracking-widest text-[#0B2E33] shadow-sm hover:bg-[#F8FAFC] transition-all active:scale-95">
-                        <Icon name="filter_list" className="text-lg" /> Filter Matrix
-                    </button>
-                    <button className="flex items-center gap-3 px-6 py-4 bg-[#0B2E33] rounded-2xl text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-[#0B2E33]/20 hover:scale-105 transition-all active:scale-95">
-                        <Icon name="download" className="text-lg" /> Export Logs
-                    </button>
-                </div>
+               
             </div>
 
             {/* Top Stats Grid */}
@@ -208,15 +240,35 @@ export default function SuperAdminComplaints() {
                         <h2 className="text-2xl font-black text-[#0B2E33] tracking-tight">recent tickets</h2>
                         <p className="text-[10px] font-bold text-[#4F7C82] uppercase tracking-[0.15em] mt-1 opacity-70">Chronological platform issues</p>
                     </div>
-                    <div className="relative w-full md:w-80">
-                        <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4F7C82] opacity-50" />
-                        <input 
-                            className="w-full pl-12 pr-4 py-4 bg-[#F8FAFC] border-none rounded-[1.5rem] text-[12px] font-bold text-[#0B2E33] focus:ring-4 focus:ring-[#B8E3E9]/20 outline-none transition-all"
-                            placeholder="Find logs by ID or description..." 
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                    <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                        <div className="relative min-w-[200px]">
+                            <Icon name="apartment" className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4F7C82] opacity-50 text-sm" />
+                            <select 
+                                className="w-full pl-12 pr-10 py-4 bg-[#F8FAFC] border-none rounded-[1.5rem] text-[12px] font-black text-[#0B2E33] focus:ring-4 focus:ring-[#B8E3E9]/20 outline-none transition-all appearance-none cursor-pointer uppercase tracking-widest"
+                                value={hostelFilter}
+                                onChange={(e) => {
+                                    setHostelFilter(e.target.value);
+                                    setPage(1);
+                                }}
+                            >
+                                <option value="All">All Hostels</option>
+                                {hostels.map(h => (
+                                    <option key={h._id} value={h._id}>{h.name}</option>
+                                ))}
+                            </select>
+                            <Icon name="expand_more" className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4F7C82] opacity-40 pointer-events-none" />
+                        </div>
+
+                        <div className="relative w-full md:w-80">
+                            <Icon name="search" className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4F7C82] opacity-50" />
+                            <input 
+                                className="w-full pl-12 pr-4 py-4 bg-[#F8FAFC] border-none rounded-[1.5rem] text-[12px] font-bold text-[#0B2E33] focus:ring-4 focus:ring-[#B8E3E9]/20 outline-none transition-all"
+                                placeholder="Find logs by ID or description..." 
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -229,7 +281,7 @@ export default function SuperAdminComplaints() {
                                 <th className="pb-4">Classification</th>
                                 <th className="pb-4">Security Level</th>
                                 <th className="pb-4">Allocated Staff</th>
-                                <th className="pb-4 text-right pr-6">Management</th>
+                                {/* <th className="pb-4 text-right pr-6">Management</th> */}
                             </tr>
                         </thead>
                         <tbody>

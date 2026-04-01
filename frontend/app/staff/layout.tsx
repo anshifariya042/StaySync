@@ -39,7 +39,7 @@ export default function StaffLayout({
             
             <StaffSidebar isOpen={isOpen} setIsOpen={setIsOpen} />
             
-            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:pl-72">
                 {children}
             </div>
         </div>

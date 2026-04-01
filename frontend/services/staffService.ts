@@ -5,7 +5,7 @@ export const getStaffStats = async () => {
     return response.data;
 };
 
-export const getStaffTasks = async (params?: { status?: string; priority?: string; limit?: number }) => {
+export const getStaffTasks = async (params?: { status?: string; priority?: string; search?: string; limit?: number }) => {
     const response = await api.get("/staff/tasks", { params });
     return response.data;
 };

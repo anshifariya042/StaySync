@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import { useComplaints, useUpdateComplaintStatus, useAssignStaff } from '@/hooks/useComplaints'
 import { useStaff } from '@/hooks/useStaff'
@@ -14,13 +14,36 @@ import SearchInput from '@/components/ui/SearchInput'
 import Modal from '@/components/ui/Modal'
 
 export default function Complaints() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-slate-400">Loading Complaint Register...</div>}>
+            <ComplaintsContent />
+        </Suspense>
+    );
+}
+
+function ComplaintsContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
 
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
     const limit = 5;
+
+    // Sync URL
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (searchTerm) params.set('search', searchTerm);
+            if (page > 1) params.set('page', page.toString());
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, page, pathname, router]);
 
     // Fetch queries
     const { data, isLoading: loading } = useComplaints(user?.hostelId, searchTerm, page, limit)
@@ -74,7 +97,7 @@ export default function Complaints() {
             <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden lg:pl-72">
                 <AdminHeader title="Complaints Management" onMenuClick={() => setSidebarOpen(true)}>
                      <div className="flex items-center gap-3">
                         <SearchInput 

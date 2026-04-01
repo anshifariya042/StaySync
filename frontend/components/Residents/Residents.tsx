@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import { useResidents, useDeleteResident, useUpdateResidentStatus } from '@/hooks/useResidents'
 
@@ -12,10 +12,32 @@ import Badge from '@/components/ui/Badge'
 import SearchInput from '@/components/ui/SearchInput'
 
 export default function Residents() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-slate-400">Synchronizing Resident Registry...</div>}>
+            <ResidentsContent />
+        </Suspense>
+    );
+}
+
+function ResidentsContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+
+    // Sync URL
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (searchTerm) params.set('search', searchTerm);
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, pathname, router]);
 
     const { data: residents = [], isLoading } = useResidents(user?.hostelId, searchTerm)
     const deleteResidentMutation = useDeleteResident()
@@ -59,7 +81,7 @@ export default function Residents() {
             <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden lg:pl-72">
                 <AdminHeader title="Residents Management" onMenuClick={() => setSidebarOpen(true)}>
                      <div className="flex items-center gap-3">
                         <SearchInput 

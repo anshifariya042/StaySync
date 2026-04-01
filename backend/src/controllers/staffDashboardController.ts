@@ -32,7 +32,7 @@ export const getStaffTasks = async (req: AuthRequest, res: Response) => {
     try {
         const staffId = req.user.id;
         const hostelId = req.user.hostelId;
-        const { status, priority, limit = 10 } = req.query;
+        const { status, priority, search, limit = 10 } = req.query;
 
         let query: any = { 
             hostelId,
@@ -42,8 +42,30 @@ export const getStaffTasks = async (req: AuthRequest, res: Response) => {
             ]
         };
 
-        if (status) query.status = status;
+        if (status && status !== "All") query.status = status;
         if (priority) query.priority = priority;
+        
+        if (search) {
+            const searchRegex = new RegExp(search as string, 'i');
+            // If already has $or (the assignment check), we need to handle it carefully
+            // In MongoDB, we can use $and with the existing query
+            const searchQuery = {
+                $or: [
+                    { title: searchRegex },
+                    { roomNumber: searchRegex },
+                    { complaintId: searchRegex }
+                ]
+            };
+            
+            // Re-structure query to use $and
+            const originalQuery = { ...query };
+            query = {
+                $and: [
+                    originalQuery,
+                    searchQuery
+                ]
+            };
+        }
 
         const tasks = await Complaint.find(query)
             .populate("userId", "name email")

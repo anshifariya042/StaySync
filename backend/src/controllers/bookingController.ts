@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { Booking, BookingStatus } from "../models/Booking";
 import { Room, RoomStatus } from "../models/Room";
-import { User, UserStatus } from "../models/User";
-import { sendBookingStatusEmail } from "../utils/mailer";
+import { User, UserStatus, UserRole } from "../models/User";
+import { sendBookingStatusEmail, sendNewBookingAlertToAdmin } from "../utils/mailer";
 import { sendNotification } from "../sockets/socket";
 import Notification from "../models/Notification";
 import Hostel from "../models/hostelModel";
@@ -83,6 +83,37 @@ export const createBooking = async (req: Request, res: Response) => {
                 }
                 await room.save();
             }
+        }
+
+        // Notify Hostel Admin(s)
+        try {
+            const hostelAdmins = await User.find({ hostelId: hostelId, role: UserRole.ADMIN });
+            const hostel = await Hostel.findById(hostelId);
+            
+            for (const admin of hostelAdmins) {
+                // Save notification to DB
+                const notification = await Notification.create({
+                    userId: admin._id,
+                    title: "New Booking Request",
+                    message: `A new booking has been requested by ${fullName} for a ${selectedRoomType} room.`,
+                    type: "info"
+                });
+
+                // Real-time socket notification
+                sendNotification(admin._id.toString(), "notification", {
+                    _id: notification._id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: "new_booking",
+                    createdAt: notification.createdAt,
+                    isRead: false
+                });
+
+                // Email alert
+                sendNewBookingAlertToAdmin(admin.email, fullName, hostel?.name || "StaySync", selectedRoomType).catch(console.error);
+            }
+        } catch (notifyError) {
+            console.error("Failed to notify hostel admins of new booking:", notifyError);
         }
 
         res.status(201).json({

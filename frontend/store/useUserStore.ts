@@ -30,6 +30,12 @@ export const useUserStore = create<UserState>((set) => ({
     error: null,
 
     fetchProfile: async () => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+        if (!token) {
+            set({ isLoading: false });
+            return;
+        }
+
         set({ isLoading: true, error: null });
         try {
             const response = await api.get('/user/profile');

@@ -222,9 +222,9 @@
 
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import UserSidebar from '@/components/UserSidebar/UserSidebar'
 import { useUserStore } from '@/store/useUserStore'
 import { useComplaints } from '@/hooks/useComplaints'
@@ -236,11 +236,33 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
     <span className={`material-symbols-outlined ${className}`}>{name}</span>
 )
 export default function UserDashboard() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-[#4F7C82]">Initializing Residence Matrix...</div>}>
+            <DashboardContent />
+        </Suspense>
+    );
+}
+
+function DashboardContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
     const { profile, isLoading: isProfileLoading, fetchProfile } = useUserStore()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [page, setPage] = useState(1)
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
     const limit = 4
+
+    // Sync URL
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (page > 1) params.set('page', page.toString());
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [page, pathname, router]);
 
     useEffect(() => {
         if (!profile && !isProfileLoading) {

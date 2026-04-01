@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import { useStaff, useAddStaff, useUpdateStaff, useDeleteStaff } from '@/hooks/useStaff'
 
@@ -13,10 +13,32 @@ import SearchInput from '@/components/ui/SearchInput'
 import Modal from '@/components/ui/Modal'
 
 export default function Staff() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-slate-400">Loading Staff Directory...</div>}>
+            <StaffContent />
+        </Suspense>
+    );
+}
+
+function StaffContent() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
     const { user } = useAuth()
     const [sidebarOpen, setSidebarOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState('')
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+
+    // Sync URL
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            const params = new URLSearchParams();
+            if (searchTerm) params.set('search', searchTerm);
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, pathname, router]);
 
     // Fetch queries
     const { data: staffMembers = [], isLoading: loading } = useStaff(user?.hostelId, searchTerm)
@@ -110,7 +132,7 @@ export default function Staff() {
             <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden lg:pl-72">
                 <AdminHeader title="Staff Management" onMenuClick={() => setSidebarOpen(true)}>
                      <div className="flex items-center gap-4">
                         <SearchInput 

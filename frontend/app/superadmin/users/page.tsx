@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatsCard from '@/components/ui/StatsCard';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface User {
     _id: string;
@@ -28,18 +29,30 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
 )
 
 export default function UserManagement() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-[#4F7C82]">Loading User Infrastructure...</div>}>
+            <UsersContent />
+        </Suspense>
+    );
+}
+
+function UsersContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
     const [users, setUsers] = useState<User[]>([]);
     const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [roleFilter, setRoleFilter] = useState('All Roles');
-    const [hostelFilter, setHostelFilter] = useState('All Hostels');
+    const [search, setSearch] = useState(searchParams.get('search') || '');
+    const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || 'All Roles');
+    const [hostelFilter, setHostelFilter] = useState(searchParams.get('hostel') || 'All Hostels');
     const [stats, setStats] = useState({
         total: 0,
         active: 0,
         pending: 0
     });
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
     const [totalPages, setTotalPages] = useState(1);
     const limit = 10;
 
@@ -84,9 +97,18 @@ export default function UserManagement() {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchUsers();
+            // Sync URL
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (roleFilter !== 'All Roles') params.set('role', roleFilter);
+            if (hostelFilter !== 'All Hostels') params.set('hostel', hostelFilter);
+            if (page > 1) params.set('page', page.toString());
+            
+            const query = params.toString();
+            router.replace(query ? `${pathname}?${query}` : pathname);
         }, 500);
         return () => clearTimeout(timeoutId);
-    }, [search, roleFilter, hostelFilter, page]);
+    }, [search, roleFilter, hostelFilter, page, pathname, router]);
 
     const handleStatusToggle = async (id: string, currentStatus: string) => {
         try {

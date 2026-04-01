@@ -103,3 +103,84 @@ export const sendHostelApprovalEmail = async (email: string, name: string, statu
 
   await transporter.sendMail(mailOptions);
 };
+
+export const sendNewHostelRegistrationEmail = async (adminEmail: string, ownerName: string, hostelName: string, location: string) => {
+    const transporter = getTransporter();
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminEmail,
+      subject: "Alert: New Hostel Registration - StaySync",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #4f46e5; text-align: center;">StaySync</h2>
+          <p>Hello Super Admin,</p>
+          <p>A new hostel registration request has been submitted by <strong>${ownerName}</strong>.</p>
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Hostel Name:</strong> ${hostelName}</p>
+            <p style="margin: 5px 0;"><strong>Location:</strong> ${location}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> Pending Approval</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/superadmin/approvals" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Review Registration</a>
+          </div>
+          <p>Best regards,<br>The StaySync Team</p>
+        </div>
+      `,
+    };
+  
+    await transporter.sendMail(mailOptions);
+  };
+  
+  export const sendRegistrationReceivedEmail = async (userEmail: string, ownerName: string, hostelName: string) => {
+      const transporter = getTransporter();
+      
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: userEmail,
+        subject: "Safe & Received: Your Hostel Registration - StaySync",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+            <h2 style="color: #4f46e5; text-align: center;">StaySync</h2>
+            <p>Hello ${ownerName},</p>
+            <p>Thank you for choosing StaySync! We've successfully received your registration request for <strong>${hostelName}</strong>.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 4px; margin: 20px 0;">
+              <p style="margin: 5px 0;"><strong>Status:</strong> Pending Manual Approval</p>
+              <p style="margin: 5px 0;"><strong>Next Steps:</strong> Our Super Admin team will review your application and documents. This typically takes 24-48 hours.</p>
+            </div>
+            <p>Once approved, you will receive another email with your access credentials and dashboard link.</p>
+            <p>Best regards,<br>The StaySync Team</p>
+          </div>
+        `,
+      };
+      await transporter.sendMail(mailOptions);
+    };
+
+export const sendNewBookingAlertToAdmin = async (adminEmail: string, studentName: string, hostelName: string, roomType: string) => {
+    const transporter = getTransporter();
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminEmail,
+      subject: `New Booking Request: ${studentName} - StaySync`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #4f46e5; text-align: center;">StaySync Admin</h2>
+          <p>Hello Admin,</p>
+          <p>A new booking request has been received for <strong>${hostelName}</strong>.</p>
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentName}</p>
+            <p style="margin: 5px 0;"><strong>Room Type:</strong> ${roomType}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> Pending Approval</p>
+          </div>
+          <p>Please log in to your dashboard to review and manage this request.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/residents" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Request</a>
+          </div>
+          <p>Best regards,<br>The StaySync Team</p>
+        </div>
+      `,
+    };
+  
+    await transporter.sendMail(mailOptions);
+};

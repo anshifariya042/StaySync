@@ -14,6 +14,17 @@ export default function SearchFilter() {
         const params = new URLSearchParams();
         if (location !== 'Select City') params.append('location', location);
         
+        // Handle Price Range
+        if (priceRange === '$200 - $500') {
+            params.append('minPrice', '200');
+            params.append('maxPrice', '500');
+        } else if (priceRange === '$500 - $1000') {
+            params.append('minPrice', '500');
+            params.append('maxPrice', '1000');
+        } else if (priceRange === '$1000+') {
+            params.append('minPrice', '1000');
+        }
+
         // Map facilities to specific keys if needed, for now just a generic search
         if (facilities !== 'All') params.append('facilities', facilities);
         

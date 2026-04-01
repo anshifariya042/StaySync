@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { getHostelApprovals, approveRejectHostel } from '@/services/superAdminService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 interface Hostel {
     _id: string;
@@ -26,15 +27,27 @@ const Icon = ({ name, className = "" }: { name: string, className?: string }) =>
 )
 
 export default function HostelApprovalsPage() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-black uppercase text-[#4F7C82]">Validating Approval Matrix...</div>}>
+            <ApprovalsContent />
+        </Suspense>
+    );
+}
+
+function ApprovalsContent() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+
     const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filterStatus, setFilterStatus] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [filterStatus, setFilterStatus] = useState<string>(searchParams.get('status') || 'all');
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+    const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get('search') || '');
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     
     // Pagination state
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
     const limit = 8;
@@ -54,10 +67,21 @@ export default function HostelApprovalsPage() {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
-            setPage(1); // Reset to first page on search
+            if (searchQuery !== debouncedSearch) setPage(1); // Reset to first page ONLY on change
         }, 500);
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+    }, [searchQuery, debouncedSearch]);
+
+    // Sync URL when filters change
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (filterStatus !== 'all') params.set('status', filterStatus);
+        if (debouncedSearch) params.set('search', debouncedSearch);
+        if (page > 1) params.set('page', page.toString());
+        
+        const query = params.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname);
+    }, [filterStatus, debouncedSearch, page, pathname, router]);
 
     const fetchHostels = async () => {
         try {
@@ -76,6 +100,14 @@ export default function HostelApprovalsPage() {
 
     useEffect(() => {
         fetchHostels();
+
+        const handleRefresh = () => {
+            console.log("🔄 Real-time refresh triggered for hostel approvals...");
+            fetchHostels();
+        };
+
+        window.addEventListener('refresh_hostel_registrations', handleRefresh);
+        return () => window.removeEventListener('refresh_hostel_registrations', handleRefresh);
     }, [filterStatus, debouncedSearch, page]);
 
     const handleAction = async (id: string, action: 'approved' | 'rejected') => {

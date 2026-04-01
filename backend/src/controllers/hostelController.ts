@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import { User, UserRole, UserStatus } from "../models/User";
 import hostelModel from "../models/hostelModel";
 import { Room } from "../models/Room";
+import Notification from "../models/Notification";
+import { sendNotification } from "../sockets/socket";
+import { sendNewHostelRegistrationEmail, sendRegistrationReceivedEmail } from "../utils/mailer";
 
 export const createHostel = async (req: Request, res: Response) => {
   try {
@@ -91,6 +94,43 @@ export const createHostel = async (req: Request, res: Response) => {
       await Room.insertMany(roomsToCreate);
     }
 
+    // Notify Super Admins
+    try {
+        const superAdmins = await User.find({ role: UserRole.SUPER_ADMIN });
+        
+        for (const admin of superAdmins) {
+            // App Notification Record
+            const notif = await Notification.create({
+                userId: admin._id,
+                type: 'info',
+                title: 'New Hostel Registration',
+                message: `User ${ownerName} has registered a new hostel: "${name}". Check registrations for approval.`
+            });
+
+            // Real-time Socket Notification
+            sendNotification(admin._id.toString(), "notification", {
+                _id: notif._id,
+                title: notif.title,
+                message: notif.message,
+                type: 'new_hostel', // Specific type for frontend filtering
+                createdAt: notif.createdAt,
+                isRead: false
+            });
+
+            // Email Notification to Super Admin
+            await sendNewHostelRegistrationEmail(admin.email, ownerName, name, location);
+        }
+
+        // Email Notification to the Owner
+        try {
+            await sendRegistrationReceivedEmail(email, ownerName, name);
+        } catch (ownerEmailError) {
+            console.error("Failed to send confirmation email to owner:", ownerEmailError);
+        }
+    } catch (notifyError) {
+        console.error("Failed to notify super admins of new registration:", notifyError);
+    }
+
     res.status(201).json({
       message: "Hostel and rooms registered successfully",
       hostel
@@ -111,7 +151,9 @@ export const getAllHostels = async (req: Request, res: Response) => {
       limit = 9,
       search = "",
       location = "",
-      facilities
+      facilities,
+      minPrice,
+      maxPrice
     } = req.query;
 
     const query: any = { status: 'approved' };
@@ -132,6 +174,12 @@ export const getAllHostels = async (req: Request, res: Response) => {
       if (facilityArray.length > 0) {
         query.facilities = { $all: facilityArray };
       }
+    }
+
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
     const pageNumber = Number(page);
