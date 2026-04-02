@@ -42,7 +42,7 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
     const navItems = [
         { label: "Dashboard", href: "/staff/dashboard", icon: "grid_view" },
         { label: "My Tasks", href: "/staff/tasks", icon: "assignment" },
-        // { label: "Messages", href: "/staff/chat", icon: "forum" },
+        { label: "Messages", href: "/staff/chat", icon: "forum" },
         { label: "My Profile", href: "/staff/profile", icon: "person" },
     ];
 
@@ -67,8 +67,8 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
                 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 {/* Brand Logo */}
-                <Link 
-                    href="/" 
+                <Link
+                    href="/"
                     className="flex items-center gap-3 mb-12 px-2 group"
                     onClick={() => setIsOpen(false)}
                 >
@@ -101,7 +101,7 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
 
                 {/* Profile Card Section */}
                 <div className="mt-auto pt-6 border-t border-[#4F7C82]/10">
-                    <div 
+                    <div
                         onClick={() => {
                             router.push('/staff/profile')
                             setIsOpen(false)
@@ -117,8 +117,8 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
                         </div>
                     </div>
 
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="flex items-center gap-4 px-4 py-3.5 text-[#4F7C82] hover:text-[#0B2E33] hover:bg-white/30 rounded-2xl w-full transition-all duration-300 text-[14px] font-bold group"
                     >
                         <Icon name="logout" className="text-[20px] group-hover:-translate-x-1 transition-transform" />

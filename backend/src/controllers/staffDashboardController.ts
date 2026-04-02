@@ -1,6 +1,11 @@
 import { Response } from "express";
 import { Complaint, ComplaintStatus } from "../models/Complaint";
 import { AuthRequest } from "../middlewares/authMiddleware";
+import Notification from "../models/Notification";
+import { sendNotification } from "../sockets/socket";
+import { User } from "../models/User";
+import Hostel from "../models/hostelModel";
+import { sendComplaintResolutionToUser } from "../utils/mailer";
 
 export const getStaffStats = async (req: AuthRequest, res: Response) => {
     try {
@@ -119,6 +124,39 @@ export const updateTaskStatus = async (req: AuthRequest, res: Response) => {
 
         task.status = status;
         await task.save();
+
+        if (status === ComplaintStatus.RESOLVED) {
+            const user = await User.findById(task.userId);
+            const hostel = await Hostel.findById(task.hostelId);
+            
+            if (user) {
+                // APP NOTIFICATION
+                const notification = new Notification({
+                    userId: user._id,
+                    type: "success",
+                    title: "Issue Resolved",
+                    message: `Status update: Your ticket "${task.title}" has been completed by staff.`,
+                    isRead: false
+                });
+                await notification.save();
+
+                // SOCKET EVENT
+                sendNotification(user._id.toString(), "complaint-resolved", {
+                    notificationId: notification._id,
+                    title: notification.title,
+                    message: notification.message,
+                    complaintId: task._id
+                });
+
+                // EMAIL NOTIFICATION
+                sendComplaintResolutionToUser(
+                    user.email,
+                    user.name,
+                    task.title,
+                    hostel?.name || "Your Residence"
+                ).catch(err => console.error("Staff Task Resolution Email Error:", err));
+            }
+        }
 
         res.json(task);
     } catch (error: any) {

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/Providers/AuthProvider";
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { ModalProvider } from "@/components/Providers/ModalProvider";
 import Navbar from "@/components/Navbar/Navbar";
 import ReactQueryProvider from "@/components/Providers/ReactQueryProvider";
 
@@ -44,8 +45,10 @@ export default function RootLayout({
         <ReactQueryProvider>
           <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "PROVIDE_VALID_CLIENT_ID"}>
             <AuthProvider>
-              <Navbar/>
-              {children}
+              <ModalProvider>
+                <Navbar/>
+                {children}
+              </ModalProvider>
             </AuthProvider>
           </GoogleOAuthProvider>
         </ReactQueryProvider>

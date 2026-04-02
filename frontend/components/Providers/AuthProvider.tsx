@@ -96,13 +96,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
 
+        const handleNewComplaint = (data: any) => {
+            console.log("📥 New complaint alert received:", data);
+            setNotification({
+                show: true,
+                title: data.title,
+                message: data.message,
+                type: 'info'
+            });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['complaints'] });
+        }
+
+        const handleComplaintResolved = (data: any) => {
+            console.log("📥 Complaint resolved alert received:", data);
+            setNotification({
+                show: true,
+                title: data.title,
+                message: data.message,
+                type: 'success'
+            });
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['complaints'] });
+        }
+
         socket.on('booking-status-updated', handleStatusUpdate);
         socket.on('task-assigned', handleTaskAssigned);
+        socket.on('new-complaint', handleNewComplaint);
+        socket.on('complaint-resolved', handleComplaintResolved);
         socket.on('notification', handleGenericNotification);
         
         return () => {
             socket.off('booking-status-updated', handleStatusUpdate);
             socket.off('task-assigned', handleTaskAssigned);
+            socket.off('new-complaint', handleNewComplaint);
+            socket.off('complaint-resolved', handleComplaintResolved);
             socket.off('notification', handleGenericNotification);
         };
     }, [user, loading, pathname, router, fetchProfile, queryClient]);

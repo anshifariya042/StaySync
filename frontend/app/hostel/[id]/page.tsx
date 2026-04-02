@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useUserStore } from "@/store/useUserStore";
+import { useModal } from "@/components/Providers/ModalProvider";
 
 
 interface Room {
@@ -49,6 +50,7 @@ interface Review {
 export default function HostelDetails() {
     const { profile } = useUserStore();
     const { id } = useParams();
+    const { showAlert } = useModal();
 
     const router = useRouter();
     const [hostel, setHostel] = useState<Hostel | null>(null);
@@ -480,7 +482,7 @@ export default function HostelDetails() {
                                                 const finalRoomId = selectedRoom._id.startsWith('temp') ? 'default' : selectedRoom._id;
                                                 router.push(`/hostel/${hostel._id}/book/${finalRoomId}?type=${encodeURIComponent(selectedRoom.type)}`);
                                             } else {
-                                                alert("Please select a room first!");
+                                                showAlert("Selection Required", "Please choose a room type from the available options before proceeding with your booking.", "error");
                                             }
                                         }}
                                         className="w-full bg-[#5048e5] hover:bg-[#5048e5]/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-[#5048e5]/20 transition-all active:scale-[0.98]"

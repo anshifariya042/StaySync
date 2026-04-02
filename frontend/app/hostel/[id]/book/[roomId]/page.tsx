@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore as useAuth } from '@/store/useAuthStore';
 import api from "@/lib/api";
 import Link from "next/link";
+import { useModal } from "@/components/Providers/ModalProvider";
 
 interface Room {
     _id: string;
@@ -28,6 +29,7 @@ export default function BookRoom() {
     const searchParams = useSearchParams();
     const currentRoomType = searchParams.get('type');
     const { user } = useAuth();
+    const { showAlert } = useModal();
 
     const [hostel, setHostel] = useState<Hostel | null>(null);
     const [room, setRoom] = useState<Room | null>(null);
@@ -126,10 +128,10 @@ export default function BookRoom() {
         } catch (error: any) {
             console.error("Booking failed:", error);
             if (error.response?.status === 401) {
-                alert("Your session has expired. Please login again.");
+                showAlert("Identity Expired", "Your security session has expired. Please re-authenticate to continue with your booking.", "error");
                 router.push('/login');
             } else {
-                alert(error.response?.data?.message || "Booking failed. Please try again.");
+                showAlert("System Error", error.response?.data?.message || "Booking synchronization failed. Please try again or contact support.", "error");
             }
         } finally {
             setIsSubmitting(false);

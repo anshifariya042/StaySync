@@ -10,9 +10,7 @@ import reviewRoutes from "./routes/reviewRoutes";
 import staffRoutes from "./routes/staffRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import superadminRoutes from "./routes/superadminRoutes";
-
-
-
+import chatRoutes from "./routes/chatRoutes";
 
 const app = express();
 
@@ -35,6 +33,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/superadmin", superadminRoutes);
+app.use("/api/chat", chatRoutes);
 
 
 

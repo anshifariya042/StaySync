@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import NotificationDropdown from "@/components/ui/NotificationDropdown";
+import { useModal } from "@/components/Providers/ModalProvider";
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -31,6 +32,7 @@ interface Task {
 
 export default function StaffTasksPage() {
     const { profile } = useUserStore();
+    const { showAlert } = useModal();
     const router = useRouter();
     const { setIsOpen } = useSidebarStore();
     const [tasks, setTasks] = useState<Task[]>([]);
@@ -64,8 +66,9 @@ export default function StaffTasksPage() {
         try {
             await acceptTask(id);
             fetchTasks();
+            showAlert("Task Accepted", "You have successfully claimed this maintenance request.", "success");
         } catch (error) {
-            alert("Error accepting task");
+            showAlert("Sync Error", "There was a problem claiming this task. Please try refreshing.", "error");
         }
     };
 
@@ -73,8 +76,9 @@ export default function StaffTasksPage() {
         try {
             await updateTaskStatus(id, "Resolved");
             fetchTasks();
+            showAlert("Work Completed", "Task marked as resolved. The resident will be notified.", "success");
         } catch (error) {
-            alert("Error resolving task");
+            showAlert("Update Failed", "Could not synchronize task status.", "error");
         }
     };
 

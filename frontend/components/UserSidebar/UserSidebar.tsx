@@ -73,11 +73,11 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
 
             <aside className={`
                 fixed inset-y-0 left-0 z-[60] w-full max-w-[280px] bg-[#B8E3E9] border-r border-[#4F7C82]/10 flex flex-col p-6 transition-transform duration-500 ease-in-out
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0' }
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
             `}>
                 {/* Brand Logo */}
-                <Link 
-                    href="/" 
+                <Link
+                    href="/"
                     className="flex items-center gap-3 mb-12 px-2 group"
                     onClick={() => setSidebarOpen(false)}
                 >
@@ -114,17 +114,17 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
 
                 {/* Profile Card Section */}
                 <div className="mt-auto pt-6 border-t border-[#4F7C82]/10">
-                    <div 
+                    <div
                         onClick={() => {
                             router.push('/user/profile')
                             setSidebarOpen(false)
-                        }}                    
-                        >
-                       
+                        }}
+                    >
+
                     </div>
 
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         className="flex items-center gap-4 px-4 py-3 text-[#4F7C82] hover:text-[#0B2E33] hover:bg-white/30 rounded-2xl w-full transition-all duration-300 text-[14px] font-bold group"
                     >
                         <Icon name="logout" className="text-[20px] group-hover:-translate-x-1 transition-transform" />

@@ -184,3 +184,59 @@ export const sendNewBookingAlertToAdmin = async (adminEmail: string, studentName
   
     await transporter.sendMail(mailOptions);
 };
+
+export const sendComplaintAlertToAdmin = async (adminEmail: string, studentName: string, hostelName: string, complaintTitle: string, category: string) => {
+    const transporter = getTransporter();
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: adminEmail,
+      subject: `New Maintenance Ticket: ${complaintTitle} - StaySync`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #4f46e5; text-align: center;">StaySync Admin Panel</h2>
+          <p>Hello Admin,</p>
+          <p>A new maintenance complaint has been registered for <strong>${hostelName}</strong>.</p>
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Resident:</strong> ${studentName}</p>
+            <p style="margin: 5px 0;"><strong>Subject:</strong> ${complaintTitle}</p>
+            <p style="margin: 5px 0;"><strong>Category:</strong> ${category}</p>
+            <p style="margin: 5px 0;"><strong>Status:</strong> New Ticket</p>
+          </div>
+          <p>Please review and assign staff to resolve this issue as soon as possible.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/complaints" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Support Hub</a>
+          </div>
+          <p>Best regards,<br>The StaySync Team</p>
+        </div>
+      `,
+    };
+  
+    await transporter.sendMail(mailOptions);
+};
+
+export const sendComplaintResolutionToUser = async (userEmail: string, studentName: string, complaintTitle: string, hostelName: string) => {
+    const transporter = getTransporter();
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: userEmail,
+      subject: `Maintenance Resolved: ${complaintTitle} - StaySync`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #4f46e5; text-align: center;">StaySync Support</h2>
+          <p>Hello ${studentName},</p>
+          <p>Your maintenance request for <strong>${complaintTitle}</strong> at ${hostelName} has been marked as <strong>Resolved</strong>.</p>
+          <div style="background-color: #f0fdf4; padding: 20px; border-left: 4px solid #10b981; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px; color: #166534;">
+              We hope this resolves the issue to your satisfaction. If the problem persists, please feel free to raise another ticket or contact the management.
+            </p>
+          </div>
+          <p>Thank you for your patience.</p>
+          <p>Best regards,<br>The StaySync Team</p>
+        </div>
+      `,
+    };
+  
+    await transporter.sendMail(mailOptions);
+};

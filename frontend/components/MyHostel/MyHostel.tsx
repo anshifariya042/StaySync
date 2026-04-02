@@ -9,6 +9,7 @@ import { useUserStore } from '@/store/useUserStore'
 import api from '@/lib/api'
 import RestrictedAccess from '@/components/ui/RestrictedAccess'
 import NotificationDropdown from '@/components/ui/NotificationDropdown'
+import { useModal } from '@/components/Providers/ModalProvider'
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "", fill = false }: { name: string, className?: string, fill?: boolean }) => (
@@ -19,6 +20,7 @@ export default function MyHostel() {
     const router = useRouter()
     const { logout } = useAuth()
     const { profile, isLoading, fetchProfile } = useUserStore()
+    const { showAlert } = useModal()
     const [sidebarOpen, setSidebarOpen] = useState(false)
 
     const [reviews, setReviews] = useState<any[]>([])
@@ -77,10 +79,10 @@ export default function MyHostel() {
             setShowReviewForm(false)
             setNewRating(5)
             setNewComment('')
-            alert("Review submitted successfully!")
+            showAlert("Review Status", "Feedback successfully cataloged in the system registry.", "success")
         } catch (error: any) {
             console.error("Failed to submit review:", error)
-            alert(error.response?.data?.message || "Failed to submit review")
+            showAlert("Submission Error", error.response?.data?.message || "Failed to submit review to the server.", "error")
         } finally {
             setSubmittingReview(false)
         }

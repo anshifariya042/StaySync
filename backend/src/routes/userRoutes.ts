@@ -3,7 +3,11 @@ import { protect } from "../middlewares/authMiddleware";
 import { authorizeRoles } from "../middlewares/roleMiddleware";
 import { UserRole, User } from "../models/User";
 
+import { getUserComplaints } from "../controllers/complaintController";
+
 const router = express.Router();
+
+router.get("/complaints", protect, getUserComplaints);
 
 // Only logged-in users
 router.get("/profile", protect, async (req: any, res) => {

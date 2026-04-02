@@ -11,6 +11,7 @@ import AdminHeader from '@/components/ui/AdminHeader'
 import Badge from '@/components/ui/Badge'
 import SearchInput from '@/components/ui/SearchInput'
 import Modal from '@/components/ui/Modal'
+import { useModal } from '@/components/Providers/ModalProvider'
 
 export default function Staff() {
     return (
@@ -25,6 +26,7 @@ function StaffContent() {
     const searchParams = useSearchParams()
     const pathname = usePathname()
     const { user } = useAuth()
+    const { showAlert, showConfirm } = useModal()
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
 
@@ -100,17 +102,24 @@ function StaffContent() {
             setIsModalOpen(false)
         } catch (error) {
             console.error("Error saving staff member:", error)
-            alert("Failed to save staff information.")
+            showAlert("Action Failed", "Failed to save staff information. Please check your network or try again.", "error")
         }
     }
 
     const handleDelete = async (staffId: string) => {
-        if (!window.confirm("Are you sure you want to remove this staff member?")) return
-        try {
-            await deleteStaffMutation.mutateAsync(staffId)
-        } catch (error) {
-            console.error("Error deleting staff:", error)
-        }
+        showConfirm(
+            "Terminate Employment", 
+            "Are you sure you want to remove this staff member from the system? This action cannot be undone.",
+            async () => {
+                try {
+                    await deleteStaffMutation.mutateAsync(staffId)
+                    showAlert("Success", "Staff member removed successfully.", "success")
+                } catch (error) {
+                    console.error("Error deleting staff:", error)
+                    showAlert("Error", "Could not remove staff member.", "error")
+                }
+            }
+        )
     }
 
     const getBadgeVariant = (status: string) => {

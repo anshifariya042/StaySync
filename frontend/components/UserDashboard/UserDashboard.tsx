@@ -24,12 +24,12 @@
 //             if (!profile) {
 //                 await fetchProfile()
 //             }
-            
+
 //             if (profile?.hostelId) {
 //                 try {
 //                     const hostelId = profile.hostelId._id || profile.hostelId;
 //                     const response = await api.get(`/hostels/${hostelId}/complaints`);
-                    
+
 //                     const userComplaints = response.data.filter((c: any) => 
 //                         (c.userId?._id === profile._id || c.userId === profile._id)
 //                     );
@@ -90,14 +90,14 @@
 //         <div className="bg-[#F8F9FA] font-display text-slate-900 min-h-screen">
 //             <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 //             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-            
+
 //             <div className="relative flex h-full w-full">
 //                 <UserSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
 //                 {/* Main Content Area */}
 //                 <main className="flex-1 lg:ml-72 min-h-screen flex flex-col p-4 md:p-10">
 //                     <div className="max-w-6xl mx-auto w-full">
-                        
+
 //                         {/* Header */}
 //                         <header className="flex items-center justify-between mb-10">
 //                             <div>
@@ -111,7 +111,7 @@
 //                                 </h1>
 //                                 <p className="text-slate-500 mt-1 font-medium">Here's what's happening in your residence today.</p>
 //                             </div>
-                            
+
 //                             <div className="flex items-center gap-4">
 //                                 <button className="relative p-3 text-slate-500 bg-white rounded-full border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors">
 //                                     <Icon name="notifications" />
@@ -257,7 +257,7 @@ function DashboardContent() {
         const timeoutId = setTimeout(() => {
             const params = new URLSearchParams();
             if (page > 1) params.set('page', page.toString());
-            
+
             const query = params.toString();
             router.replace(query ? `${pathname}?${query}` : pathname);
         }, 500);
@@ -273,10 +273,10 @@ function DashboardContent() {
     // Use the hook for paginated complaints
     const hostelId = profile?.hostelId?._id || profile?.hostelId;
     const { data, isLoading: isLoadingComplaints } = useComplaints(
-        hostelId, 
-        '', 
-        page, 
-        limit, 
+        hostelId,
+        '',
+        page,
+        limit,
         profile?._id
     )
 
@@ -289,26 +289,26 @@ function DashboardContent() {
     }
 
     const stats = [
-        { 
-            label: 'My Room Number', 
-            value: profile?.roomId?.roomNumber || 'TBD', 
-            icon: 'meeting_room', 
+        {
+            label: 'My Room Number',
+            value: profile?.roomId?.roomNumber || 'TBD',
+            icon: 'meeting_room',
             gradient: 'from-[#B8E3E9]/60 to-[#F8FAFC]',
             textColor: 'text-[#0B2E33]',
             subText: 'Assigned status'
         },
-        { 
-            label: 'Active Complaints', 
-            value: complaints.filter((c: any) => c.status !== 'Resolved').length.toString().padStart(2, '0'), 
-            icon: 'pending_actions', 
+        {
+            label: 'Active Complaints',
+            value: complaints.filter((c: any) => c.status !== 'Resolved').length.toString().padStart(2, '0'),
+            icon: 'pending_actions',
             gradient: 'from-[#4F7C82]/20 to-[#B8E3E9]/10',
             textColor: 'text-[#4F7C82]',
             subText: 'Needs attention'
         },
-        { 
-            label: 'Resolved Complaints', 
-            value: complaints.filter((c: any) => c.status === 'Resolved').length.toString().padStart(2, '0'), 
-            icon: 'task_alt', 
+        {
+            label: 'Resolved Complaints',
+            value: complaints.filter((c: any) => c.status === 'Resolved').length.toString().padStart(2, '0'),
+            icon: 'task_alt',
             gradient: 'from-[#B8E3E9]/40 to-emerald-50/30',
             textColor: 'text-emerald-800',
             subText: 'Completed tasks'
@@ -329,14 +329,14 @@ function DashboardContent() {
         <div className="bg-[#F8FAFC] font-display text-[#0B2E33] min-h-screen antialiased">
             <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-            
+
             <div className="relative flex h-full w-full">
                 <UserSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
                 {/* Main Content Area */}
                 <main className="flex-1 lg:ml-72 min-h-screen flex flex-col p-4 md:p-10">
                     <div className="max-w-6xl mx-auto w-full">
-                        
+
                         {/* Header */}
                         <header className="flex items-center justify-between mb-12">
                             <div>
@@ -350,13 +350,13 @@ function DashboardContent() {
                                 </h1>
                                 <p className="text-[#4F7C82] mt-1.5 font-bold text-sm uppercase tracking-widest opacity-80">Resident Portal Overview</p>
                             </div>
-                            
+
                             <div className="flex items-center gap-4">
                                 <NotificationDropdown />
-                                <div 
-                                     onClick={() => router.push('/user/profile')}
-                                     className="size-14 rounded-2xl border-4 border-white shadow-xl bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300" 
-                                     style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}>
+                                <div
+                                    onClick={() => router.push('/user/profile')}
+                                    className="size-14 rounded-2xl border-4 border-white shadow-xl bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300"
+                                    style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}>
                                     {!profile?.profileImage && (
                                         <div className="size-full flex items-center justify-center text-[#4F7C82] font-black bg-white">
                                             {profile?.name?.charAt(0) || 'U'}
@@ -369,7 +369,7 @@ function DashboardContent() {
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-14">
                             {stats.map((stat, idx) => (
-                                <motion.div 
+                                <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -401,7 +401,7 @@ function DashboardContent() {
                                     <h2 className="text-2xl font-black text-[#0B2E33] tracking-tight">Recent Complaints</h2>
                                     <p className="text-xs font-bold text-[#4F7C82] uppercase tracking-[0.1em] mt-1 opacity-70">Latest tracking updates</p>
                                 </div>
-                              
+
                             </div>
 
                             <div className="space-y-5 relative z-10">
@@ -419,7 +419,7 @@ function DashboardContent() {
                                     <>
                                         <div className="space-y-5">
                                             {complaints.map((complaint: any, idx: number) => (
-                                                <motion.div 
+                                                <motion.div
                                                     key={complaint._id}
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
@@ -444,9 +444,8 @@ function DashboardContent() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-4 w-full sm:w-auto self-stretch sm:self-center">
-                                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${
-                                                            complaint.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
-                                                        }`}>
+                                                        <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${complaint.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
+                                                            }`}>
                                                             {complaint.status}
                                                         </span>
                                                     </div>
@@ -461,14 +460,14 @@ function DashboardContent() {
                                                     Page {page} of {totalPages}
                                                 </p>
                                                 <div className="flex gap-3">
-                                                    <button 
+                                                    <button
                                                         disabled={page === 1}
                                                         onClick={() => setPage((p: number) => Math.max(1, p - 1))}
                                                         className="size-12 rounded-2xl border border-slate-100 flex items-center justify-center text-[#4F7C82] hover:bg-white hover:shadow-lg transition-all disabled:opacity-20 bg-[#F8FAFC]"
                                                     >
                                                         <Icon name="chevron_left" />
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         disabled={page === totalPages}
                                                         onClick={() => setPage((p: number) => Math.min(totalPages, p + 1))}
                                                         className="size-12 rounded-2xl border border-slate-100 flex items-center justify-center text-[#4F7C82] hover:bg-white hover:shadow-lg transition-all disabled:opacity-20 bg-[#F8FAFC]"

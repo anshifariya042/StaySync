@@ -4,15 +4,16 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
-import { 
-    getStaffStats, 
-    getStaffTasks, 
-    acceptTask, 
-    updateTaskStatus 
+import {
+    getStaffStats,
+    getStaffTasks,
+    acceptTask,
+    updateTaskStatus
 } from "@/services/staffService";
 import { useSidebarStore } from "@/store/useSidebarStore";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationDropdown from "@/components/ui/NotificationDropdown";
+import { useModal } from "@/components/Providers/ModalProvider";
 
 // Helper for Material Symbols
 const Icon = ({ name, className = "" }: { name: string, className?: string }) => (
@@ -46,6 +47,7 @@ interface Stats {
 export default function StaffDashboard() {
     const { profile } = useUserStore();
     const { setIsOpen } = useSidebarStore();
+    const { showAlert } = useModal();
     const router = useRouter();
 
     const [stats, setStats] = useState<Stats | null>(null);
@@ -58,16 +60,16 @@ export default function StaffDashboard() {
             const [statsData, tasksData, highPriorityData] = await Promise.all([
                 getStaffStats(),
                 getStaffTasks({ limit: 20 }),
-                getStaffTasks({ limit: 10 }) 
+                getStaffTasks({ limit: 10 })
             ]);
-            
+
             setStats(statsData);
             setTasks(tasksData as Task[]);
-            
+
             const allFetched = [...(tasksData as Task[]), ...(highPriorityData as Task[])];
-            const urgent = allFetched.find(t => t.priority === "Urgent" && t.status !== "Resolved") || 
-                           allFetched.find(t => t.priority === "High" && t.status !== "Resolved");
-                           
+            const urgent = allFetched.find(t => t.priority === "Urgent" && t.status !== "Resolved") ||
+                allFetched.find(t => t.priority === "High" && t.status !== "Resolved");
+
             setUrgentTask(urgent || null);
         } catch (error) {
             console.error("Failed to fetch staff data:", error);
@@ -78,7 +80,7 @@ export default function StaffDashboard() {
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 30000); 
+        const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -86,8 +88,9 @@ export default function StaffDashboard() {
         try {
             await acceptTask(taskId);
             fetchData();
+            showAlert("Task Accepted", "System registry updated. You are now responsible for this maintenance thread.", "success");
         } catch (error) {
-            alert("Failed to accept task");
+            showAlert("Action Failed", "Could not synchronize task inheritance. Please try again.", "error");
         }
     };
 
@@ -95,8 +98,9 @@ export default function StaffDashboard() {
         try {
             await updateTaskStatus(taskId, "Resolved");
             fetchData();
+            showAlert("Task Resolved", "Maintenance cycle completed successfully.", "success");
         } catch (error) {
-            alert("Failed to update task");
+            showAlert("Update Failed", "Could not commit task resolution to the server.", "error");
         }
     };
 
@@ -120,16 +124,16 @@ export default function StaffDashboard() {
 
     return (
         <div className="flex-1 overflow-y-auto bg-[#F8FAFC] font-display text-[#0B2E33] min-h-screen antialiased">
-             <style jsx global>{`
+            <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800;900&display=swap');
                 body { font-family: 'Public Sans', sans-serif; }
                 .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
             `}</style>
-            
+
             {/* Top Header */}
             <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#B8E3E9]/20 bg-[#F8FAFC]/80 backdrop-blur-md px-6 md:px-10 py-6">
                 <div className="flex items-center gap-6">
-                    <button 
+                    <button
                         onClick={() => setIsOpen(true)}
                         className="lg:hidden size-12 flex items-center justify-center bg-white border border-[#B8E3E9] rounded-2xl text-[#4F7C82] hover:bg-slate-50 shadow-sm transition-all active:scale-95"
                     >
@@ -143,11 +147,11 @@ export default function StaffDashboard() {
 
                 <div className="flex items-center gap-6">
                     <NotificationDropdown />
-                    <div 
+                    <div
                         onClick={() => router.push('/staff/profile')}
                         className="size-12 rounded-2xl border-4 border-white shadow-lg bg-slate-100 bg-center bg-cover overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
                         style={{ backgroundImage: profile?.profileImage ? `url('${profile.profileImage}')` : 'none' }}
-                        >
+                    >
                         {!profile?.profileImage && (
                             <div className="size-full flex items-center justify-center text-[#4F7C82] font-black bg-white">
                                 {profile?.name?.charAt(0) || 'S'}
@@ -166,7 +170,7 @@ export default function StaffDashboard() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                             className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#B8E3E9]/60 to-[#F8FAFC] relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
                         >
@@ -181,7 +185,7 @@ export default function StaffDashboard() {
                             <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                         </motion.div>
 
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
                             className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#4F7C82]/20 to-[#B8E3E9]/10 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
                         >
@@ -196,7 +200,7 @@ export default function StaffDashboard() {
                             <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                         </motion.div>
 
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
                             className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#B8E3E9]/40 to-indigo-50/30 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
                         >
@@ -211,7 +215,7 @@ export default function StaffDashboard() {
                             <div className="absolute -right-6 -bottom-6 size-32 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                         </motion.div>
 
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
                             className="rounded-[2.5rem] p-8 shadow-sm border border-white bg-gradient-to-br from-[#4F7C82]/10 to-[#B8E3E9]/30 relative overflow-hidden group hover:shadow-xl hover:shadow-[#4F7C82]/5 transition-all duration-500"
                         >
@@ -231,7 +235,7 @@ export default function StaffDashboard() {
                 {/* Priority Highlight */}
                 {urgentTask && (
                     <section>
-                         <div className="relative overflow-hidden rounded-[3rem] bg-[#0B2E33] p-10 md:p-14 text-white shadow-2xl shadow-[#0B2E33]/30 border border-white/5">
+                        <div className="relative overflow-hidden rounded-[3rem] bg-[#0B2E33] p-10 md:p-14 text-white shadow-2xl shadow-[#0B2E33]/30 border border-white/5">
                             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
@@ -245,7 +249,7 @@ export default function StaffDashboard() {
                                     <p className="text-[#B8E3E9]/60 text-[15px] font-medium max-w-xl leading-relaxed">{urgentTask.description}</p>
                                 </div>
                                 <div className="shrink-0">
-                                     <button className="w-full md:w-auto px-10 py-5 bg-white text-[#0B2E33] rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-white/5 hover:scale-105 transition-all active:scale-95">
+                                    <button className="w-full md:w-auto px-10 py-5 bg-white text-[#0B2E33] rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-white/5 hover:scale-105 transition-all active:scale-95">
                                         Analyze Task
                                     </button>
                                 </div>
@@ -270,7 +274,7 @@ export default function StaffDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {tasks.filter(t => t.status === 'In Progress').length > 0 ? (
                             tasks.filter(t => t.status === 'In Progress').map((task, idx) => (
-                                <motion.div 
+                                <motion.div
                                     key={task._id}
                                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
                                     className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-50 relative overflow-hidden group hover:shadow-2xl hover:shadow-[#4F7C82]/10 transition-all duration-500"
@@ -280,32 +284,31 @@ export default function StaffDashboard() {
                                             <h4 className="font-black text-[#0B2E33] text-2xl tracking-tighter leading-none group-hover:text-[#4F7C82] transition-colors">{task.title}</h4>
                                             <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest mt-2 bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md inline-block">Room {task.roomNumber} • {task.category}</p>
                                         </div>
-                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${
-                                            task.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
-                                        }`}>
+                                        <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm border border-white ${task.status === 'Resolved' ? 'bg-emerald-50 text-emerald-600' : 'bg-[#B8E3E9]/40 text-[#4F7C82]'
+                                            }`}>
                                             {task.status}
                                         </span>
                                     </div>
 
                                     <div className="flex items-center gap-6 mb-10 relative z-10">
                                         <div className="size-14 rounded-2xl bg-[#B8E3E9]/20 flex items-center justify-center text-[#4F7C82] border border-[#B8E3E9]/30 group-hover:scale-110 group-hover:bg-[#B8E3E9]/40 transition-all duration-500">
-                                             <Icon name={getIconForCategory(task.category)} className="text-2xl" />
+                                            <Icon name={getIconForCategory(task.category)} className="text-2xl" />
                                         </div>
                                         <div>
-                                             <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest opacity-60">Created At</p>
-                                             <p className="text-sm font-black text-[#0B2E33]">{new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                            <p className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest opacity-60">Created At</p>
+                                            <p className="text-sm font-black text-[#0B2E33]">{new Date(task.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex gap-4 relative z-10">
-                                        <button 
+                                        <button
                                             onClick={() => handleMarkDone(task._id)}
                                             className="w-full py-4 bg-[#0B2E33] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-[#0B2E33]/20 hover:scale-105 active:scale-95 transition-all"
                                         >
                                             Submit Resolution
                                         </button>
                                     </div>
-                                    
+
                                     <div className="absolute -right-10 -bottom-10 size-40 bg-[#B8E3E9]/10 rounded-full blur-3xl group-hover:bg-[#B8E3E9]/20 transition-all duration-1000"></div>
                                 </motion.div>
                             ))

@@ -186,7 +186,7 @@ function ComplaintsContent() {
                                                     <button 
                                                         onClick={() => { setSelectedComplaint(complaint); setIsAssignModalOpen(true); }}
                                                         className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all" 
-                                                        title="Assign Personnel"
+                                                        title="Assign Staff"
                                                     >
                                                         <Icon name="person_add" className="material-symbols-outlined text-lg" />
                                                     </button>

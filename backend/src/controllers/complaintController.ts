@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import { Complaint, ComplaintStatus } from "../models/Complaint";
 import Notification from "../models/Notification";
 import { sendNotification } from "../sockets/socket";
+import { User, UserRole } from "../models/User";
+import Hostel from "../models/hostelModel";
+import { sendComplaintAlertToAdmin, sendComplaintResolutionToUser } from "../utils/mailer";
 
 // @desc    Get all complaints for a hostel
 // @route   GET /api/hostels/:hostelId/complaints
@@ -64,6 +67,40 @@ export const updateComplaintStatus = async (req: Request, res: Response) => {
 
         complaint.status = status;
         await complaint.save();
+
+        // NOTIFY USER IF RESOLVED
+        if (status === ComplaintStatus.RESOLVED) {
+            const user = await User.findById(complaint.userId);
+            const hostel = await Hostel.findById(complaint.hostelId);
+            
+            if (user) {
+                // APP NOTIFICATION
+                const notification = new Notification({
+                    userId: user._id,
+                    type: "success",
+                    title: "Complaint Resolved",
+                    message: `Maintenance for your ticket "${complaint.title}" is complete.`,
+                    isRead: false
+                });
+                await notification.save();
+
+                // SOCKET EVENT
+                sendNotification(user._id.toString(), "complaint-resolved", {
+                    notificationId: notification._id,
+                    title: notification.title,
+                    message: notification.message,
+                    complaintId: complaint._id
+                });
+
+                // EMAIL NOTIFICATION
+                sendComplaintResolutionToUser(
+                    user.email,
+                    user.name,
+                    complaint.title,
+                    hostel?.name || "Your Residence"
+                ).catch(err => console.error("Email Resolution Notification Error:", err));
+            }
+        }
 
         res.json(complaint);
     } catch (error) {
@@ -131,7 +168,7 @@ export const createComplaint = async (req: any, res: Response) => {
 
 
         // Fetch user to get hostelId and roomNumber if not provided
-        const user = await (require("../models/User").User).findById(userId).populate("roomId");
+        const user = await User.findById(userId).populate("roomId");
         if (!user || !user.hostelId) {
             return res.status(400).json({ message: "You must be assigned to a hostel to raise a complaint." });
         }
@@ -158,9 +195,81 @@ export const createComplaint = async (req: any, res: Response) => {
             status: ComplaintStatus.PENDING
         });
 
+        // NOTIFY HOSTEL ADMIN
+        try {
+            const admin = await User.findOne({ hostelId: hostelId, role: UserRole.ADMIN });
+            const hostel = await Hostel.findById(hostelId);
+            
+            if (admin) {
+                // APP NOTIFICATION
+                const notification = new Notification({
+                    userId: admin._id,
+                    type: "info",
+                    title: "New Support Ticket",
+                    message: `Resident from Room ${roomNumber} raised: ${title}`,
+                    isRead: false
+                });
+                await notification.save();
+
+                // SOCKET EVENT
+                sendNotification(admin._id.toString(), "new-complaint", {
+                    notificationId: notification._id,
+                    title: notification.title,
+                    message: notification.message,
+                    complaintId: complaint._id
+                });
+
+                // EMAIL NOTIFICATION
+                sendComplaintAlertToAdmin(
+                    admin.email,
+                    user.name,
+                    hostel?.name || "StaySync Residence",
+                    title,
+                    category
+                ).catch(err => console.error("Email Complaint Alert Error:", err));
+            }
+        } catch (notifErr) {
+            console.error("Delayed Notification Error:", (notifErr as Error).message);
+        }
+
         res.status(201).json(complaint);
     } catch (error: any) {
         console.error("Complaint creation error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    Get complaints assigned to the logged-in staff
+// @route   GET /api/chat/staff/complaints
+// @access  Private
+export const getStaffComplaints = async (req: any, res: Response) => {
+    try {
+        const staffId = req.user.id;
+        const complaints = await Complaint.find({ 
+            assignedStaff: staffId,
+            status: { $ne: ComplaintStatus.RESOLVED } 
+        })
+        .populate("userId", "name profileImage")
+        .sort({ updatedAt: -1 });
+
+        res.json({ success: true, data: complaints });
+    } catch (error: any) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    Get user's own complaints for chat
+// @route   GET /api/user/complaints
+// @access  Private
+export const getUserComplaints = async (req: any, res: Response) => {
+    try {
+        const userId = req.user.id;
+        const complaints = await Complaint.find({ userId })
+            .populate("assignedStaff", "name role profileImage")
+            .sort({ updatedAt: -1 });
+
+        res.json({ success: true, data: complaints });
+    } catch (error: any) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
