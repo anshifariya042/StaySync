@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
+import * as XLSX from 'xlsx'
 
 export default function RegisterHostel() {
     const router = useRouter()
@@ -12,6 +13,7 @@ export default function RegisterHostel() {
 
     const [selectedImages, setSelectedImages] = useState<File[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const excelFileInputRef = useRef<HTMLInputElement>(null)
 
     interface RoomDetail {
         roomNumber: string;
@@ -64,6 +66,56 @@ export default function RegisterHostel() {
         const newRooms = [...rooms]
         newRooms[index] = { ...newRooms[index], [field]: value }
         setRooms(newRooms)
+    }
+
+    const downloadTemplate = () => {
+        const template = [
+            { "Room Number": "101", "Capacity": 2, "Type": "Two sharing", "Price": 5500 },
+            { "Room Number": "102", "Capacity": 4, "Type": "Four sharing", "Price": 4500 }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rooms");
+        XLSX.writeFile(wb, "StaySync_Room_Inventory_Template.xlsx");
+    }
+
+    const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+
+                if (data.length === 0) {
+                    setError("The Excel file seems empty.");
+                    return;
+                }
+
+                const mappedRooms: RoomDetail[] = data.map((row: any) => ({
+                    roomNumber: String(row["Room Number"] || row["roomNo"] || row["room"] || ""),
+                    capacity: Number(row["Capacity"] || row["capacity"] || 1),
+                    type: String(row["Type"] || row["type"] || "Standard"),
+                    price: Number(row["Price"] || row["price"] || 0)
+                })).filter(r => r.roomNumber !== "");
+
+                if (mappedRooms.length > 0) {
+                    setRooms(mappedRooms);
+                    setError("");
+                } else {
+                    setError("Could not find valid room data in the Excel. Please use the template.");
+                }
+            } catch (err) {
+                console.error("Excel Parse Error:", err);
+                setError("Failed to parse the Excel file. Please ensure it's a valid .xlsx file.");
+            }
+        };
+        reader.readAsBinaryString(file);
     }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,82 +332,109 @@ export default function RegisterHostel() {
                             </section>
 
                             <section className="space-y-6">
-                                <div className="flex items-center justify-between border-l-4 border-primary pl-4">
-                                    <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
-                                    <button 
-                                        type="button" 
-                                        onClick={addRoom}
-                                        className="text-xs font-black uppercase text-primary hover:underline flex items-center gap-1"
+                                <div className="flex flex-col gap-4 border-l-4 border-primary pl-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
+                                        <div className="flex items-center gap-4">
+                                            <button 
+                                                type="button" 
+                                                onClick={downloadTemplate}
+                                                className="text-[10px] font-black uppercase text-text-gray hover:text-primary flex items-center gap-1"
+                                                title="Download formatting template"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">download</span>
+                                                Template
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                onClick={addRoom}
+                                                className="text-[10px] font-black uppercase text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">add_circle</span>
+                                                Add Room
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div 
+                                        onClick={() => excelFileInputRef.current?.click()}
+                                        className="w-full p-6 bg-primary/5 rounded-[1.5rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-all group"
                                     >
-                                        <span className="material-symbols-outlined text-sm">add_circle</span>
-                                        Add Room
-                                    </button>
+                                        <div className="size-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                            <span className="material-symbols-outlined font-black">file_upload</span>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Bulk Inventory Import</p>
+                                            <p className="text-[10px] font-bold text-text-gray/50 mt-1 uppercase tracking-tighter">Upload Excel (.xlsx) form to auto-fill rooms</p>
+                                        </div>
+                                        <input 
+                                            type="file" 
+                                            ref={excelFileInputRef} 
+                                            onChange={handleExcelUpload} 
+                                            accept=".xlsx, .xls, .csv" 
+                                            className="hidden" 
+                                        />
+                                    </div>
+                                    
+                                    {rooms.length > 0 && rooms[0].roomNumber !== "" && (
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full w-fit">
+                                            {rooms.length} Rooms Cataloged
+                                        </p>
+                                    )}
                                 </div>
                                 
-                                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                    {rooms.map((room, index) => (
-                                        <div key={index} className="p-6 bg-[#F8FAFC] rounded-[1.5rem] border border-slate-100 flex flex-col gap-4 relative group">
-                                            {rooms.length > 1 && (
-                                                <button 
-                                                    type="button"
-                                                    onClick={() => removeRoom(index)}
-                                                    className="absolute top-4 right-4 text-rose-500 hover:text-rose-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                >
-                                                    <span className="material-symbols-outlined text-sm">delete</span>
-                                                </button>
-                                            )}
-                                            
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Room No.</span>
-                                                    <input 
-                                                        type="text"
-                                                        value={room.roomNumber}
-                                                        onChange={(e) => handleRoomChange(index, 'roomNumber', e.target.value)}
-                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
-                                                        placeholder="e.g. 101"
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Price / Mo</span>
-                                                    <input 
-                                                        type="number"
-                                                        value={room.price || ''}
-                                                        onChange={(e) => handleRoomChange(index, 'price', Number(e.target.value))}
-                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-primary focus:border-primary outline-none"
-                                                        placeholder="0.00"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Capacity</span>
-                                                    <select 
-                                                        value={room.capacity}
-                                                        onChange={(e) => handleRoomChange(index, 'capacity', Number(e.target.value))}
-                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
-                                                    >
-                                                        {[1, 2, 3, 4, 5, 6].map(c => <option key={c} value={c}>{c} {c === 1 ? 'Person' : 'People'}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Room Type</span>
-                                                    <select 
-                                                        value={room.type}
-                                                        onChange={(e) => handleRoomChange(index, 'type', e.target.value)}
-                                                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold focus:border-primary outline-none"
-                                                    >
-                                                        <option value="single">single</option>
-                                                        <option value="Two sharing">Two sharing</option>
-                                                        <option value="Four sharing">Four sharing</option>
-                                                    </select>
-                                                </div>
-                                            </div>
+                                <div className="flex flex-col gap-6 border-l-4 border-primary pl-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
+                                        <button 
+                                            type="button" 
+                                            onClick={downloadTemplate}
+                                            className="text-[10px] font-black uppercase text-primary hover:bg-primary/5 px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 transition-all"
+                                            title="Download formatting template"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">download</span>
+                                            Download Template
+                                        </button>
+                                    </div>
+                                    
+                                    <div 
+                                        onClick={() => excelFileInputRef.current?.click()}
+                                        className="w-full p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-all group relative overflow-hidden"
+                                    >
+                                        <div className="size-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 relative z-10">
+                                            <span className="material-symbols-outlined text-3xl font-black">table_view</span>
                                         </div>
-                                    ))}
+                                        <div className="text-center relative z-10">
+                                            <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">Upload Inventory Spreadsheet</p>
+                                            <p className="text-xs font-bold text-text-gray/50 mt-2 max-w-[200px] mx-auto leading-relaxed">Mandatory: Please upload a .xlsx file with Room No, Capacity, Type, and Price.</p>
+                                        </div>
+                                        {/* Decoration */}
+                                        <div className="absolute -right-4 -bottom-4 size-24 bg-primary/5 rounded-full blur-2xl"></div>
+                                        
+                                        <input 
+                                            type="file" 
+                                            ref={excelFileInputRef} 
+                                            onChange={handleExcelUpload} 
+                                            accept=".xlsx, .xls, .csv" 
+                                            className="hidden" 
+                                            required={rooms.length === 0 || rooms[0].roomNumber === ""}
+                                        />
+                                    </div>
+                                    
+                                    {rooms.length > 0 && rooms[0].roomNumber !== "" && (
+                                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] animate-fade-in">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-emerald-600 font-black">check_circle</span>
+                                                    <span className="text-xs font-black text-emerald-700 uppercase tracking-widest leading-none">Catalog Verified</span>
+                                                </div>
+                                                <span className="bg-emerald-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg shadow-emerald-600/20">
+                                                    {rooms.length} ROOMS
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-tighter leading-none italic">Room data has been successfully staged for the registration process.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </section>
                         </div>

@@ -22,9 +22,9 @@ const AdminHeader = ({ title, onMenuClick, children }: AdminHeaderProps) => {
       <div className="flex items-center gap-6">
         <button 
           onClick={onMenuClick} 
-          className="lg:hidden size-12 flex items-center justify-center bg-white border border-[#B8E3E9] rounded-2xl text-[#4F7C82] hover:bg-slate-50 shadow-sm transition-all active:scale-95"
+          className="lg:hidden p-2.5 bg-white rounded-[18px] border-2 border-[#B8E3E9] shadow-[0_4px_12px_rgba(184,227,233,0.2)] hover:bg-[#B8E3E9]/10 transition-all duration-300 active:scale-95 flex items-center justify-center group"
         >
-          <Icon name="menu" />
+          <Icon name="menu" className="text-[#4F7C82] group-hover:scale-110 transition-transform" />
         </button>
         <div>
           <h2 className="text-2xl font-black text-[#13454d] tracking-tight">

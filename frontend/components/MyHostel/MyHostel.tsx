@@ -115,8 +115,11 @@ export default function MyHostel() {
                         
                         <header className="flex items-center justify-between mb-10">
                             <div className="flex items-center gap-4">
-                                <button onClick={() => setSidebarOpen(true)} className="p-2.5 bg-white rounded-2xl shadow-sm border border-[#B8E3E9] lg:hidden">
-                                    <Icon name="menu" className="text-[#4F7C82]" />
+                                <button 
+                                    onClick={() => setSidebarOpen(true)} 
+                                    className="p-2.5 bg-white rounded-[18px] border-2 border-[#B8E3E9] shadow-[0_4px_12px_rgba(184,227,233,0.2)] hover:bg-[#B8E3E9]/10 transition-all duration-300 active:scale-95 flex items-center justify-center group lg:hidden"
+                                >
+                                    <Icon name="menu" className="text-[#4F7C82] group-hover:scale-110 transition-transform" />
                                 </button>
                                 <div>
                                     <h1 className="text-3xl font-black text-[#0B2E33] tracking-tighter">My Hostel</h1>

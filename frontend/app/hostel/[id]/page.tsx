@@ -58,6 +58,11 @@ export default function HostelDetails() {
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const images = (hostel?.images && hostel.images.length > 0) 
+        ? hostel.images 
+        : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'];
 
 
     useEffect(() => {
@@ -113,48 +118,61 @@ export default function HostelDetails() {
         );
     }
 
-    // Default values if data is missing
-    const primaryImage = hostel.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-    const hasFacility = (keyword: string) => {
-        return hostel.facilities.some(f => f.toLowerCase().includes(keyword.toLowerCase()));
+    const formatRoomType = (type: string) => {
+        if (!type) return "Standard Unit";
+        return type.charAt(0).toUpperCase() + type.slice(1);
     };
 
-    const getRoomTypeLabel = (type: string) => {
-        const mapping: { [key: string]: string } = {
-            'Standard': 'single',
-            'AC': 'Two sharing',
-            'Deluxe': 'Four sharing'
-        };
-        return mapping[type] || type;
-    };
+
 
     return (
         <div className="bg-[#f6f6f8] text-slate-900 font-sans min-h-screen">
             <main className="max-w-7xl mx-auto px-4 py-8">
-                {/* Back Button */}
-                {/* <button
-                    onClick={() => router.back()}
-                    className="flex items-center gap-2 text-slate-500 hover:text-[#5048e5] mb-6 transition-colors font-medium"
-                >
-                    <span className="material-symbols-outlined text-lg">arrow_back</span>
-                    Back to search
-                </button> */}
-
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Left Content Column */}
                     <div className="lg:col-span-8 space-y-8">
-                        {/* Hero Section */}
-                        <section className="space-y-6">
-                            <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-200">
+                        {/* Hero Section / Multi-Image Gallery */}
+                        <section className="space-y-4">
+                            <div className="relative w-full aspect-video rounded-[2rem] overflow-hidden bg-slate-200 border border-slate-100 shadow-xl shadow-slate-200/50 group">
                                 <img
-                                    src={primaryImage}
-                                    className="w-full h-full object-cover"
+                                    src={images[currentImageIndex]}
+                                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                     alt={hostel.name}
                                 />
-
+                                {images.length > 1 && (
+                                    <>
+                                        <button 
+                                            onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                                            className="absolute left-6 top-1/2 -translate-y-1/2 size-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 border border-white/40 opacity-0 group-hover:opacity-100 transition-all hover:bg-white active:scale-95 shadow-lg"
+                                        >
+                                            <span className="material-symbols-outlined font-black">arrow_back_ios</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                                            className="absolute right-6 top-1/2 -translate-y-1/2 size-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-slate-900 border border-white/40 opacity-0 group-hover:opacity-100 transition-all hover:bg-white active:scale-95 shadow-lg"
+                                        >
+                                            <span className="material-symbols-outlined font-black">arrow_forward_ios</span>
+                                        </button>
+                                    </>
+                                )}
                             </div>
+                            
+                            {/* Thumbnails Grid */}
+                            {images.length > 1 && (
+                                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 pt-2">
+                                    {images.map((img, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => setCurrentImageIndex(idx)}
+                                            className={`aspect-square rounded-2xl overflow-hidden cursor-pointer border-2 transition-all duration-300 ${currentImageIndex === idx ? 'border-primary ring-4 ring-primary/10' : 'border-white opacity-60 hover:opacity-100'}`}
+                                        >
+                                            <img src={img} className="w-full h-full object-cover" alt={`Thumb ${idx}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                            <div className="flex flex-col flex-wrap md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex flex-col flex-wrap md:flex-row md:items-center justify-between gap-4 mt-8">
                                 <div>
                                     <h1 className="text-3xl font-bold tracking-tight">{hostel.name}</h1>
                                     <div className="flex flex-wrap items-center gap-4 mt-2 text-slate-600">
@@ -177,7 +195,6 @@ export default function HostelDetails() {
                                             <span className="text-sm font-bold text-slate-900">{hostel.averageRating || "New"}</span>
                                             <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -229,106 +246,79 @@ export default function HostelDetails() {
 
                         {/* Room Types Section */}
                         <section className="space-y-4">
-                            <h2 className="text-xl font-bold">Available Room Types</h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold">Room Inventory Selection</h2>
+                                <span className="bg-primary/10 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                                    {rooms.length} Units Found
+                                </span>
+                            </div>
+                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {rooms.length > 0 ? (
                                     rooms.map((room) => (
-                                        <div key={room._id} className="bg-white border border-slate-200 rounded-xl overflow-hidden p-5 flex flex-col gap-4">
+                                        <div key={room._id} className={`bg-white border transition-all duration-300 rounded-2xl overflow-hidden p-6 flex flex-col gap-4 relative group ${selectedRoom?._id === room._id ? 'border-primary ring-4 ring-primary/5 shadow-xl shadow-primary/10' : 'border-slate-200'}`}>
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <h3 className="font-bold text-lg">{getRoomTypeLabel(room.type) || `Room ${room.roomNumber}`}</h3>
-                                                    <p className="text-sm text-slate-500">Room Number: {room.roomNumber}</p>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="material-symbols-outlined text-slate-400 text-base">meeting_room</span>
+                                                        <h3 className="font-black text-lg text-slate-900 leading-none">Unit {room.roomNumber}</h3>
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{formatRoomType(room.type)}</p>
                                                 </div>
-                                                <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${room.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
-                                                    }`}>
+                                                <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${room.status === 'available' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500'}`}>
                                                     {room.status}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-4 text-sm text-slate-600">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-base">person</span>
-                                                    <span>{room.capacity} Person</span>
+                                            
+                                            <div className="flex flex-wrap gap-2 py-2">
+                                                {hostel.facilities.slice(0, 4).map((fac, idx) => (
+                                                    <span key={idx} className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-[#4F7C82] bg-[#B8E3E9]/20 px-2 py-0.5 rounded-md border border-[#B8E3E9]/30">
+                                                        <span className="material-symbols-outlined text-[10px]">{fac.toLowerCase() === 'wifi' ? 'wifi' : 'check'}</span>
+                                                        {fac}
+                                                    </span>
+                                                ))}
+                                            </div>
+
+                                            <div className="flex items-center gap-6 py-4 border-y border-slate-50">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Occupancy</span>
+                                                    <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                                                        <span className="material-symbols-outlined text-base">groups</span>
+                                                        <span>{room.capacity} Person</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pricing</span>
+                                                    <div className="flex items-center gap-1 font-black text-primary">
+                                                        <span>₹{room.price}</span>
+                                                        <span className="text-[9px] opacity-60">/ MO</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                                                <div className="flex flex-col">
-                                                    <span className="text-2xl font-bold text-[#5048e5]">₹{room.price || hostel.price}</span>
-                                                    <span className="text-xs text-slate-500">per month</span>
+
+                                            <button
+                                                onClick={() => setSelectedRoom(room)}
+                                                className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedRoom?._id === room._id
+                                                    ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[0.98]'
+                                                    : 'bg-slate-50 text-slate-500 hover:bg-primary/5 hover:text-primary'
+                                                }`}
+                                            >
+                                                {selectedRoom?._id === room._id ? 'Selected Unit' : 'Select for Booking'}
+                                            </button>
+                                            
+                                            {/* Selection Marker */}
+                                            {selectedRoom?._id === room._id && (
+                                                <div className="absolute top-0 right-0 w-12 h-12 bg-primary flex items-center justify-center rounded-bl-full animate-fade-in">
+                                                    <span className="material-symbols-outlined text-white font-black text-xl mb-2 ml-2">check</span>
                                                 </div>
-                                                <button
-                                                    onClick={() => setSelectedRoom(room)}
-                                                    className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-colors ${selectedRoom?._id === room._id
-                                                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                                        : 'bg-[#5048e5] hover:bg-[#5048e5]/90 text-white'
-                                                        }`}
-                                                >
-                                                    {selectedRoom?._id === room._id ? 'Selected' : 'Select'}
-                                                </button>
-                                            </div>
+                                            )}
                                         </div>
                                     ))
                                 ) : (
-                                    hostel.roomTypes && hostel.roomTypes.length > 0 ? (
-                                        hostel.roomTypes.map((type, idx) => (
-                                            <div key={idx} className="bg-white border border-slate-200 rounded-xl overflow-hidden p-5 flex flex-col gap-4">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h3 className="font-bold text-lg">{getRoomTypeLabel(type)}</h3>
-                                                        <p className="text-sm text-slate-500">Available Room Type</p>
-                                                    </div>
-                                                    <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">Available</span>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-sm text-slate-600">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="material-symbols-outlined text-base">person</span>
-                                                        <span>{type.includes('Double') ? '2' : type.includes('Triple') ? '3' : type.includes('Four') ? '4' : '1'} Person</span>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-2xl font-bold text-[#5048e5]">₹{hostel.price}</span>
-                                                        <span className="text-xs text-slate-500">per month</span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => setSelectedRoom({ _id: `temp-${idx}`, type, price: hostel.price, status: 'available', roomNumber: 'TBD', capacity: 1 })}
-                                                        className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-colors ${selectedRoom?.type === type
-                                                                ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                                                                : 'bg-[#5048e5] hover:bg-[#5048e5]/90 text-white'
-                                                            }`}
-                                                    >
-                                                        {selectedRoom?.type === type ? 'Selected' : 'Select'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="bg-white border-2 border-[#5048e5] rounded-xl overflow-hidden p-5 flex flex-col gap-4 relative">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h3 className="font-bold text-lg">Standard Room</h3>
-                                                    <p className="text-sm text-slate-500">Based on default hostel pricing</p>
-                                                </div>
-                                                <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider">Available</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-sm text-slate-600">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-base">square_foot</span>
-                                                    <span>Standard Setup</span>
-                                                </div>
-                                            </div>
-                                            <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
-                                                <div className="flex flex-col">
-                                                    <span className="text-2xl font-bold text-[#5048e5]">₹{hostel.price || 850}</span>
-                                                    <span className="text-xs text-slate-500">per month</span>
-                                                </div>
-                                                <button
-                                                    className="bg-amber-100 text-amber-700 border border-amber-200 px-6 py-2.5 rounded-lg text-sm font-bold"
-                                                >
-                                                    Selected
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )
+                                    <div className="col-span-full py-16 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+                                        <span className="material-symbols-outlined text-4xl text-slate-200 mb-2">sensor_door</span>
+                                        <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">No active units listed for this residency.</p>
+                                    </div>
                                 )}
                             </div>
                         </section>
@@ -446,13 +436,13 @@ export default function HostelDetails() {
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded bg-slate-200 overflow-hidden shrink-0">
                                                 <img
-                                                    src={primaryImage}
+                                                    src={images[0]}
                                                     className="w-full h-full object-cover"
                                                     alt="Thumbnail"
                                                 />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold">{getRoomTypeLabel(selectedRoom?.type || '')}</p>
+                                                <p className="text-sm font-bold">{formatRoomType(selectedRoom?.type || '')}</p>
                                                 {/* <p className="text-xs text-slate-500">1 Room • 1 Guest</p> */}
                                             </div>
                                         </div>

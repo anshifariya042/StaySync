@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useAuthStore as useAuth } from '@/store/useAuthStore'
 import { useRooms, useAddRoom, useUpdateRoom, useDeleteRoom } from '@/hooks/useRooms'
+import * as XLSX from 'xlsx'
 
 import AdminSidebar from '@/components/ui/AdminSidebar'
 import AdminHeader from '@/components/ui/AdminHeader'
@@ -47,6 +48,8 @@ function RoomsContent() {
 
     // Fetch queries
     const { data: rooms = [], isLoading: loading } = useRooms(user?.hostelId, searchTerm)
+    const excelFileInputRef = React.useRef<HTMLInputElement>(null)
+    const [isBulkLoading, setIsBulkLoading] = useState(false)
 
     // Modal States
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -118,6 +121,64 @@ function RoomsContent() {
         }
     }
 
+    const downloadTemplate = () => {
+        const template = [
+            { "Room Number": "101", "Capacity": 2, "Type": "Two sharing", "Price": 5500 },
+            { "Room Number": "102", "Capacity": 4, "Type": "Four sharing", "Price": 4500 }
+        ];
+        const ws = XLSX.utils.json_to_sheet(template);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rooms");
+        XLSX.writeFile(wb, "StaySync_Room_Inventory_Update_Template.xlsx");
+    }
+
+    const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user?.hostelId) return;
+
+        setIsBulkLoading(true);
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const bstr = evt.target?.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+
+                if (data.length === 0) {
+                    alert("The Excel file seems empty.");
+                    setIsBulkLoading(false);
+                    return;
+                }
+
+                const mappedRooms = data.map((row: any) => ({
+                    roomNumber: String(row["Room Number"] || row["roomNo"] || row["room"] || ""),
+                    capacity: Number(row["Capacity"] || row["capacity"] || 1),
+                    type: String(row["Type"] || row["type"] || "Standard"),
+                    price: Number(row["Price"] || row["price"] || 0),
+                    hostelId: user.hostelId
+                })).filter(r => r.roomNumber !== "");
+
+                // Simple implementation: Add all as new rooms. 
+                // For a more advanced version, we could check for existing roomNumbers and update.
+                // But for now, let's keep it simple as requested.
+                for (const room of mappedRooms) {
+                    await addRoomMutation.mutateAsync(room);
+                }
+                
+                alert(`Successfully processed ${mappedRooms.length} rooms.`);
+            } catch (err) {
+                console.error("Excel Parse Error:", err);
+                alert("Failed to parse the Excel file.");
+            } finally {
+                setIsBulkLoading(false);
+                if (excelFileInputRef.current) excelFileInputRef.current.value = '';
+            }
+        };
+        reader.readAsBinaryString(file);
+    }
+
     const getBadgeVariant = (status: string) => {
         const s = status?.toLowerCase();
         switch (s) {
@@ -128,14 +189,9 @@ function RoomsContent() {
         }
     }
 
-    const getRoomTypeLabel = (type: string) => {
-        const mapping: { [key: string]: string } = {
-            'Standard': 'single',
-            'AC': 'Two sharing',
-            'Deluxe': 'Four sharing',
-            'Single': 'single'
-        };
-        return mapping[type] || type;
+    const formatRoomType = (type: string) => {
+        if (!type) return "Standard";
+        return type.charAt(0).toUpperCase() + type.slice(1);
     };
 
     return (
@@ -160,13 +216,38 @@ function RoomsContent() {
                                 className="w-64"
                             />
                         </div>
-                        <button
-                            onClick={() => handleOpenModal('add')}
-                            className="bg-[#0B2E33] text-white px-6 py-3 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#0B2E33]/20 hover:scale-105 transition-all active:scale-95 shrink-0"
-                        >
-                            <Icon name="add_box" />
-                            <span className="hidden sm:inline">Add Unit</span>
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={downloadTemplate}
+                                className="p-3 bg-white border border-[#B8E3E9] text-[#4F7C82] rounded-2xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest hover:bg-[#B8E3E9]/10 transition-all active:scale-95"
+                                title="Download Template"
+                            >
+                                <Icon name="download" className="text-sm" />
+                                <span className="hidden lg:inline">Template</span>
+                            </button>
+                            <button
+                                onClick={() => excelFileInputRef.current?.click()}
+                                disabled={isBulkLoading}
+                                className="p-3 bg-[#B8E3E9] text-[#4F7C82] rounded-2xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                <Icon name={isBulkLoading ? "sync" : "upload_file"} className={isBulkLoading ? "animate-spin" : ""} />
+                                <span className="hidden lg:inline">{isBulkLoading ? "Importing..." : "Bulk Upload"}</span>
+                            </button>
+                            <input 
+                                type="file" 
+                                ref={excelFileInputRef} 
+                                onChange={handleExcelUpload} 
+                                accept=".xlsx, .xls, .csv" 
+                                className="hidden" 
+                            />
+                            <button
+                                onClick={() => handleOpenModal('add')}
+                                className="bg-[#0B2E33] text-white px-6 py-3 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#0B2E33]/20 hover:scale-105 transition-all active:scale-95 shrink-0"
+                            >
+                                <Icon name="add_box" />
+                                <span className="hidden sm:inline">Add Unit</span>
+                            </button>
+                        </div>
                     </div>
                 </AdminHeader>
 
@@ -220,7 +301,7 @@ function RoomsContent() {
                                                 <div className="space-y-2 relative z-10">
                                                     <h3 className="font-black text-3xl text-[#0B2E33] tracking-tighter leading-none group-hover:text-[#4F7C82] transition-colors">{room.roomNumber}</h3>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md">{getRoomTypeLabel(room.type)}</span>
+                                                        <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest bg-[#B8E3E9]/30 px-2 py-0.5 rounded-md">{formatRoomType(room.type)}</span>
                                                         <span className="text-slate-200">/</span>
                                                         <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-[0.2em] opacity-60">{room.capacity} BEDS</span>
                                                     </div>

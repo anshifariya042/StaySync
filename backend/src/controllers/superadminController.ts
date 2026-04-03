@@ -32,36 +32,36 @@ export const getSuperAdminDashboard = async (req: Request, res: Response) => {
         const resolutionTrends = [];
         const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         const today = new Date();
-        
+
         for (let i = 7; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
             const day = d.getDate();
             const month = monthNames[d.getMonth()];
-            
+
             const startOfDay = new Date(d);
             startOfDay.setHours(0, 0, 0, 0);
             const endOfDay = new Date(d);
             endOfDay.setHours(23, 59, 59, 999);
-            
+
             // Registration Count
             const regCount = await Hostel.countDocuments({
                 createdAt: { $gte: startOfDay, $lte: endOfDay }
             });
-            
+
             // Complaint Total Count
             const totalCompCount = await Complaint.countDocuments({
                 createdAt: { $gte: startOfDay, $lte: endOfDay }
             });
-            
+
             // Resolution Count
             const resCount = await Complaint.countDocuments({
                 status: ComplaintStatus.RESOLVED,
                 updatedAt: { $gte: startOfDay, $lte: endOfDay }
             });
-            
+
             const label = `${day} ${month}`;
-            
+
             registrationTrends.push({ label, count: regCount });
             complaintTrends.push({ label, count: totalCompCount });
             resolutionTrends.push({ label, count: resCount });

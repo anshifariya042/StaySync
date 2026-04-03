@@ -89,7 +89,7 @@ export const createBooking = async (req: Request, res: Response) => {
         try {
             const hostelAdmins = await User.find({ hostelId: hostelId, role: UserRole.ADMIN });
             const hostel = await Hostel.findById(hostelId);
-            
+
             for (const admin of hostelAdmins) {
                 // Save notification to DB
                 const notification = await Notification.create({
@@ -156,8 +156,8 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         const hostel = booking.hostelId as any;
 
         if (user) {
-            const message = status === BookingStatus.APPROVED 
-                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!` 
+            const message = status === BookingStatus.APPROVED
+                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!`
                 : `Your booking at ${hostel?.name || "StaySync"} has been rejected.`;
 
             // Save notification to DB
@@ -191,9 +191,9 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
 
         // Find the most recent pending booking for this user
-        const booking = await Booking.findOne({ 
-            userId, 
-            status: BookingStatus.PENDING 
+        const booking = await Booking.findOne({
+            userId,
+            status: BookingStatus.PENDING
         }).populate("hostelId");
 
         if (!booking) {
@@ -201,10 +201,10 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
             // We just update the user status directly in this case
             const userStatus = status === "approved" ? UserStatus.ACTIVE : UserStatus.REJECTED;
             const updatedUser = await User.findByIdAndUpdate(userId, { status: userStatus }, { new: true });
-            
+
             if (updatedUser) {
-                const message = status === "approved" 
-                    ? `Your residency has been approved!` 
+                const message = status === "approved"
+                    ? `Your residency has been approved!`
                     : `Your residency request has been rejected.`;
 
                 await Notification.create({
@@ -214,12 +214,12 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
                     type: status === "approved" ? "success" : "error"
                 });
 
-                 sendNotification(userId, "booking-status-updated", {
+                sendNotification(userId, "booking-status-updated", {
                     status,
                     message
                 });
             }
-            
+
             return res.status(200).json({ message: `Resident status updated to ${status}` });
         }
 
@@ -234,8 +234,8 @@ export const updateResidentStatus = async (req: Request, res: Response) => {
         const hostel = booking.hostelId as any;
 
         if (user) {
-            const message = status === BookingStatus.APPROVED 
-                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!` 
+            const message = status === BookingStatus.APPROVED
+                ? `Your booking at ${hostel?.name || "StaySync"} has been approved!`
                 : `Your booking at ${hostel?.name || "StaySync"} has been rejected.`;
 
             await Notification.create({

@@ -47,6 +47,7 @@ export default function UserSidebar({ sidebarOpen, setSidebarOpen }: UserSidebar
         { icon: 'grid_view', label: 'Dashboard', path: '/user/dashboard' },
         { icon: 'person', label: 'My Profile', path: '/user/profile' },
         { icon: 'domain', label: 'My Hostel', path: '/user/my-hostel' },
+        { icon: 'history', label: 'Previous Hostels', path: '/user/previous-hostels' },
         { icon: 'edit_square', label: 'Raise Complaint', path: '/user/complaints/new' },
     ]
 
