@@ -163,9 +163,6 @@ export default function SuperAdminDashboard() {
         <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-50">
           <div className="flex items-center justify-between mb-10">
             <h2 className="text-2xl font-black text-[#0B2E33] tracking-tight">activity</h2>
-            <button className="size-10 rounded-xl bg-[#F8FAFC] text-[#4F7C82] flex items-center justify-center hover:bg-[#B8E3E9]/20 transition-all">
-              <Icon name="more_horiz" />
-            </button>
           </div>
           <div className="space-y-6">
             {recentActivities.slice(0, 5).map((activity: any, i: number) => (

@@ -270,7 +270,7 @@ function ComplaintsContent() {
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-sm text-slate-800 truncate">{staff.name}</p>
+                                    <p className="font-bold text-sm text-gray-500 truncate">{staff.name}</p>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{staff.designation || 'Technical Staff'}</p>
                                 </div>
                                 <Icon name="chevron_right" className="material-symbols-outlined text-slate-200 group-hover:text-primary transition-all group-hover:translate-x-1" />
@@ -279,12 +279,12 @@ function ComplaintsContent() {
                     ) : (
                         <div className="text-center py-12">
                              <Icon name="person_off" className="text-4xl text-slate-100 mb-2 material-symbols-outlined" />
-                             <p className="text-slate-400 text-sm font-medium">No personnel found for assignment.</p>
+                             <p className="text-slate-400 text-sm font-medium">No personal found for assignment.</p>
                         </div>
                     )}
                 </div>
 
-                <div className="flex gap-4 mt-8 pt-6 border-t border-border-light">
+                <div className="flex gap-4 mt-8 pt-6 ">
                     <button
                         onClick={() => setIsAssignModalOpen(false)}
                         className="flex-1 px-4 py-3 rounded-xl border border-border-light font-bold text-slate-500 hover:bg-slate-50 transition-all uppercase text-[10px] tracking-widest"

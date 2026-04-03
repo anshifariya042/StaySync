@@ -382,7 +382,7 @@ function ApprovalsContent() {
                                                 </div>
                                                 <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100">
                                                     <Icon name="payments" className="text-emerald-600 mb-2" />
-                                                    <p className="text-2xl font-black text-emerald-600">${selectedHostel.price}</p>
+                                                    <p className="text-2xl font-black text-emerald-600">₹{selectedHostel.price}</p>
                                                     <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mt-1">Starting Price</p>
                                                 </div>
                                             </div>

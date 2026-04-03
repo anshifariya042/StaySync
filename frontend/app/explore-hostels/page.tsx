@@ -162,7 +162,7 @@ function ExploreHostelsContent() {
                                         <div className="absolute top-4 left-4">
                                             <div className="flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
                                                 <span className="text-yellow-500 text-sm">★</span>
-                                                <span className="text-xs font-bold text-slate-800">{hostel.rating || '4.5'}</span>
+                                                <span className="text-xs font-bold text-slate-800">{hostel.rating || ''}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -183,16 +183,11 @@ function ExploreHostelsContent() {
                                                     {fac}
                                                 </span>
                                             ))}
-                                            {hostel.roomTypes && hostel.roomTypes.slice(0, 1).map((type, idx) => (
-                                                <span key={idx} className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-[11px] font-bold uppercase tracking-tighter">
-                                                    {getRoomTypeLabel(type)}
-                                                </span>
-                                            ))}
                                         </div>
 
                                         <div className="flex items-center justify-between pt-5 border-t border-slate-100">
                                             <div>
-                                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-0.5">Monthly Rent</p>
+                                                {/* <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mb-0.5">Monthly Rent</p> */}
                                                 <p className="text-2xl font-bold text-slate-900">
                                                     ₹{hostel.price.toLocaleString()}<span className="text-sm text-slate-400 font-normal">/mo</span>
                                                 </p>

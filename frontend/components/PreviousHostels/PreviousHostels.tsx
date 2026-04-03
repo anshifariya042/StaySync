@@ -79,9 +79,7 @@ function PreviousHostelsContent() {
                         <div className="flex flex-col items-center">
                             <h1 className="font-['Plus_Jakarta_Sans'] font-bold text-lg text-[#053930]">Previous Hostels</h1>
                         </div>
-                        {/* <button className="text-[#b1202d] transition-all duration-300 ease-in-out scale-95 active:scale-90">
-                            <Icon name="tune" />
-                        </button> */}
+            
                     </header>
 
                     <div className="px-6 md:px-10 py-8 lg:py-12 max-w-5xl mx-auto w-full">
@@ -108,8 +106,7 @@ function PreviousHostelsContent() {
 
                         <section className="mb-12">
                             <p className="text-[#00675f] font-medium tracking-widest uppercase text-xs mb-2">Your Past STAY</p>
-                            {/* <h2 className="font-['Plus_Jakarta_Sans'] text-4xl font-extrabold tracking-tight text-[#2d2f2f] mb-3">Your past stays and experiences</h2>
-                            <div className="w-12 h-1 bg-[#b1202d] rounded-full"></div> */}
+                           
                         </section>
 
 

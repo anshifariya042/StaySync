@@ -203,10 +203,7 @@ function ComplaintsContent() {
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <h2 className="text-2xl font-black text-[#0B2E33] tracking-tight">resolution frequency</h2>
-                            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full">
-                                <span className="text-[10px] font-black uppercase tracking-widest">stable</span>
-                                <Icon name="trending_flat" className="text-base" />
-                            </div>
+        
                         </div>
                         <p className="text-[10px] font-bold text-[#4F7C82] uppercase tracking-[0.15em] opacity-70">Daily average: 12.4 resolutions</p>
                     </div>
@@ -340,9 +337,7 @@ function ComplaintsContent() {
                                         )}
                                     </td>
                                     <td className="py-5 pr-6 text-right rounded-r-[1.5rem] border-y border-r border-transparent">
-                                        <button className="size-10 rounded-xl bg-white border border-[#B8E3E9]/30 flex items-center justify-center text-[#4F7C82] hover:bg-[#0B2E33] hover:text-white transition-all active:scale-95 shadow-sm">
-                                            <Icon name="more_vert" />
-                                        </button>
+                                    
                                     </td>
                                 </motion.tr>
                             ))}

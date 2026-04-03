@@ -149,7 +149,6 @@ function ResidentsContent() {
                                             </td>
                                             <td className="px-6 py-5">
                                                 <p className="font-semibold text-slate-800 text-sm">{resident.email}</p>
-                                                <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">{resident.phone || 'NO PHONE'}</p>
                                             </td>
                                             <td className="px-6 py-5 focus-within:ring-0">
                                                 <div className="flex items-center gap-2 font-bold text-slate-700">

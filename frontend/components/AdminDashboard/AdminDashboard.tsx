@@ -99,7 +99,7 @@ export default function AdminDashboard() {
                                             onClick={() => router.push('/admin/complaints')}
                                             className="px-6 py-2.5 bg-[#B8E3E9]/30 text-[#4F7C82] rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#B8E3E9]/50 transition-all active:scale-95"
                                         >
-                                            View Archive
+                                            View complaints
                                         </button>
                                     </div>
 

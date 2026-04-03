@@ -179,9 +179,6 @@ export default function MyHostel() {
                                         <div className="bg-white p-10 rounded-[3rem] border border-slate-50 shadow-sm relative overflow-hidden">
                                             <div className="flex items-center justify-between mb-10">
                                                 <h3 className="text-2xl font-black text-[#0B2E33] tracking-tight">Included Facilities</h3>
-                                                <div className="size-8 bg-[#B8E3E9]/40 rounded-lg flex items-center justify-center">
-                                                    <Icon name="apps" className="text-[#4F7C82] text-lg" />
-                                                </div>
                                             </div>
                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
                                                 {(hostel.facilities?.length > 0 ? hostel.facilities : ['WiFi', 'Laundry', 'Mess', 'CCTV']).map((fac: string, idx: number) => (
@@ -319,16 +316,16 @@ export default function MyHostel() {
                                                     </span>
                                                 </div>
                                                 <div className="mb-10 text-center">
-                                                    <h4 className="text-8xl font-black text-[#0B2E33] tracking-tighter mb-2 scale-110 transform transition-transform group-hover:scale-125 duration-700">{room?.roomNumber || 'TBD'}</h4>
+                                                    <h4 className="text-3xl font-black text-[#0B2E33] tracking-tighter mb-2 scale-110 transform transition-transform group-hover:scale-125 duration-700">{room?.roomNumber || 'TBD'}</h4>
                                                     <p className="text-[#4F7C82] font-black uppercase text-[11px] tracking-[0.3em] inline-block px-4 py-1.5 bg-[#B8E3E9]/10 rounded-xl mt-4 border border-[#B8E3E9]/20">{profile?.roomType || room?.type || 'Standard Suite'}</p>
                                                 </div>
                                                 <div className="flex justify-between items-center pt-8 border-t border-slate-50 mb-10">
-                                                    <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest opacity-60">Monthly Tariff</span>
+                                                    <span className="text-[10px] font-black text-[#4F7C82] uppercase tracking-widest opacity-60">Monthly rent</span>
                                                     <span className="text-3xl font-black text-[#0B2E33] tracking-tight">₹{room?.price || hostel?.price || '0.00'}</span>
                                                 </div>
                                                 <button onClick={() => router.push('/user/complaints/new')} className="w-full bg-[#0B2E33] text-white py-5 rounded-[2rem] font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-[#4F7C82] transition-all shadow-2xl shadow-[#0B2E33]/20 active:scale-95 group/btn">
                                                     <Icon name="report" className="text-lg group-hover/btn:rotate-12 transition-transform" /> 
-                                                    Ticket Maintenance
+                                                    raise complaint
                                                 </button>
                                             </div>
                                             {/* decorative circle */}

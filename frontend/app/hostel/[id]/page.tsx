@@ -60,6 +60,9 @@ export default function HostelDetails() {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+    const [currentRoomPage, setCurrentRoomPage] = useState(1);
+    const roomsPerPage = 2;
+
     const images = (hostel?.images && hostel.images.length > 0) 
         ? hostel.images 
         : ['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'];
@@ -123,7 +126,10 @@ export default function HostelDetails() {
         return type.charAt(0).toUpperCase() + type.slice(1);
     };
 
-
+    const indexOfLastRoom = currentRoomPage * roomsPerPage;
+    const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
+    const currentRooms = rooms.slice(indexOfFirstRoom, indexOfLastRoom);
+    const totalPages = Math.ceil(rooms.length / roomsPerPage);
 
     return (
         <div className="bg-[#f6f6f8] text-slate-900 font-sans min-h-screen">
@@ -192,8 +198,8 @@ export default function HostelDetails() {
                                                     </span>
                                                 ))}
                                             </div>
-                                            <span className="text-sm font-bold text-slate-900">{hostel.averageRating || "New"}</span>
-                                            <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span>
+                                            {/* <span className="text-sm font-bold text-slate-900">{hostel.averageRating || "New"}</span>
+                                            <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span> */}
                                         </div>
                                     </div>
                                 </div>
@@ -209,7 +215,7 @@ export default function HostelDetails() {
 
                             <div className="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4 sm:gap-12">
                                 <div>
-                                    <p className="text-sm text-slate-500 mb-1">Owner / Manager</p>
+                                    <p className="text-sm text-slate-500 mb-1">Owner</p>
                                     <p className="font-semibold text-slate-900">{hostel.ownerName}</p>
                                 </div>
                                 <div>
@@ -249,19 +255,19 @@ export default function HostelDetails() {
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold">Room Inventory Selection</h2>
                                 <span className="bg-primary/10 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                                    {rooms.length} Units Found
+                                    {rooms.length} Rooms Found
                                 </span>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {rooms.length > 0 ? (
-                                    rooms.map((room) => (
+                                {currentRooms.length > 0 ? (
+                                    currentRooms.map((room) => (
                                         <div key={room._id} className={`bg-white border transition-all duration-300 rounded-2xl overflow-hidden p-6 flex flex-col gap-4 relative group ${selectedRoom?._id === room._id ? 'border-primary ring-4 ring-primary/5 shadow-xl shadow-primary/10' : 'border-slate-200'}`}>
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className="material-symbols-outlined text-slate-400 text-base">meeting_room</span>
-                                                        <h3 className="font-black text-lg text-slate-900 leading-none">Unit {room.roomNumber}</h3>
+                                                        <h3 className="font-black text-lg text-slate-900 leading-none">Room {room.roomNumber}</h3>
                                                     </div>
                                                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">{formatRoomType(room.type)}</p>
                                                 </div>
@@ -321,6 +327,40 @@ export default function HostelDetails() {
                                     </div>
                                 )}
                             </div>
+                            
+                            {totalPages > 1 && (
+                                <div className="flex justify-center gap-2 mt-6">
+                                    <button 
+                                        onClick={() => setCurrentRoomPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentRoomPage === 1}
+                                        className="p-2 rounded-lg border border-slate-200 disabled:opacity-50 hover:bg-slate-50 transition-colors flex items-center justify-center"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">chevron_left</span>
+                                    </button>
+                                    
+                                    {Array.from({ length: totalPages }).map((_, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setCurrentRoomPage(idx + 1)}
+                                            className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${
+                                                currentRoomPage === idx + 1
+                                                    ? 'bg-[#5048e5] text-white'
+                                                    : 'border border-slate-200 hover:bg-slate-50 text-slate-600'
+                                            }`}
+                                        >
+                                            {idx + 1}
+                                        </button>
+                                    ))}
+                                    
+                                    <button 
+                                        onClick={() => setCurrentRoomPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentRoomPage === totalPages}
+                                        className="p-2 rounded-lg border border-slate-200 disabled:opacity-50 hover:bg-slate-50 transition-colors flex items-center justify-center"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                    </button>
+                                </div>
+                            )}
                         </section>
 
                         {/* Reviews Section */}

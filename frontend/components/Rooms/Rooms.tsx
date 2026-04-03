@@ -217,14 +217,7 @@ function RoomsContent() {
                             />
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={downloadTemplate}
-                                className="p-3 bg-white border border-[#B8E3E9] text-[#4F7C82] rounded-2xl flex items-center gap-2 font-black text-[10px] uppercase tracking-widest hover:bg-[#B8E3E9]/10 transition-all active:scale-95"
-                                title="Download Template"
-                            >
-                                <Icon name="download" className="text-sm" />
-                                <span className="hidden lg:inline">Template</span>
-                            </button>
+    
                             <button
                                 onClick={() => excelFileInputRef.current?.click()}
                                 disabled={isBulkLoading}
@@ -240,13 +233,6 @@ function RoomsContent() {
                                 accept=".xlsx, .xls, .csv" 
                                 className="hidden" 
                             />
-                            <button
-                                onClick={() => handleOpenModal('add')}
-                                className="bg-[#0B2E33] text-white px-6 py-3 rounded-2xl flex items-center gap-3 font-black text-xs uppercase tracking-widest shadow-xl shadow-[#0B2E33]/20 hover:scale-105 transition-all active:scale-95 shrink-0"
-                            >
-                                <Icon name="add_box" />
-                                <span className="hidden sm:inline">Add Unit</span>
-                            </button>
                         </div>
                     </div>
                 </AdminHeader>
