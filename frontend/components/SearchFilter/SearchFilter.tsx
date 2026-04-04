@@ -1,34 +1,81 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 export default function SearchFilter() {
     const router = useRouter();
     const [location, setLocation] = useState('Select City');
-    const [priceRange, setPriceRange] = useState('$200 - $500');
+    const [priceRange, setPriceRange] = useState('Any Price');
     const [facilities, setFacilities] = useState('All');
     const [gender, setGender] = useState('Mixed');
+
+    const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+    const [availableFacilities, setAvailableFacilities] = useState<string[]>([]);
+    const [availablePriceRanges, setAvailablePriceRanges] = useState<{label: string, min?: number, max?: number}[]>([]);
+
+    useEffect(() => {
+        const fetchFilters = async () => {
+            try {
+                const res = await api.get('/hostels?limit=1000');
+                const hostels = res.data.hostels || [];
+
+                // Extract Locations
+                const locations = [...new Set(hostels.map((h: any) => h.location))].filter(Boolean) as string[];
+                setAvailableLocations(locations);
+
+                // Extract Facilities
+                const facilitiesList: string[] = [];
+                hostels.forEach((h: any) => {
+                    if (h.facilities && Array.isArray(h.facilities)) {
+                        h.facilities.forEach((f: string) => facilitiesList.push(f));
+                    }
+                });
+                setAvailableFacilities([...new Set(facilitiesList)]);
+
+                // Extract Price Ranges logically based on data
+                const prices = hostels.map((h: any) => h.price).filter((p: number) => !isNaN(p) && p > 0);
+                const standardRanges = [
+                    { label: 'Below ₹2000', max: 2000 },
+                    { label: '₹2000 - ₹5000', min: 2000, max: 5000 },
+                    { label: '₹5000 - ₹10000', min: 5000, max: 10000 },
+                    { label: 'Above ₹10000', min: 10000 }
+                ];
+                
+                const validRanges = standardRanges.filter(range => {
+                    if (range.min && range.max) {
+                        return prices.some((p: number) => p >= range.min! && p <= range.max!);
+                    } else if (range.min) {
+                        return prices.some((p: number) => p >= range.min!);
+                    } else if (range.max) {
+                        return prices.some((p: number) => p <= range.max!);
+                    }
+                    return false;
+                });
+                
+                setAvailablePriceRanges(validRanges);
+
+            } catch (err) {
+                console.error("Failed to fetch filter options", err);
+            }
+        };
+
+        fetchFilters();
+    }, []);
 
     const handleSearch = () => {
         const params = new URLSearchParams();
         if (location !== 'Select City') params.append('location', location);
         
-        // Handle Price Range
-        if (priceRange === '$200 - $500') {
-            params.append('minPrice', '200');
-            params.append('maxPrice', '500');
-        } else if (priceRange === '$500 - $1000') {
-            params.append('minPrice', '500');
-            params.append('maxPrice', '1000');
-        } else if (priceRange === '$1000+') {
-            params.append('minPrice', '1000');
+        const selectedRange = availablePriceRanges.find(r => r.label === priceRange);
+        if (selectedRange) {
+            if (selectedRange.min) params.append('minPrice', selectedRange.min.toString());
+            if (selectedRange.max) params.append('maxPrice', selectedRange.max.toString());
         }
 
-        // Map facilities to specific keys if needed, for now just a generic search
         if (facilities !== 'All') params.append('facilities', facilities);
         
-        // Redirect to explore page with params
         router.push(`/explore-hostels?${params.toString()}`);
     };
 
@@ -46,11 +93,9 @@ export default function SearchFilter() {
                             className="border-none bg-transparent w-full text-[0.95rem] font-medium text-foreground outline-none appearance-none cursor-pointer"
                         >
                             <option>Select City</option>
-                            <option>New York</option>
-                            <option>London</option>
-                            <option>Berlin</option>
-                            <option>Bangalore</option>
-                            <option>Kochi</option>
+                            {availableLocations.map((loc, i) => (
+                                <option key={i} value={loc}>{loc}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -64,9 +109,10 @@ export default function SearchFilter() {
                             onChange={(e) => setPriceRange(e.target.value)}
                             className="border-none bg-transparent w-full text-[0.95rem] font-medium text-foreground outline-none appearance-none cursor-pointer"
                         >
-                            <option>$200 - $500</option>
-                            <option>$500 - $1000</option>
-                            <option>$1000+</option>
+                            <option>Any Price</option>
+                            {availablePriceRanges.map((range, i) => (
+                                <option key={i} value={range.label}>{range.label}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -81,9 +127,9 @@ export default function SearchFilter() {
                             className="border-none bg-transparent w-full text-[0.95rem] font-medium text-foreground outline-none appearance-none cursor-pointer"
                         >
                             <option>All</option>
-                            <option>WiFi</option>
-                            <option>Mess</option>
-                            <option>Laundry</option>
+                            {availableFacilities.map((fac, i) => (
+                                <option key={i} value={fac}>{fac}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -118,3 +164,4 @@ export default function SearchFilter() {
         </div>
     );
 }
+

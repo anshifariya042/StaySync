@@ -249,7 +249,7 @@ export default function RegisterHostel() {
                         {/* Column 1: Core Details */}
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-border-color space-y-10">
                             <section className="space-y-6">
-                                <h3 className="text-foreground text-xl font-bold border-l-4 border-primary pl-4">Hostel Details</h3>
+                                <h3 className="text-foreground text-xl font-bold pl-4">Hostel Details</h3>
                                 <div className="space-y-5">
                                     <label className="flex flex-col w-full">
                                         <span className="text-text-gray text-xs font-bold uppercase tracking-widest mb-2 ml-1">Hostel Name</span>
@@ -332,27 +332,10 @@ export default function RegisterHostel() {
                             </section>
 
                             <section className="space-y-6">
-                                <div className="flex flex-col gap-4 border-l-4 border-primary pl-4">
+                                <div className="flex flex-col gap-4 pl-4">
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
                                         <div className="flex items-center gap-4">
-                                            <button 
-                                                type="button" 
-                                                onClick={downloadTemplate}
-                                                className="text-[10px] font-black uppercase text-text-gray hover:text-primary flex items-center gap-1"
-                                                title="Download formatting template"
-                                            >
-                                                <span className="material-symbols-outlined text-sm">download</span>
-                                                Template
-                                            </button>
-                                            <button 
-                                                type="button" 
-                                                onClick={addRoom}
-                                                className="text-[10px] font-black uppercase text-primary hover:underline flex items-center gap-1"
-                                            >
-                                                <span className="material-symbols-outlined text-sm">add_circle</span>
-                                                Add Room
-                                            </button>
                                         </div>
                                     </div>
                                     
@@ -382,67 +365,14 @@ export default function RegisterHostel() {
                                         </p>
                                     )}
                                 </div>
-                                
-                                <div className="flex flex-col gap-6 border-l-4 border-primary pl-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
-                                        <button 
-                                            type="button" 
-                                            onClick={downloadTemplate}
-                                            className="text-[10px] font-black uppercase text-primary hover:bg-primary/5 px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1 transition-all"
-                                            title="Download formatting template"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">download</span>
-                                            Download Template
-                                        </button>
-                                    </div>
-                                    
-                                    <div 
-                                        onClick={() => excelFileInputRef.current?.click()}
-                                        className="w-full p-10 bg-primary/5 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-all group relative overflow-hidden"
-                                    >
-                                        <div className="size-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 relative z-10">
-                                            <span className="material-symbols-outlined text-3xl font-black">table_view</span>
-                                        </div>
-                                        <div className="text-center relative z-10">
-                                            <p className="text-sm font-black uppercase tracking-[0.2em] text-primary">Upload Inventory Spreadsheet</p>
-                                            <p className="text-xs font-bold text-text-gray/50 mt-2 max-w-[200px] mx-auto leading-relaxed">Mandatory: Please upload a .xlsx file with Room No, Capacity, Type, and Price.</p>
-                                        </div>
-                                        {/* Decoration */}
-                                        <div className="absolute -right-4 -bottom-4 size-24 bg-primary/5 rounded-full blur-2xl"></div>
-                                        
-                                        <input 
-                                            type="file" 
-                                            ref={excelFileInputRef} 
-                                            onChange={handleExcelUpload} 
-                                            accept=".xlsx, .xls, .csv" 
-                                            className="hidden" 
-                                            required={rooms.length === 0 || rooms[0].roomNumber === ""}
-                                        />
-                                    </div>
-                                    
-                                    {rooms.length > 0 && rooms[0].roomNumber !== "" && (
-                                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[2rem] animate-fade-in">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="material-symbols-outlined text-emerald-600 font-black">check_circle</span>
-                                                    <span className="text-xs font-black text-emerald-700 uppercase tracking-widest leading-none">Catalog Verified</span>
-                                                </div>
-                                                <span className="bg-emerald-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg shadow-emerald-600/20">
-                                                    {rooms.length} ROOMS
-                                                </span>
-                                            </div>
-                                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-tighter leading-none italic">Room data has been successfully staged for the registration process.</p>
-                                        </div>
-                                    )}
-                                </div>
+
                             </section>
                         </div>
 
                         {/* Column 2: Specifics & Multimedia */}
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-border-color space-y-10">
                             <section className="space-y-6">
-                                <h3 className="text-foreground text-xl font-bold border-l-4 border-primary pl-4">Facilities</h3>
+                                <h3 className="text-foreground text-xl font-bold  pl-4">Facilities</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[
                                         { id: 'WiFi', label: 'Free Wi-Fi' },
@@ -466,7 +396,7 @@ export default function RegisterHostel() {
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Description</h3>
+                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest  pl-4">Description</h3>
                                 <textarea
                                     name="description"
                                     value={formData.description}
@@ -477,7 +407,7 @@ export default function RegisterHostel() {
                             </section>
 
                             <section className="space-y-6">
-                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest border-l-4 border-primary pl-4">Hostel Images</h3>
+                                <h3 className="text-foreground text-sm font-black uppercase tracking-widest pl-4">Hostel Images</h3>
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="flex flex-col items-center justify-center w-full aspect-video rounded-[2rem] border-2 border-dashed border-border-color bg-slate-50 hover:border-primary hover:bg-white transition-all cursor-pointer group shadow-sm"
