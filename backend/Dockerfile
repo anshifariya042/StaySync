@@ -1,4 +1,4 @@
-# ✅ Use correct Node version (important)
+# ✅ Use correct Node version
 FROM node:20
 
 # Set working directory
@@ -7,17 +7,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including devDependencies)
 RUN npm install
 
-# 👉 FIX: Ensure TypeScript runs properly
-RUN chmod +x ./node_modules/.bin/tsc
-
-# Copy all files
+# Copy project files
 COPY . .
 
-# 🔥 BUILD your project (this creates dist/)
-RUN npm run build
+# ✅ BEST FIX: Use npx (no permission issues)
+RUN npx tsc
 
 # Expose port
 EXPOSE 5000
