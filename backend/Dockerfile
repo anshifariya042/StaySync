@@ -10,6 +10,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# 👉 FIX: Ensure TypeScript runs properly
+RUN chmod +x ./node_modules/.bin/tsc
+
 # Copy all files
 COPY . .
 
