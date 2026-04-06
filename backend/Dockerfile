@@ -1,5 +1,5 @@
-# Use Node image
-FROM node:18
+# ✅ Use correct Node version (important)
+FROM node:20
 
 # Set working directory
 WORKDIR /app
@@ -12,6 +12,9 @@ RUN npm install
 
 # Copy all files
 COPY . .
+
+# 🔥 BUILD your project (this creates dist/)
+RUN npm run build
 
 # Expose port
 EXPOSE 5000

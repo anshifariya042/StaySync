@@ -198,8 +198,8 @@ export default function HostelDetails() {
                                                     </span>
                                                 ))}
                                             </div>
-                                            {/* <span className="text-sm font-bold text-slate-900">{hostel.averageRating || "New"}</span>
-                                            <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span> */}
+                                             <span className="text-sm font-bold text-slate-900">{hostel.averageRating || ""}</span>
+                                            {/* <span className="text-sm font-medium text-slate-400">({hostel.numberOfReviews || 0} reviews)</span>  */}
                                         </div>
                                     </div>
                                 </div>

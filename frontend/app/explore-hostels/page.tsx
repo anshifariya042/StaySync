@@ -160,10 +160,10 @@ function ExploreHostelsContent() {
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                                         />
                                         <div className="absolute top-4 left-4">
-                                            <div className="flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
+                                            {/* <div className="flex items-center gap-1 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm">
                                                 <span className="text-yellow-500 text-sm">★</span>
                                                 <span className="text-xs font-bold text-slate-800">{hostel.rating || ''}</span>
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
 
