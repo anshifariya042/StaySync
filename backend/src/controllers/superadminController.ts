@@ -226,9 +226,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
         const { search, role, hostel, page = 1, limit = 10 } = req.query;
         let query: any = {};
 
-        if (role && role !== 'All Roles') {
-            query.role = role.toLowerCase();
-        }
+        if (typeof role === "string" && role !== "All Roles") {
+         query.role = role.toLowerCase();
+         }
+
 
         if (hostel && hostel !== 'All Hostels') {
             query.hostelId = hostel;

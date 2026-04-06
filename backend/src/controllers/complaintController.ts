@@ -174,8 +174,8 @@ export const createComplaint = async (req: any, res: Response) => {
         }
 
         const hostelId = user.hostelId;
-        const roomNumber = user.roomId?.roomNumber || "General";
-
+        const roomNumber =
+        (user?.roomId as any)?.roomNumber || "General";
         // Handle Image Uploads
         const images = (req.files as any[])?.map(file => file.path) || [];
 
