@@ -7,7 +7,7 @@ const onlineUsers = new Map<string, string>(); // userId -> socketId
 export const initSocket = (server: HttpServer) => {
     io = new Server(server, {
         cors: {
-            origin: ["http://localhost:5174", "http://localhost:3000"],
+            origin: ["https://stay-sync-theta.vercel.app"],
             methods: ["GET", "POST"],
             credentials: true
         }
@@ -42,15 +42,7 @@ export const initSocket = (server: HttpServer) => {
         socket.on("send-message", (payload) => {
             const { complaintId, senderId, receiverId, message, messageId, timestamp } = payload;
             
-            // Broadcast the message to all members in the complaint room
-            // io.to(complaintId).emit("receive-message", {
-            //     complaintId,
-            //     senderId,
-            //     receiverId,
-            //     message,
-            //     messageId,
-            //     timestamp
-            // });
+    
 
             // More controlled emission - ensuring it's sent to the other party
             socket.to(complaintId).emit("receive-message", {
