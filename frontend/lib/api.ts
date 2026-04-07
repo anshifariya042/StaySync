@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 
-console.log("ENV:", process.env.REACT_APP_API_URL); // 👈 ADD HERE
+console.log("ENV:", process.env.NEXT_PUBLIC_API_URL);
 
 const api = axios.create({
-  baseURL: `${process.env.REACT_APP_API_URL}/api/auth`,
+ baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api/auth`, 
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
