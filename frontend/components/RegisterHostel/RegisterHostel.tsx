@@ -70,13 +70,13 @@ export default function RegisterHostel() {
 
     const downloadTemplate = () => {
         const template = [
-            { "Room Number": "101", "Capacity": 2, "Type": "Two sharing", "Price": 5500 },
-            { "Room Number": "102", "Capacity": 4, "Type": "Four sharing", "Price": 4500 }
+        { "Room Number": "", "Capacity": "", "Type": "", "Price": "" }
         ];
+
         const ws = XLSX.utils.json_to_sheet(template);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rooms");
-        XLSX.writeFile(wb, "StaySync_Room_Inventory_Template.xlsx");
+        XLSX.writeFile(wb, `StaySync_Template_${Date.now()}.xlsx`);
     }
 
     const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
