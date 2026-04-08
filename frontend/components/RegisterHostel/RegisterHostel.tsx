@@ -336,6 +336,15 @@ export default function RegisterHostel() {
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
                                         <div className="flex items-center gap-4">
+                                            <button 
+                                                type="button" 
+                                                onClick={downloadTemplate}
+                                                className="text-[10px] font-black uppercase text-text-gray hover:text-primary flex items-center gap-1"
+                                                title="Download formatting template"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">download</span>
+                                                Template
+                                            </button>
                                         </div>
                                     </div>
                                     
