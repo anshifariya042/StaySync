@@ -99,10 +99,10 @@ const SuperAdminSidebar = ({ isOpen, onClose }: SuperAdminSidebarProps) => {
         </nav>
 
         <div className="mt-auto pt-6 border-t border-[#4F7C82]/10 space-y-4">
-          {/* <div 
-            onClick={() => router.push('/user/profile')}
+          <div 
+            // onClick={() => router.push('/user/profile')}
             className="flex items-center gap-4 px-4 py-3 bg-white/30 rounded-[1.5rem] cursor-pointer hover:bg-white/50 transition-all duration-300 border border-white/20"
-          > */}
+          >
             <div className="size-10 rounded-xl bg-[#0B2E33] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
               {user?.name?.[0] || 'S'}
             </div>
@@ -119,7 +119,7 @@ const SuperAdminSidebar = ({ isOpen, onClose }: SuperAdminSidebarProps) => {
             <Icon name="logout" className="text-[20px] group-hover:-translate-x-1 transition-transform" />
             <span>Sign Out</span>
           </button>
-        {/* </div> */}
+        </div>
       </aside>
     </>
   );
