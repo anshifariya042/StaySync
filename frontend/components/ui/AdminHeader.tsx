@@ -38,7 +38,7 @@ const AdminHeader = ({ title, onMenuClick, children }: AdminHeaderProps) => {
         {children}
         <NotificationDropdown />
         <button 
-          onClick={() => router.push('/user/profile')}
+          // onClick={() => router.push('/user/profile')}
           className="size-12 rounded-2xl bg-white flex items-center justify-center border border-white text-[#4F7C82] hover:text-[#0B2E33] shadow-sm hover:shadow-lg transition-all active:scale-95 group"
           title="My Profile"
         >
