@@ -37,13 +37,13 @@ const AdminHeader = ({ title, onMenuClick, children }: AdminHeaderProps) => {
       <div className="flex items-center gap-6">
         {children}
         <NotificationDropdown />
-        <button 
+        {/* <button 
           // onClick={() => router.push('/user/profile')}
           className="size-12 rounded-2xl bg-white flex items-center justify-center border border-white text-[#4F7C82] hover:text-[#0B2E33] shadow-sm hover:shadow-lg transition-all active:scale-95 group"
           title="My Profile"
         >
           <Icon name="person" className="group-hover:scale-110 transition-transform" />
-        </button>
+        </button> */}
       </div>
     </header>
   );
