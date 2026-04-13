@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+// import "./globals.css";
 import { AuthProvider } from "@/components/Providers/AuthProvider";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ModalProvider } from "@/components/Providers/ModalProvider";
