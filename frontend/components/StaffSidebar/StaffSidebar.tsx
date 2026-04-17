@@ -113,7 +113,9 @@ export default function StaffSidebar({ isOpen, setIsOpen }: StaffSidebarProps) {
                         </div>
                         <div className="flex flex-col min-w-0">
                             <span className="text-sm font-black text-[#0B2E33] truncate">{user?.name || 'Staff Member'}</span>
-                            <span className="text-[10px] font-bold text-[#4F7C82] truncate uppercase tracking-widest opacity-60">Operations</span>
+                        <span className="text-[10px] font-bold text-[#4F7C82] truncate uppercase tracking-widest opacity-60">
+                          {user?.designation || 'Staff Member'} 
+                       </span>
                         </div>
                     </div>
 

@@ -16,7 +16,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-  origin: [ "https://stay-sync-theta.vercel.app" ],
+  origin: "https://stay-sync-theta.vercel.app" ,
   credentials: true,
 }));
 app.use(express.json({ limit: "10mb" }));

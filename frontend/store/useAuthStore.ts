@@ -6,6 +6,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    designation:string;
     hostelId?: any;
     roomId?: any;
     status?: string;
