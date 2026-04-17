@@ -68,16 +68,30 @@ export default function RegisterHostel() {
         setRooms(newRooms)
     }
 
-    const downloadTemplate = () => {
-        const template = [
-        { "Room Number": "", "Capacity": "", "Type": "", "Price": "" }
-        ];
+      const downloadTemplate = () => {
+        // Map the actual data from the 'rooms' state into the Excel format
+        const template = rooms.map(room => ({
+            "Room Number": room.roomNumber,
+            "Capacity": room.capacity,
+            "Type": room.type,
+            "Price": room.price
+        }));
+
+        // If for some reason rooms is empty, provide at least one blank row
+        if (template.length === 0) {
+            template.push({ "Room Number": "", "Capacity": 1 as any, "Type": "", "Price": 0 as any });
+        }
 
         const ws = XLSX.utils.json_to_sheet(template);
+        
+        // Add column widths for better visibility
+        ws['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }];
+
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Rooms");
-        XLSX.writeFile(wb, `StaySync_Template_${Date.now()}.xlsx`);
+        XLSX.writeFile(wb, `StaySync_Room_Data_${Date.now()}.xlsx`);
     }
+
 
     const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -170,7 +184,7 @@ export default function RegisterHostel() {
             formDataToSend.append('phone', formData.phone)
             formDataToSend.append('location', formData.location)
             formDataToSend.append('description', formData.description)
-            
+
             // Calculate total rooms and average/min price for the hostel record
             formDataToSend.append('totalRooms', rooms.length.toString())
             const minPrice = Math.min(...rooms.map(r => r.price))
@@ -192,7 +206,7 @@ export default function RegisterHostel() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            
+
             setSuccess(true)
         } catch (err: any) {
             setError(err.message || 'Registration failed. Please try again.')
@@ -211,13 +225,13 @@ export default function RegisterHostel() {
                 <div className="max-w-md mx-auto mt-6 p-6 bg-white rounded-2xl border border-border-color shadow-sm space-y-4">
                     <p className="text-sm font-bold text-foreground">Next Steps:</p>
                     <p className="text-xs text-text-gray leading-relaxed font-medium">
-                        Your registration for <span className="text-primary font-bold">"{formData.name}"</span> is currently <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-black uppercase tracking-widest text-[9px]">Pending Approval</span>. 
+                        Your registration for <span className="text-primary font-bold">"{formData.name}"</span> is currently <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-black uppercase tracking-widest text-[9px]">Pending Approval</span>.
                     </p>
                     <p className="text-xs text-text-gray leading-relaxed font-medium mt-2">
                         The Super Admin will review your details. You will receive an <span className="text-primary font-bold">Email Notification</span> once your account is activated.
                     </p>
                 </div>
-                <button 
+                <button
                     onClick={() => router.push('/login')}
                     className="mt-10 text-primary font-black uppercase tracking-widest text-xs hover:underline flex items-center gap-2 mx-auto"
                 >
@@ -336,8 +350,8 @@ export default function RegisterHostel() {
                                     <div className="flex items-center justify-between">
                                         <h3 className="text-foreground text-xl font-bold">Room Inventory</h3>
                                         <div className="flex items-center gap-4">
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={downloadTemplate}
                                                 className="text-[10px] font-black uppercase text-text-gray hover:text-primary flex items-center gap-1"
                                                 title="Download formatting template"
@@ -347,8 +361,8 @@ export default function RegisterHostel() {
                                             </button>
                                         </div>
                                     </div>
-                                    
-                                    <div 
+
+                                    <div
                                         onClick={() => excelFileInputRef.current?.click()}
                                         className="w-full p-6 bg-primary/5 rounded-[1.5rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-primary/10 hover:border-primary/40 transition-all group"
                                     >
@@ -359,15 +373,15 @@ export default function RegisterHostel() {
                                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Bulk Inventory Import</p>
                                             <p className="text-[10px] font-bold text-text-gray/50 mt-1 uppercase tracking-tighter">Upload Excel (.xlsx) form to auto-fill rooms</p>
                                         </div>
-                                        <input 
-                                            type="file" 
-                                            ref={excelFileInputRef} 
-                                            onChange={handleExcelUpload} 
-                                            accept=".xlsx, .xls, .csv" 
-                                            className="hidden" 
+                                        <input
+                                            type="file"
+                                            ref={excelFileInputRef}
+                                            onChange={handleExcelUpload}
+                                            accept=".xlsx, .xls, .csv"
+                                            className="hidden"
                                         />
                                     </div>
-                                    
+
                                     {rooms.length > 0 && rooms[0].roomNumber !== "" && (
                                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full w-fit">
                                             {rooms.length} Rooms Cataloged
