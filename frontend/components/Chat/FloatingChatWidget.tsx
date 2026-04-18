@@ -57,7 +57,8 @@ const ChatPanel = ({ selectedComplaint, setSelectedComplaint, onClose }: ChatPan
         }
     });
 
-    const activeComplaints = complaints?.filter((c: any) => c.status !== 'Resolved') || [];
+    // const activeComplaints = complaints?.filter((c: any) => c.status !== 'Resolved') || [];
+       const activeComplaints = complaints?.filter((c: any) => c.status !== 'Resolved' && c.assignedStaff) || [];
 
     if (isLoading) {
         return (
@@ -71,7 +72,7 @@ const ChatPanel = ({ selectedComplaint, setSelectedComplaint, onClose }: ChatPan
         return (
             <div className="bg-white dark:bg-slate-900 w-[380px] h-[200px] mb-4 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col items-center justify-center text-center animate-in slide-in-from-bottom-5 duration-300">
                 <p className="text-slate-500 dark:text-slate-400 font-medium">You have no active complaints.</p>
-                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Chat will be available once you raise a complaint.</p>
+                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Chat will be available once a staff member is assigned to your complaint.</p>
             </div>
         );
     }
