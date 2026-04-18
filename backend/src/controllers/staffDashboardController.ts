@@ -39,13 +39,11 @@ export const getStaffTasks = async (req: AuthRequest, res: Response) => {
         const hostelId = req.user.hostelId;
         const { status, priority, search, limit = 10 } = req.query;
 
-        let query: any = { 
+               let query: any = { 
             hostelId,
-            $or: [
-                { assignedStaff: staffId },
-                { assignedStaff: { $exists: false } } // Also show unassigned tasks in the hostel
-            ]
+            assignedStaff: staffId
         };
+
 
         if (status && status !== "All") query.status = status;
         if (priority) query.priority = priority;
